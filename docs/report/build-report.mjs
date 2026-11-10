@@ -271,7 +271,7 @@ const cover = [
   }),
   ...infoTable([
     ['Student Name', STUDENT.name, 'USN', STUDENT.usn],
-    ['Section / Batch', BLANK, 'Date', SUBMITTED],
+    ['Branch', 'Computer Applications', 'Date', SUBMITTED],
     ['Project Title', PROJECT_TITLE, 'Faculty', 'Dr. Vidya Sagar S D'],
   ]),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120 }, children: [run('Source code: ', { size: 18, color: GRAY }), link(REPO, REPO)] }),
@@ -305,7 +305,7 @@ const rubrics = [
   subtitle('Course: Full-Stack Web Development Using MERN (25MCA301)    •    Maximum Marks: 20'),
   ...infoTable([
     ['Student Name', STUDENT.name, 'USN', STUDENT.usn],
-    ['Section / Batch', BLANK, 'Date', SUBMITTED],
+    ['Branch', 'Computer Applications', 'Date', SUBMITTED],
     ['Project Title', PROJECT_TITLE, 'Faculty', 'Dr. Vidya Sagar S D'],
   ]),
   H2('A. Marks allocation and assessment'),
@@ -406,7 +406,7 @@ const contribution = [
   subtitle('Full-Stack Web Development Using MERN (25MCA301)    •    Supporting record for the 20-mark project rubric'),
   ...infoTable([
     ['Project Title', PROJECT_TITLE, 'Date', SUBMITTED],
-    ['Section / Batch', BLANK, 'Student', `${STUDENT.name} (${STUDENT.usn})`],
+    ['Branch', 'Computer Applications', 'Student', `${STUDENT.name} (${STUDENT.usn})`],
   ]),
   H2('A. Student responsibilities and completed work'),
   ...contributionRecord(),
