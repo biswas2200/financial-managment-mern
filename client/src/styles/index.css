@@ -1,0 +1,242 @@
+@import "tailwindcss";
+
+/* Dark mode follows the data-theme attribute (set before first paint in index.html). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ------------------------------------------------------------------
+   Kosha tokens
+   Cotton-white paper, indigo "cheque ink", a celadon banknote tint and a
+   marigold security thread. Chart hues (income aqua / expense orange) are the
+   validated categorical slots from the data-viz palette.
+------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+  --paper: #f3f5f9;
+  --surface: #ffffff;
+  --surface-2: #eef1f6;
+  --ink: #151b33;
+  --ink-2: #4b5371;
+  --ink-3: #737b96;
+  --line: #dfe3ec;
+  --line-strong: #c9cfdc;
+
+  --brand: #2c3a8f;
+  --brand-hover: #24307a;
+  --brand-ink: #ffffff;
+  --brand-soft: #e7eaf8;
+
+  --income: #1baf7a;
+  --expense: #eb6834;
+  --income-text: #0b7a52;
+  --expense-text: #b8461a;
+
+  --good: #0ca30c;
+  --warn: #fab219;
+  --bad: #d03b3b;
+  --good-text: #006300;
+  --warn-text: #8a5a00;
+  --bad-text: #b42323;
+
+  --note: #e2eeea;
+  --note-line: #1f5e58;
+  --thread: #d99a1e;
+
+  --grid: #e7eaf1;
+  --axis: #c3c9d6;
+  --shadow-pop: 0 18px 40px -18px rgb(21 27 51 / 0.35);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0d1120;
+  --surface: #151a2c;
+  --surface-2: #1c2238;
+  --ink: #e9ecf6;
+  --ink-2: #aeb5cc;
+  --ink-3: #848ca8;
+  --line: #262d46;
+  --line-strong: #343c5a;
+
+  --brand: #8e9bff;
+  --brand-hover: #a7b1ff;
+  --brand-ink: #0d1120;
+  --brand-soft: #222a4d;
+
+  --income: #199e70;
+  --expense: #d95926;
+  --income-text: #37c891;
+  --expense-text: #f08a5d;
+
+  --good-text: #3fc35a;
+  --warn-text: #f2b84b;
+  --bad-text: #f07a7a;
+
+  --note: #102c2a;
+  --note-line: #6fc1b5;
+  --thread: #e2a93a;
+
+  --grid: #222842;
+  --axis: #343c5a;
+  --shadow-pop: 0 18px 40px -16px rgb(0 0 0 / 0.6);
+}
+
+@theme inline {
+  --font-sans: "Anek Latin", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-income-text: var(--income-text);
+  --color-expense-text: var(--expense-text);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-good-text: var(--good-text);
+  --color-warn-text: var(--warn-text);
+  --color-bad-text: var(--bad-text);
+  --color-note: var(--note);
+  --color-note-line: var(--note-line);
+  --color-thread: var(--thread);
+
+  /* Type scale (major third, 16px base) */
+  --text-2xs: 0.75rem;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5625rem;
+  --text-2xl: 1.953rem;
+  --text-3xl: 2.441rem;
+  --text-4xl: 3.052rem;
+  --text-5xl: 3.815rem;
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    min-height: 100dvh;
+    background: var(--paper);
+    line-height: 1.5;
+  }
+  ::selection {
+    background: var(--brand-soft);
+    color: var(--ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+  /* Native date input icon follows the theme */
+  [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.85);
+  }
+  dialog::backdrop {
+    background: rgb(13 17 32 / 0.45);
+    backdrop-filter: blur(2px);
+  }
+}
+
+@layer utilities {
+  /* Anek Latin's width axis: wide for headings, condensed for big rupee figures */
+  .font-wide {
+    font-stretch: 112%;
+  }
+  .font-extrawide {
+    font-stretch: 125%;
+  }
+  .font-condensed {
+    font-stretch: 82%;
+  }
+  .font-narrow {
+    font-stretch: 92%;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* One deliberate motion: the banknote linework draws itself once. */
+@keyframes guilloche-draw {
+  from {
+    stroke-dashoffset: var(--len, 1200);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.guilloche-draw path {
+  stroke-dasharray: var(--len, 1200);
+  animation: guilloche-draw 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes typing {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+.typing-dot {
+  animation: typing 1.1s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+.drawer-in {
+  animation: drawer-in 0.22s ease-out;
+}
