@@ -343,7 +343,7 @@ function studentBlock(n, role, contribution, evidence, share) {
 }
 const contribution = [
   H1('3. Contribution of work done'),
-  P('Kosha was built by a team of three. The record follows Annexure A of the rubric. Each member owned one layer of the system and reviewed the others through pull requests on the shared GitHub repository.'),
+  P('Kosha was built by a team of three. The record follows Annexure A of the rubric. Each member owned one layer of the system, and all work went into one shared GitHub repository.'),
   ...studentBlock(
     1,
     'Frontend and user experience',
@@ -657,7 +657,7 @@ const methodology = [
     'Passwords hashed with bcrypt (cost 10); the hash field is excluded from queries and from every JSON response.',
     'Sessions are signed JWTs in an httpOnly cookie with SameSite=Lax, so scripts cannot read the token and other sites cannot send it with a POST. A Bearer header is accepted for API clients.',
     'One generic message for a wrong email or password, so accounts cannot be discovered by trying emails.',
-    'helmet security headers, CORS limited to the web origin, JSON body limit of 100 KB, rate limits of 30 sign-in attempts per 15 minutes and 20 Copilot messages per minute.',
+    'helmet security headers, CORS limited to the web origin, JSON body limit of 100 KB, rate limits of 30 failed sign-in attempts per 15 minutes and 20 Copilot messages per minute.',
     'Every query filters by the signed-in user; requests for another user’s records return 404, so their existence is not revealed.',
     'Secrets such as JWT_SECRET and GEMINI_API_KEY live in server/.env, which is listed in .gitignore; only a placeholder .env.example is committed.',
   ]),
