@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.65.0",
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "docx": "^9.15.3"
   }
 }

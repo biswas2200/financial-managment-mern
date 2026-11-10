@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kosha report diagrams</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Latin:wdth,wght@75..125,300..800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --ink: #151b33;
+        --ink2: #4b5371;
+        --ink3: #737b96;
+        --line: #c9cfdc;
+        --paper: #f3f5f9;
+        --brand: #2c3a8f;
+        --brand-soft: #e7eaf8;
+        --note: #e2eeea;
+        --note-line: #1f5e58;
+        --thread: #d99a1e;
+        --income: #1baf7a;
+        --expense: #eb6834;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #fff; font-family: 'Anek Latin', system-ui, sans-serif; color: var(--ink); }
+      .diagram { position: relative; width: 1200px; padding: 36px 40px; background: #fff; }
+      svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+      .row { display: flex; gap: 72px; align-items: stretch; }
+      .col { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+      .group { border-radius: 18px; padding: 16px; background: var(--paper); border: 1.5px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+      .group h3 { margin: 0 0 2px; font-stretch: 112%; font-size: 17px; }
+      .group p.sub { margin: -4px 0 4px; font-size: 13px; color: var(--ink2); }
+      .box { background: #fff; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; font-size: 14.5px; line-height: 1.35; }
+      .box b { display: block; font-size: 15px; }
+      .box small { color: var(--ink2); font-size: 13px; }
+      .box.brand { border-color: var(--brand); background: var(--brand-soft); }
+      .box.note { background: var(--note); border-color: color-mix(in oklch, var(--note-line) 40%, white); }
+      .box.ext { border-style: dashed; border-color: var(--ink3); }
+      .box.warn { border-color: var(--thread); background: #fdf3e1; }
+      .tag { display: inline-block; font-size: 12px; padding: 1px 7px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); margin: 2px 2px 0 0; }
+      .label { position: absolute; font-size: 12.5px; color: var(--ink2); background: #fff; padding: 1px 6px; border-radius: 6px; white-space: nowrap; transform: translate(-50%, -50%); }
+      /* ER */
+      .entity { position: absolute; width: 270px; background: #fff; border: 1.5px solid var(--ink); border-radius: 12px; overflow: hidden; font-size: 13.5px; }
+      .entity h4 { margin: 0; padding: 8px 12px; background: var(--brand); color: #fff; font-stretch: 112%; font-size: 15px; }
+      .entity ul { list-style: none; margin: 0; padding: 6px 12px 8px; }
+      .entity li { display: flex; justify-content: space-between; gap: 8px; padding: 2.5px 0; border-bottom: 1px solid #eef0f5; }
+      .entity li:last-child { border-bottom: 0; }
+      .entity li span:last-child { color: var(--ink3); }
+      .entity li.key span:first-child { font-weight: 700; }
+      .entity li.idx { color: var(--note-line); font-size: 12.5px; display: block; }
+      /* TDD */
+      .cycle { display: flex; align-items: center; justify-content: center; gap: 30px; }
+      .stage { width: 220px; border-radius: 18px; padding: 16px; text-align: center; border: 2px solid; }
+      .stage h3 { margin: 0; font-stretch: 112%; font-size: 20px; }
+      .stage p { margin: 6px 0 0; font-size: 13.5px; color: var(--ink2); }
+      .red { border-color: #d03b3b; background: #fbeaea; }
+      .green { border-color: #0ca30c; background: #e6f6e6; }
+      .refactor { border-color: var(--brand); background: var(--brand-soft); }
+      .pyramid { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+      .tier { color: #fff; text-align: center; padding: 10px; border-radius: 8px; font-size: 14.5px; }
+      .tier b { font-size: 16px; }
+      /* sequence */
+      .lanes { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+      .lane-head { text-align: center; }
+      .lane-head .box { display: inline-block; min-width: 170px; }
+    </style>
+  </head>
+  <body>
+    <!-- 1. Architecture -->
+    <section class="diagram" id="architecture">
+      <svg class="wires"></svg>
+      <div class="row">
+        <div class="col">
+          <div class="group" id="a-client">
+            <h3>Client (browser)</h3>
+            <p class="sub">React 18 single-page app, built with Vite</p>
+            <div class="box"><b>Pages</b><small>Overview, Transactions, Analytics, Budgets, Copilot, Settings</small></div>
+            <div class="box"><b>Forms and validation</b><small>React Hook Form with shared Zod schemas (rupees → integer paise)</small></div>
+            <div class="box"><b>Charts</b><small>Recharts and custom SVG/HTML (heatmap, ranked bars)</small></div>
+            <div class="box brand" id="a-query"><b>Server state</b><small>TanStack Query cache: fetch, invalidate, optimistic delete</small></div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="group" id="a-api">
+            <h3>REST API (Node.js + Express 5)</h3>
+            <p class="sub">/api/v1, JSON, stateless JWT sessions</p>
+            <div class="box" id="a-mw"><b>Middleware</b><small>helmet, CORS, rate limit, cookie-parser, requireAuth (JWT), validate (Zod)</small></div>
+            <div class="box"><b>Routes → Controllers</b><small>auth, categories, transactions, budgets, analytics, assistant</small></div>
+            <div class="box"><b>Services</b><small>Business rules, ownership checks, aggregation pipelines</small></div>
+            <div class="box warn" id="a-agent"><b>Copilot agent</b><small>9 tools, Gemini provider (function calling), offline rule engine, drafts awaiting confirmation</small></div>
+            <div class="box" id="a-models"><b>Mongoose models</b><small>User, Category, Transaction, Budget, AssistantMessage</small></div>
+          </div>
+        </div>
+        <div class="col" style="justify-content: space-between">
+          <div class="group" id="a-db">
+            <h3>MongoDB 7 (Docker)</h3>
+            <p class="sub">Database "kosha"</p>
+            <div class="box note"><b>Collections</b><small>users, categories, transactions, budgets, assistantmessages</small></div>
+            <div class="box note"><b>Seed dataset</b><small>mongodump archive restored automatically on first start</small></div>
+            <div class="box"><b>mongo-express</b><small>Database admin UI on :8081</small></div>
+          </div>
+          <div class="box ext" id="a-gemini" style="padding: 14px"><b>Google Gemini API</b><small>generateContent with tool declarations, via @google/genai and an API key in server/.env</small></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. ER diagram -->
+    <section class="diagram" id="er" style="height: 700px">
+      <svg class="wires"></svg>
+      <div class="entity" id="e-user" style="left: 40px; top: 70px">
+        <h4>User</h4>
+        <ul>
+          <li class="key"><span>_id</span><span>ObjectId, PK</span></li>
+          <li><span>name</span><span>String</span></li>
+          <li><span>email</span><span>String, unique</span></li>
+          <li><span>passwordHash</span><span>bcrypt, hidden</span></li>
+          <li><span>currency</span><span>"INR"</span></li>
+          <li><span>createdAt, updatedAt</span><span>Date</span></li>
+        </ul>
+      </div>
+      <div class="entity" id="e-cat" style="left: 465px; top: 40px">
+        <h4>Category</h4>
+        <ul>
+          <li class="key"><span>_id</span><span>ObjectId, PK</span></li>
+          <li><span>user</span><span>FK → User</span></li>
+          <li><span>name</span><span>String</span></li>
+          <li><span>type</span><span>income | expense</span></li>
+          <li><span>color, icon</span><span>String</span></li>
+          <li><span>isDefault</span><span>Boolean</span></li>
+          <li class="idx">unique (user, type, name), case-insensitive</li>
+        </ul>
+      </div>
+      <div class="entity" id="e-txn" style="left: 465px; top: 330px; width: 290px">
+        <h4>Transaction</h4>
+        <ul>
+          <li class="key"><span>_id</span><span>ObjectId, PK</span></li>
+          <li><span>user</span><span>FK → User</span></li>
+          <li><span>category</span><span>FK → Category</span></li>
+          <li><span>type</span><span>income | expense</span></li>
+          <li><span>amount</span><span>Integer paise</span></li>
+          <li><span>description, merchant</span><span>String</span></li>
+          <li><span>date</span><span>Date (IST bucketing)</span></li>
+          <li><span>paymentMethod</span><span>UPI | Card | Cash | …</span></li>
+          <li><span>notes, tags</span><span>String, [String]</span></li>
+          <li><span>source</span><span>manual | copilot</span></li>
+          <li class="idx">index (user, date) · (user, category, date) · (user, type, date)</li>
+        </ul>
+      </div>
+      <div class="entity" id="e-budget" style="left: 890px; top: 70px">
+        <h4>Budget</h4>
+        <ul>
+          <li class="key"><span>_id</span><span>ObjectId, PK</span></li>
+          <li><span>user</span><span>FK → User</span></li>
+          <li><span>category</span><span>FK → Category</span></li>
+          <li><span>month</span><span>"YYYY-MM"</span></li>
+          <li><span>limit</span><span>Integer paise</span></li>
+          <li class="idx">unique (user, month, category)</li>
+        </ul>
+      </div>
+      <div class="entity" id="e-msg" style="left: 40px; top: 400px; width: 300px">
+        <h4>AssistantMessage</h4>
+        <ul>
+          <li class="key"><span>_id</span><span>ObjectId, PK</span></li>
+          <li><span>user</span><span>FK → User</span></li>
+          <li><span>role</span><span>user | assistant</span></li>
+          <li><span>content</span><span>String</span></li>
+          <li><span>provider</span><span>gemini | offline</span></li>
+          <li><span>toolCalls, data</span><span>[String], Mixed</span></li>
+          <li><span>pendingAction</span><span>{type, payload, status}</span></li>
+          <li class="idx">index (user, createdAt)</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 3. Copilot agent flow -->
+    <section class="diagram" id="agent" style="height: 680px">
+      <svg class="wires"></svg>
+      <div class="box brand" id="g-user" style="position:absolute; left:40px; top:40px; width:220px"><b>User message</b><small>"Spent 450 on groceries yesterday"</small></div>
+      <div class="box" id="g-agent" style="position:absolute; left:320px; top:40px; width:270px"><b>Agent orchestrator</b><small>Loads categories and recent history, saves the message, builds the tool executor</small></div>
+      <div class="box warn" id="g-check" style="position:absolute; left:650px; top:56px; width:220px; text-align:center"><b>Gemini key set and available?</b></div>
+      <div class="box ext" id="g-gemini" style="position:absolute; left:930px; top:40px; width:230px"><b>Gemini generateContent</b><small>System prompt, 9 tool declarations and the conversation</small></div>
+      <div class="box" id="g-calls" style="position:absolute; left:930px; top:220px; width:230px"><b>Function calls returned?</b><small>Gemini picks tools and arguments; the loop repeats until it answers in text (max 5 rounds)</small></div>
+      <div class="box" id="g-offline" style="position:absolute; left:320px; top:200px; width:270px"><b>Offline engine</b><small>Intent router and parser (amounts, dates, categories, merchants) with template replies. Used when there is no key, the quota is hit or the network fails</small></div>
+      <div class="box note" id="g-tools" style="position:absolute; left:640px; top:390px; width:250px"><b>Tool executor (MongoDB)</b><small>get_summary, get_spending_by_category, compare_months, get_budget_status, find_transactions, get_monthly_trend, detect_unusual_spending, propose_transaction, propose_budget</small></div>
+      <div class="box brand" id="g-reply" style="position:absolute; left:320px; top:430px; width:270px"><b>Reply</b><small>Text, a chart payload (data.kind) and an optional draft (pendingAction)</small></div>
+      <div class="box" id="g-card" style="position:absolute; left:40px; top:580px; width:240px"><b>Draft card in chat</b><small>Amount, category, date. Nothing saved yet</small></div>
+      <div class="box note" id="g-confirm" style="position:absolute; left:400px; top:590px; width:420px"><b>POST /assistant/actions/:id/confirm</b><small>Atomic claim, re-validated with Zod, creates the transaction (source: copilot) or the budget</small></div>
+    </section>
+
+    <!-- 4. Request lifecycle: add an expense -->
+    <section class="diagram" id="request" style="height: 600px">
+      <svg class="wires"></svg>
+      <div id="r-heads" style="display:grid; grid-template-columns: repeat(5, 1fr); text-align:center">
+        <div><div class="box brand" style="display:inline-block; min-width:150px"><b>User</b></div></div>
+        <div><div class="box" style="display:inline-block; min-width:170px"><b>React app</b></div></div>
+        <div><div class="box" style="display:inline-block; min-width:170px"><b>Express API</b></div></div>
+        <div><div class="box" style="display:inline-block; min-width:170px"><b>Service layer</b></div></div>
+        <div><div class="box note" style="display:inline-block; min-width:170px"><b>MongoDB</b></div></div>
+      </div>
+    </section>
+
+    <!-- 5. TDD cycle + test pyramid -->
+    <section class="diagram" id="tdd" style="height: 470px">
+      <svg class="wires"></svg>
+      <div style="display:flex; gap:60px; align-items:center; height:100%">
+        <div style="flex: 1.25">
+          <div class="cycle">
+            <div class="stage red" id="t-red"><h3>Red</h3><p>Write a failing spec for the next behaviour. Commit <i>test(x): … (red)</i></p></div>
+            <div class="stage green" id="t-green"><h3>Green</h3><p>Write the least code that passes. Commit <i>feat(x): … (green)</i> and push</p></div>
+          </div>
+          <div class="cycle" style="margin-top:56px">
+            <div class="stage refactor" id="t-refactor"><h3>Refactor</h3><p>Clean up with the suite as a safety net, then pick the next behaviour</p></div>
+          </div>
+        </div>
+        <div style="flex: 1">
+          <div class="pyramid">
+            <div class="tier" style="width:200px; background:#2c3a8f"><b>10</b> end-to-end<br />Playwright, real Chrome</div>
+            <div class="tier" style="width:250px; background:#3f4fa8"><b>28</b> component<br />React Testing Library</div>
+            <div class="tier" style="width:350px; background:#5465c0"><b>77</b> API integration<br />Supertest + MongoDB</div>
+            <div class="tier" style="width:450px; background:#6c7dd4"><b>138</b> unit<br />money, dates, schemas, parser, agent, seed</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      /** Draw an arrow between two elements inside a diagram section. */
+      function wire(section, from, to, { fromSide = 'right', toSide = 'left', label, dashed = false, bend = 0, color = '#4b5371', both = false, via, labelAt, start, end } = {}) {
+        const svg = section.querySelector('svg.wires');
+        const s = section.getBoundingClientRect();
+        const point = (el, side) => {
+          const r = el.getBoundingClientRect();
+          const x = { left: r.left, right: r.right, top: r.left + r.width / 2, bottom: r.left + r.width / 2 }[side] - s.left;
+          const y = { top: r.top, bottom: r.bottom, left: r.top + r.height / 2, right: r.top + r.height / 2 }[side] - s.top;
+          return [x, y];
+        };
+        const [x1, y1] = start ?? point(document.getElementById(from), fromSide);
+        const [x2, y2] = end ?? point(document.getElementById(to), toSide);
+        const horizontal = (side) => side === 'left' || side === 'right';
+        let d;
+        if (via) {
+          d = `M${x1},${y1} ` + via.map(([x, y]) => `L${x},${y}`).join(' ') + ` L${x2},${y2}`;
+        } else if (horizontal(fromSide) && horizontal(toSide)) {
+          const mx = (x1 + x2) / 2 + bend;
+          d = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+        } else if (!horizontal(fromSide) && !horizontal(toSide)) {
+          const my = (y1 + y2) / 2 + bend;
+          d = `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`;
+        } else {
+          d = horizontal(fromSide) ? `M${x1},${y1} C${x2},${y1} ${x2},${y1} ${x2},${y2}` : `M${x1},${y1} C${x1},${y2} ${x1},${y2} ${x2},${y2}`;
+        }
+        const id = 'm' + Math.random().toString(36).slice(2);
+        svg.insertAdjacentHTML(
+          'beforeend',
+          `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${color}"/></marker></defs>
+           <path d="${d}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" ${dashed ? 'stroke-dasharray="6 5"' : ''} marker-end="url(#${id})" ${both ? `marker-start="url(#${id})"` : ''}/>`,
+        );
+        if (label) {
+          const el = document.createElement('div');
+          el.className = 'label';
+          el.textContent = label;
+          const [lx, ly] = labelAt ?? [(x1 + x2) / 2 + (horizontal(fromSide) && horizontal(toSide) ? bend : 0), (y1 + y2) / 2];
+          el.style.left = `${lx}px`;
+          el.style.top = `${ly}px`;
+          section.appendChild(el);
+        }
+      }
+
+      function crow(section, from, to, opts) {
+        wire(section, from, to, { ...opts, color: '#151b33' });
+      }
+
+      document.fonts.ready.then(() => {
+        const A = document.getElementById('architecture');
+        wire(A, 'a-query', 'a-mw', { label: 'HTTPS JSON /api/v1', both: true });
+        wire(A, 'a-models', 'a-db', { label: 'Mongoose ODM', both: true });
+        wire(A, 'a-agent', 'a-gemini', { label: 'function calling', dashed: true, both: true });
+
+        const E = document.getElementById('er');
+        crow(E, 'e-user', 'e-cat', { label: '1 : many' });
+        crow(E, 'e-user', 'e-txn', { label: '1 : many' });
+        crow(E, 'e-cat', 'e-txn', { fromSide: 'bottom', toSide: 'top', label: '1 : many' });
+        crow(E, 'e-cat', 'e-budget', { label: '1 : many' });
+        crow(E, 'e-user', 'e-msg', { fromSide: 'bottom', toSide: 'top', label: '1 : many' });
+        crow(E, 'e-txn', 'e-budget', { fromSide: 'right', toSide: 'bottom', label: 'spent = Σ amount per month', dashed: true });
+
+        const G = document.getElementById('agent');
+        const gr = (id) => { const r = document.getElementById(id).getBoundingClientRect(), s = G.getBoundingClientRect(); return { l: r.left - s.left, r: r.right - s.left, t: r.top - s.top, b: r.bottom - s.top, cx: r.left - s.left + r.width / 2, cy: r.top - s.top + r.height / 2 }; };
+        wire(G, 'g-user', 'g-agent');
+        wire(G, 'g-agent', 'g-check');
+        wire(G, 'g-check', 'g-gemini', { label: 'yes' });
+        wire(G, 'g-check', 'g-offline', { fromSide: 'bottom', toSide: 'right', label: 'no / error' });
+        wire(G, 'g-gemini', 'g-calls', { fromSide: 'bottom', toSide: 'top' });
+        wire(G, 'g-calls', 'g-tools', { fromSide: 'bottom', toSide: 'right', label: 'yes: run tools, send results back', both: true });
+        {
+          const o = gr('g-offline'), t = gr('g-tools');
+          const y = o.b - 18;
+          wire(G, 'g-offline', 'g-tools', { start: [o.r, y], end: [t.cx, t.t], via: [[t.cx, y]], label: 'same tools', labelAt: [(o.r + t.cx) / 2 + 20, y] });
+        }
+        {
+          const c = gr('g-calls'), t = gr('g-tools'), rep = gr('g-reply');
+          const y = Math.max(t.b, rep.b) + 22;
+          wire(G, 'g-calls', 'g-reply', { fromSide: 'right', toSide: 'bottom', via: [[c.r + 24, c.cy], [c.r + 24, y], [rep.cx, y]], label: 'no: final text', labelAt: [(c.r + rep.cx) / 2 + 120, y] });
+        }
+        {
+          const o = gr('g-offline'), r = gr('g-reply'), d = gr('g-card');
+          const x = o.l - 30;
+          wire(G, 'g-offline', 'g-reply', { start: [o.l, o.cy], end: [r.l, r.t + 24], via: [[x, o.cy], [x, r.t + 24]], label: 'template reply', labelAt: [x, (o.cy + r.t) / 2] });
+          wire(G, 'g-reply', 'g-card', { start: [r.l, r.b - 18], end: [d.cx, d.t], via: [[d.cx, r.b - 18]] });
+        }
+        wire(G, 'g-card', 'g-confirm', { label: 'user taps Confirm' });
+
+        // Sequence diagram drawn from data
+        const R = document.getElementById('request');
+        const svg = R.querySelector('svg.wires');
+        const heads = [...R.querySelectorAll('#r-heads > div')];
+        const sr = R.getBoundingClientRect();
+        const xs = heads.map((h) => {
+          const b = h.firstElementChild.getBoundingClientRect();
+          return b.left + b.width / 2 - sr.left;
+        });
+        const top = heads[0].firstElementChild.getBoundingClientRect().bottom - sr.top;
+        xs.forEach((x) => svg.insertAdjacentHTML('beforeend', `<line x1="${x}" y1="${top}" x2="${x}" y2="580" stroke="#c9cfdc" stroke-width="1.5" stroke-dasharray="5 5"/>`));
+        const steps = [
+          [0, 1, 'Fills form: ₹450, Groceries, "Vegetables"'],
+          [1, 1, 'Zod validates, converts "450" → 45000 paise'],
+          [1, 2, 'POST /api/v1/transactions (cookie: kosha_token)'],
+          [2, 2, 'requireAuth verifies JWT, validate() re-checks with Zod'],
+          [2, 3, 'createTransaction(userId, data)'],
+          [3, 4, 'find category {_id, user}: must exist and be an expense'],
+          [3, 4, 'insert transaction document'],
+          [2, 1, '201 Created + transaction JSON'],
+          [1, 2, 'React Query invalidates; refetch summary, trend, budgets'],
+          [2, 4, '$facet / $group / $lookup aggregations'],
+          [1, 0, 'Dashboard totals, charts and budgets update'],
+        ];
+        steps.forEach(([a, b, text], i) => {
+          const y = top + 34 + i * 40;
+          const id = 's' + i;
+          if (a === b) {
+            const x = xs[a];
+            svg.insertAdjacentHTML('beforeend', `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2c3a8f"/></marker></defs><path d="M${x},${y - 8} h36 v16 h-34" fill="none" stroke="#2c3a8f" stroke-width="1.6" marker-end="url(#${id})"/>`);
+            const el = document.createElement('div');
+            el.className = 'label';
+            el.style.transform = 'translate(0, -50%)';
+            el.style.left = `${x + 44}px`;
+            el.style.top = `${y}px`;
+            el.textContent = `${i + 1}. ${text}`;
+            R.appendChild(el);
+          } else {
+            const x1 = xs[a], x2 = xs[b];
+            const back = x2 < x1;
+            svg.insertAdjacentHTML('beforeend', `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="${back ? '#1baf7a' : '#2c3a8f'}"/></marker></defs><line x1="${x1}" y1="${y}" x2="${x2 + (back ? 4 : -4)}" y2="${y}" stroke="${back ? '#1baf7a' : '#2c3a8f'}" stroke-width="1.6" ${back ? 'stroke-dasharray="6 4"' : ''} marker-end="url(#${id})"/>`);
+            const el = document.createElement('div');
+            el.className = 'label';
+            el.style.left = `${(x1 + x2) / 2}px`;
+            el.style.top = `${y - 11}px`;
+            el.textContent = `${i + 1}. ${text}`;
+            R.appendChild(el);
+          }
+        });
+
+        const T = document.getElementById('tdd');
+        wire(T, 't-red', 't-green', {});
+        wire(T, 't-green', 't-refactor', { fromSide: 'bottom', toSide: 'right' });
+        wire(T, 't-refactor', 't-red', { fromSide: 'left', toSide: 'bottom' });
+
+        document.body.dataset.ready = 'true';
+      });
+    </script>
+  </body>
+</html>
