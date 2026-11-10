@@ -11,6 +11,18 @@ export default defineConfig({
     // httpOnly session cookie works without any CORS setup.
     proxy: { '/api': 'http://localhost:5000' },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Long-lived vendor chunks cache well between deploys.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          charts: ['recharts'],
+          data: ['@tanstack/react-query', 'react-hook-form', '@hookform/resolvers', 'zod'],
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.js'],

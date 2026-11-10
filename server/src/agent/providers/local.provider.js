@@ -17,6 +17,13 @@ import {
 
 const fm = (m) => formatMoney(m);
 
+/** "2026-11-09" → "today", "yesterday" or "9 Nov". */
+function friendlyDay(dayKey, now) {
+  if (dayKey === toDayKey(now)) return 'today';
+  if (dayKey === toDayKey(new Date(now.getTime() - 86400000))) return 'yesterday';
+  return new Date(`${dayKey}T12:00:00+05:30`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'Asia/Kolkata' });
+}
+
 /** Stable pick so the same question gets the same wording. */
 function pick(options, seed) {
   let h = 0;
@@ -216,9 +223,8 @@ export function createLocalProvider() {
           merchant: merchant ?? undefined,
         });
         if (!r.pendingAction) return done(`I couldn't draft that: ${r.result.error}`);
-        const when = date === toDayKey(now) ? 'today' : date;
         return done(
-          `Here's the draft: ${type === 'income' ? 'income' : 'an expense'} of **${fm(amount)}** in ${category.name}${merchant ? ` at ${merchant}` : ''}, dated ${when}. Tap Confirm to save it.`,
+          `Here's the draft: ${type === 'income' ? 'income' : 'an expense'} of **${fm(amount)}** in ${category.name}${merchant ? ` at ${merchant}` : ''}, dated ${friendlyDay(date, now)}. Tap Confirm to save it.`,
           { pendingAction: r.pendingAction },
         );
       }

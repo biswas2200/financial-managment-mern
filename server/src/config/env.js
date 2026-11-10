@@ -19,7 +19,8 @@ export const env = Object.freeze({
   nodeEnv,
   isTest,
   isProd,
-  port: num(process.env.PORT, 5000),
+  // API_PORT (not PORT) so tools that inject PORT for the web dev server don't collide.
+  port: num(process.env.API_PORT, 5000),
   mongoUri: isTest ? process.env.MONGO_URI_TEST : process.env.MONGO_URI || DEV_MONGO_URI,
   jwtSecret: process.env.JWT_SECRET || 'kosha-local-dev-secret',
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
