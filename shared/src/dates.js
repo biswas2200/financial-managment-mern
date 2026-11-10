@@ -77,6 +77,17 @@ export function monthRange(key) {
   };
 }
 
+/** "2026-10" → "October 2026" (or "Oct 26" with { short: true }). */
+export function formatMonthLabel(key, { short = false } = {}) {
+  const [y, m] = key.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, 15));
+  if (short) {
+    const month = date.toLocaleString('en-IN', { month: 'short', timeZone: 'UTC' });
+    return `${month} ${String(y).slice(2)}`;
+  }
+  return date.toLocaleString('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
 /** IST start-of-day instant for a Date. */
 export function startOfDayIST(date = new Date()) {
   const { year, month, day } = istParts(date);

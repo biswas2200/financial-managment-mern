@@ -224,6 +224,44 @@ export async function getMerchants(userId, query = {}, now = new Date()) {
   ]);
 }
 
+/**
+ * Categories whose spending this month is well above their 3-month average.
+ * Mid-month, flag a category only once it has already passed its usual full-month
+ * level, or (after 40% of the month) is running 1.5× the pro-rated pace.
+ */
+export async function getUnusualSpending(userId, { month } = {}, now = new Date()) {
+  const key = month ?? toMonthKey(now);
+  const { series } = await getCategoryTrend(userId, { months: 4, end: key, top: 100 }, now);
+  const { start, end } = monthRange(key);
+  const inProgress = now > start && now < end;
+  const fraction = inProgress ? (now.getTime() - start.getTime()) / (end.getTime() - start.getTime()) : 1;
+  const MIN_GAP = 100000; // ₹1,000
+
+  return series
+    .map((s) => {
+      const current = s.values.at(-1);
+      const history = s.values.slice(0, -1);
+      const average = Math.round(history.reduce((a, b) => a + b, 0) / history.length);
+      const expected = Math.round(average * fraction);
+      return {
+        categoryId: s.categoryId,
+        name: s.name,
+        color: s.color,
+        current,
+        average,
+        expected,
+        ratio: average ? Math.round((current / Math.max(expected, 1)) * 10) / 10 : null,
+      };
+    })
+    .filter((r) => {
+      if (!r.average) return false;
+      const beyondUsualMonth = r.current > r.average * 1.25 && r.current - r.average >= MIN_GAP;
+      const fastPace = fraction >= 0.4 && r.current > r.expected * 1.5 && r.current - r.expected >= MIN_GAP;
+      return beyondUsualMonth || fastPace;
+    })
+    .sort((a, b) => b.ratio - a.ratio);
+}
+
 /** Monthly spend for the top-N categories over the window; everything else folds into "Other". */
 export async function getCategoryTrend(userId, { months = 6, end, top = 4 } = {}, now = new Date()) {
   const keys = lastNMonthKeys(months, end ?? toMonthKey(now));

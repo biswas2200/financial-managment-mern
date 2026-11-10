@@ -5,14 +5,15 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import { env } from './config/env.js';
 import { databaseState } from './config/db.js';
-import apiRoutes from './routes/index.js';
+import { createApiRouter } from './routes/index.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 /**
  * Builds the Express application without starting a server,
  * so tests can drive it in-process with supertest.
+ * @param {{ assistant?: { gemini?: object|null } }} [options] dependency overrides (used by tests)
  */
-export function createApp() {
+export function createApp(options = {}) {
   const app = express();
 
   app.disable('x-powered-by');
@@ -26,7 +27,7 @@ export function createApp() {
     res.json({ status: 'ok', database: databaseState(), uptime: process.uptime() });
   });
 
-  app.use('/api/v1', apiRoutes);
+  app.use('/api/v1', createApiRouter(options));
 
   app.use(notFound);
   app.use(errorHandler);

@@ -1,5 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { toMonthKey, parseDateInput, monthRange, APP_TIMEZONE } from '../src/dates.js';
+import {
+  toMonthKey,
+  parseDateInput,
+  monthRange,
+  APP_TIMEZONE,
+  formatMonthLabel,
+  shiftMonth,
+  lastNMonthKeys,
+} from '../src/dates.js';
 
 describe('dates', () => {
   it('uses India Standard Time for day/month bucketing', () => {
@@ -24,6 +32,16 @@ describe('dates', () => {
   it('returns null for garbage', () => {
     expect(parseDateInput('not-a-date')).toBeNull();
     expect(parseDateInput('2026-13-40')).toBeNull();
+  });
+
+  it('formats month keys for people', () => {
+    expect(formatMonthLabel('2026-10')).toBe('October 2026');
+    expect(formatMonthLabel('2026-10', { short: true })).toBe('Oct 26');
+  });
+
+  it('shifts and lists month keys across year boundaries', () => {
+    expect(shiftMonth('2026-01', -1)).toBe('2025-12');
+    expect(lastNMonthKeys(3, '2026-02')).toEqual(['2025-12', '2026-01', '2026-02']);
   });
 
   it('gives the IST start/end instants of a month', () => {
