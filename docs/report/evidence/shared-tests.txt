@@ -1,0 +1,14 @@
+npm notice run kosha@1.0.0 npx
+npm notice run 'vitest' run
+
+ RUN  v3.2.7 /home/amitosh-biswas/BiswasPub/Mern Project LA/financial-managment-mern/shared
+
+ ✓ tests/dates.test.js (8 tests) 19ms
+ ✓ tests/schemas.test.js (17 tests) 16ms
+ ✓ tests/money.test.js (37 tests) 23ms
+
+ Test Files  3 passed (3)
+      Tests  62 passed (62)
+   Start at  13:05:41
+   Duration  493ms (transform 52ms, setup 0ms, collect 95ms, tests 58ms, environment 0ms, prepare 223ms)
+

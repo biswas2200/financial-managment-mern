@@ -53,9 +53,11 @@ async function main() {
       await ctx.close();
     }
 
-    const ctx = await signedInContext(browser, { colorScheme: 'light' });
-    const page = await ctx.newPage();
-    await page.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+    const APP_SHOTS = ['dashboard', 'transactions', 'add-transaction', 'analytics', 'budgets', 'copilot', 'settings', 'dark'];
+    const needsApp = APP_SHOTS.some(want);
+    const ctx = needsApp ? await signedInContext(browser, { colorScheme: 'light' }) : null;
+    const page = needsApp ? await ctx.newPage() : null;
+    if (page) await page.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
 
     if (want('dashboard')) {
       await page.goto(`${BASE}/`);
@@ -143,7 +145,32 @@ async function main() {
       await settle(page);
       await shot(page, 'analytics-dark');
     }
-    await ctx.close();
+    await ctx?.close();
+
+    if (want('database')) {
+      const dctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+      const d = await dctx.newPage();
+      await d.goto(process.env.MONGO_EXPRESS_URL ?? 'http://localhost:8081/db/kosha/');
+      await settle(d, 800);
+      await shot(d, 'database');
+      await d.goto(`${process.env.MONGO_EXPRESS_URL ?? 'http://localhost:8081/db/kosha/'}transactions`);
+      await settle(d, 800);
+      await shot(d, 'database-transactions');
+      await dctx.close();
+    }
+
+    if (want('github')) {
+      const gctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'en-IN', colorScheme: 'light' });
+      const g = await gctx.newPage();
+      const repo = 'https://github.com/biswas2200/financial-managment-mern';
+      await g.goto(repo, { waitUntil: 'domcontentloaded' });
+      await settle(g, 2500);
+      await shot(g, 'github-repo');
+      await g.goto(`${repo}/commits/main`, { waitUntil: 'domcontentloaded' });
+      await settle(g, 2500);
+      await shot(g, 'github-commits');
+      await gctx.close();
+    }
 
     if (want('mobile')) {
       const mctx = await signedInContext(browser, {

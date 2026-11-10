@@ -1,0 +1,90 @@
+npm notice run kosha@1.0.0 npx
+npm notice run 'vitest' run --coverage --coverage.reporter=text-summary --coverage.reporter=text
+
+ RUN  v3.2.7 /home/amitosh-biswas/BiswasPub/Mern Project LA/financial-managment-mern/server
+      Coverage enabled with v8
+
+ ✓ tests/integration/analytics.test.js (13 tests) 3157ms
+   ✓ Analytics API (MongoDB aggregation pipelines) > GET /merchants ranks merchants by spend  302ms
+   ✓ Analytics API (MongoDB aggregation pipelines) > isolates analytics per user  317ms
+ ✓ tests/integration/transactions.test.js (18 tests) 2354ms
+ ✓ tests/integration/assistant.test.js (13 tests) 2286ms
+ ✓ tests/integration/categories.test.js (10 tests) 823ms
+ ✓ tests/integration/budgets.test.js (7 tests) 1059ms
+   ✓ Budgets API > upserts one budget per category per month  301ms
+ ✓ tests/integration/auth.test.js (13 tests) 751ms
+ ✓ tests/integration/health.test.js (3 tests) 269ms
+ ✓ tests/unit/seed.generator.test.js (7 tests) 55ms
+ ✓ tests/unit/agent/parser.test.js (38 tests) 10ms
+ ✓ tests/unit/agent/gemini.provider.test.js (5 tests) 8ms
+ ✓ tests/unit/agent/intents.test.js (26 tests) 10ms
+
+ Test Files  11 passed (11)
+      Tests  153 passed (153)
+   Start at  13:05:21
+   Duration  16.91s (transform 232ms, setup 24ms, collect 3.28s, tests 10.78s, environment 2ms, prepare 686ms)
+
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 89.13% ( 2272/2549 )
+Branches     : 80.36% ( 565/703 )
+Functions    : 93.93% ( 155/165 )
+Lines        : 89.13% ( 2272/2549 )
+================================================================================
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   89.13 |    80.36 |   93.93 |   89.13 |                   
+ src               |     100 |    66.66 |     100 |     100 |                   
+  app.js           |     100 |    66.66 |     100 |     100 | 24                
+ src/agent         |   81.69 |    79.33 |   86.53 |   81.69 |                   
+  agent.js         |   94.59 |    89.47 |     100 |   94.59 | ...22-124,141-143 
+  insights.js      |   59.15 |    18.18 |     100 |   59.15 | ...48,51-58,71-77 
+  intents.js       |     100 |      100 |     100 |     100 |                   
+  parser.js        |   92.74 |    96.47 |   92.85 |   92.74 | 43-44,145-156     
+  prompt.js        |     100 |       80 |     100 |     100 | 7                 
+  tools.js         |   71.61 |     42.1 |   68.42 |   71.61 | ...80-381,384-385 
+ ...gent/providers |   67.12 |    54.11 |     100 |   67.12 |                   
+  ...i.provider.js |     100 |       76 |     100 |     100 | 14,22,40,46,54    
+  ...l.provider.js |   58.69 |       45 |     100 |   58.69 | ...36-241,252-254 
+ src/config        |   79.41 |    45.45 |      50 |   79.41 |                   
+  db.js            |   61.53 |       50 |   33.33 |   61.53 | 6-8,11-12         
+  env.js           |   90.47 |    44.44 |     100 |   90.47 | 15-16             
+ src/controllers   |     100 |      100 |     100 |     100 |                   
+  ...controller.js |     100 |      100 |     100 |     100 |                   
+  ...controller.js |     100 |      100 |     100 |     100 |                   
+  ...controller.js |     100 |      100 |     100 |     100 |                   
+  ...controller.js |     100 |      100 |     100 |     100 |                   
+ src/middleware    |    89.9 |    79.16 |     100 |    89.9 |                   
+  auth.js          |     100 |    94.73 |     100 |     100 | 49                
+  error.js         |    72.5 |    63.15 |     100 |    72.5 | ...19,24-25,27-30 
+  validate.js      |     100 |       80 |     100 |     100 | 16,21             
+ src/models        |     100 |      100 |     100 |     100 |                   
+  ...antMessage.js |     100 |      100 |     100 |     100 |                   
+  Budget.js        |     100 |      100 |     100 |     100 |                   
+  Category.js      |     100 |      100 |     100 |     100 |                   
+  Transaction.js   |     100 |      100 |     100 |     100 |                   
+  User.js          |     100 |      100 |     100 |     100 |                   
+ ...models/plugins |     100 |      100 |     100 |     100 |                   
+  toJSON.js        |     100 |      100 |     100 |     100 |                   
+ src/routes        |     100 |      100 |   83.33 |     100 |                   
+  ...ics.routes.js |     100 |      100 |     100 |     100 |                   
+  ...ant.routes.js |     100 |      100 |   66.66 |     100 |                   
+  auth.routes.js   |     100 |      100 |     100 |     100 |                   
+  budget.routes.js |     100 |      100 |     100 |     100 |                   
+  ...ory.routes.js |     100 |      100 |     100 |     100 |                   
+  index.js         |     100 |      100 |     100 |     100 |                   
+  ...ion.routes.js |     100 |      100 |     100 |     100 |                   
+ src/seed          |     100 |    94.11 |     100 |     100 |                   
+  generator.js     |     100 |    94.11 |     100 |     100 | 44,53,64,176      
+ src/services      |   99.33 |    85.02 |     100 |   99.33 |                   
+  ...cs.service.js |     100 |    83.72 |     100 |     100 | ...53,257-260,267 
+  auth.service.js  |     100 |      100 |     100 |     100 |                   
+  ...et.service.js |     100 |    88.88 |     100 |     100 | 82,100            
+  ...ry.service.js |   94.33 |       88 |     100 |   94.33 | 43-45             
+  ...on.service.js |   99.18 |    80.85 |     100 |   99.18 | 99                
+ src/utils         |     100 |      100 |     100 |     100 |                   
+  ApiError.js      |     100 |      100 |     100 |     100 |                   
+  ids.js           |     100 |      100 |     100 |     100 |                   
+-------------------|---------|----------|---------|---------|-------------------

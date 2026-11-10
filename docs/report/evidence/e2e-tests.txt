@@ -1,0 +1,17 @@
+npm notice run kosha@1.0.0 npx
+npm notice run 'playwright' test -c e2e/playwright.config.js --reporter=list
+
+Running 10 tests using 1 worker
+
+  ✓   1 e2e/specs/auth.spec.js:5:3 › Authentication › register, sign out, and sign back in (1.7s)
+  ✓   2 e2e/specs/auth.spec.js:20:3 › Authentication › rejects a wrong password with a clear message (1.4s)
+  ✓   3 e2e/specs/auth.spec.js:30:3 › Authentication › protects app pages from signed-out visitors (883ms)
+  ✓   4 e2e/specs/auth.spec.js:35:3 › Authentication › validates the sign-up form before calling the API (904ms)
+  ✓   5 e2e/specs/copilot-budgets.spec.js:5:3 › Copilot and budgets › Copilot drafts a transaction that is saved only after Confirm (1.8s)
+  ✓   6 e2e/specs/copilot-budgets.spec.js:27:3 › Copilot and budgets › Copilot answers spending questions from real data (1.7s)
+  ✓   7 e2e/specs/copilot-budgets.spec.js:37:3 › Copilot and budgets › a budget warns when spending gets close to the limit (2.0s)
+  ✓   8 e2e/specs/transactions.spec.js:5:3 › Transactions end to end › adding income and expenses updates the dashboard totals (2.6s)
+  ✓   9 e2e/specs/transactions.spec.js:22:3 › Transactions end to end › edit, filter, delete and undo on the transactions page (3.8s)
+  ✓  10 e2e/specs/transactions.spec.js:51:3 › Transactions end to end › form validation blocks bad input (1.7s)
+
+  10 passed (19.3s)

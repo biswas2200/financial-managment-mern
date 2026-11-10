@@ -8,10 +8,11 @@ import * as auth from '../controllers/auth.controller.js';
 
 const router = Router();
 
-// Slow down password guessing: 30 attempts per 15 minutes per IP.
+// Slow down password guessing: 30 failed attempts per 15 minutes per IP.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
+  skipSuccessfulRequests: true,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   skip: () => env.isTest,

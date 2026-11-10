@@ -1,0 +1,25 @@
+npm notice run kosha@1.0.0 npx
+npm notice run 'vitest' run --coverage --coverage.reporter=text-summary
+
+ RUN  v3.2.7 /home/amitosh-biswas/BiswasPub/Mern Project LA/financial-managment-mern/client
+      Coverage enabled with v8
+
+ ✓ src/api/client.test.js (5 tests) 17ms
+ ✓ src/features/transactions/filters.test.js (10 tests) 11ms
+ ✓ src/features/dashboard/KpiStrip.test.jsx (4 tests) 57ms
+ ✓ src/features/assistant/ActionCard.test.jsx (4 tests) 185ms
+ ✓ src/features/transactions/TransactionForm.test.jsx (5 tests) 422ms
+
+ Test Files  5 passed (5)
+      Tests  28 passed (28)
+   Start at  13:05:39
+   Duration  1.76s (transform 197ms, setup 541ms, collect 911ms, tests 692ms, environment 2.06s, prepare 594ms)
+
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 13.94% ( 572/4101 )
+Branches     : 64.51% ( 140/217 )
+Functions    : 48.05% ( 37/77 )
+Lines        : 13.94% ( 572/4101 )
+================================================================================
