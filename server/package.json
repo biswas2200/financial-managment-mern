@@ -1,0 +1,35 @@
+{
+  "name": "@kosha/server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kosha REST API: Express 5 + Mongoose + Gemini copilot",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "seed": "node --env-file-if-exists=.env scripts/seed.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@google/genai": "^1.52.0",
+    "@kosha/shared": "1.0.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-rate-limit": "^7.5.1",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.24.8",
+    "morgan": "^1.10.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.7",
+    "supertest": "^7.1.0",
+    "vitest": "^3.2.7"
+  }
+}

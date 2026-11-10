@@ -1,0 +1,21 @@
+{
+  "name": "@kosha/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Money utilities, category catalog and validation schemas shared by the Kosha API and web app",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.7"
+  }
+}

@@ -1,0 +1,43 @@
+name: kosha
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: kosha-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-kosha}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-kosha_dev_pw}
+      MONGO_INITDB_DATABASE: kosha
+    # Small cache keeps the container light on a laptop.
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    volumes:
+      - mongo-data:/data/db
+      # Runs once, on an empty volume: restores the committed seed dataset.
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+      - ./database/dump:/dump:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: kosha-mongo-express
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USER:-kosha}:${MONGO_ROOT_PASSWORD:-kosha_dev_pw}@mongo:27017/?authSource=admin
+      ME_CONFIG_BASICAUTH: "false"
+      ME_CONFIG_SITE_BASEURL: /
+
+volumes:
+  mongo-data:
