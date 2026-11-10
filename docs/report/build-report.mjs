@@ -165,31 +165,18 @@ function figure(key, caption, widthIn = 6.27) {
 }
 function figurePair(keyA, keyB, caption) {
   figureNo += 1;
-  const half = Math.floor(PAGE_W / 2);
-  const none = { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER };
-  const imgCell = (key) =>
-    new TableCell({ width: { size: half, type: WidthType.DXA }, borders: none, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [image(key, 2.35)] })] });
-  const captionCell = new TableCell({
-    width: { size: half * 2, type: WidthType.DXA },
-    columnSpan: 2,
-    borders: none,
-    children: [
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { before: 60, after: 60 },
-        children: [run(`Figure ${figureNo}: `, { bold: true, size: 19, color: MUTED }), ...runs(caption, { size: 19, color: MUTED })],
-      }),
-    ],
-  });
   return [
-    new Table({
-      width: { size: half * 2, type: WidthType.DXA },
-      columnWidths: [half, half],
-      layout: TableLayoutType.FIXED,
-      borders: NO_BORDERS,
-      rows: [new TableRow({ cantSplit: true, children: [imgCell(keyA), imgCell(keyB)] }), new TableRow({ cantSplit: true, children: [captionCell] })],
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 120, after: 60 },
+      keepNext: true,
+      children: [image(keyA, 2.3), run('      '), image(keyB, 2.3)],
     }),
-    new Paragraph({ spacing: { after: 160 }, children: [] }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 220 },
+      children: [run(`Figure ${figureNo}: `, { bold: true, size: 19, color: MUTED }), ...runs(caption, { size: 19, color: MUTED })],
+    }),
   ];
 }
 
