@@ -49,6 +49,9 @@ async function main() {
       const page = await ctx.newPage();
       await page.goto(`${BASE}/login`);
       await settle(page, 2600);
+      // The report shows the plain sign-in form; the demo-account helper stays in the app.
+      await page.addStyleTag({ content: '[data-demo-hint]{display:none!important}' });
+      await page.waitForTimeout(200);
       await shot(page, 'login');
       await ctx.close();
     }

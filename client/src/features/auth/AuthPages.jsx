@@ -101,7 +101,7 @@ export function LoginPage() {
           Sign in
         </Button>
       </form>
-      <div className="mt-6 rounded-xl bg-surface p-4 text-sm ring-1 ring-line">
+      <div data-demo-hint className="mt-6 rounded-xl bg-surface p-4 text-sm ring-1 ring-line">
         <p className="font-semibold">Exploring the project?</p>
         <p className="mt-1 text-ink-2">
           The seed dataset includes a demo account with a year of activity: <span className="font-medium text-ink">{DEMO.email}</span>
