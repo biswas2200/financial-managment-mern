@@ -16,6 +16,7 @@ import {
   Document,
   ExternalHyperlink,
   Footer,
+  Header,
   HeadingLevel,
   ImageRun,
   LevelFormat,
@@ -61,14 +62,19 @@ const COMMITS = Number(git('rev-list --count HEAD'));
 const RED = Number(execSync('git log --oneline | grep -c "(red)" || true', { cwd: ROOT, shell: '/bin/bash' }).toString().trim());
 const REPO = 'https://github.com/biswas2200/financial-managment-mern';
 
-// ---------- styling helpers ----------
-const FONT = 'Arial';
-const BRAND = '2C3A8F';
-const INK = '151B33';
-const MUTED = '4B5371';
-const LINE = 'C9CFDC';
-const HEAD_FILL = 'E7EAF8';
-const PAGE_W = 9026; // A4 width minus 1" margins, in DXA
+// ---------- styling: matches the faculty's "Full-Stack Project & Report Rubric" form ----------
+const FONT = 'Aptos';
+const NAVY = '123C60'; // table header fill
+const TEXT = '122C4D'; // body text
+const TEAL = '006F79'; // labels and section headings
+const GRAY = '566371'; // secondary text
+const ROW = 'F5F8FA'; // light row fill
+const ACCENT = 'EAF1F5'; // total rows, highlighted cells
+const RULE = 'D5DEE7'; // table borders
+const BRAND = TEAL;
+const INK = TEXT;
+const MUTED = GRAY;
+const PAGE_W = 9749; // A4 (11909) minus 0.75" margins, in DXA
 
 const run = (text, o = {}) => new TextRun({ text, font: FONT, ...o });
 
@@ -79,68 +85,113 @@ function runs(text, base = {}) {
     .filter(Boolean)
     .map((part) => {
       if (part.startsWith('**')) return run(part.slice(2, -2), { ...base, bold: true });
-      if (part.startsWith('`')) return run(part.slice(1, -1), { ...base, font: 'Courier New', size: 19, color: '24307A' });
+      if (part.startsWith('`')) return run(part.slice(1, -1), { ...base, font: 'Courier New', size: 18, color: TEAL });
       return run(part, base);
     });
 }
 
-const P = (text, o = {}) => new Paragraph({ children: runs(text, o.run), spacing: { after: 140, line: 300 }, ...o.para });
-const Note = (text) => P(text, { run: { color: MUTED, size: 20 }, para: { spacing: { after: 120, line: 280 } } });
-const H1 = (text) => new Paragraph({ heading: HeadingLevel.HEADING_1, pageBreakBefore: true, children: [run(text)] });
+const P = (text, o = {}) => new Paragraph({ children: runs(text, o.run), spacing: { after: 110, line: 288 }, ...o.para });
+const Note = (text) => P(text, { run: { color: GRAY, size: 18 }, para: { spacing: { after: 100, line: 276 } } });
+const H1 = (text, o = {}) => new Paragraph({ heading: HeadingLevel.HEADING_1, pageBreakBefore: Boolean(o.newPage), children: [run(text)] });
 const H2 = (text) => new Paragraph({ heading: HeadingLevel.HEADING_2, children: [run(text)] });
 const H3 = (text) => new Paragraph({ heading: HeadingLevel.HEADING_3, children: [run(text)] });
+const eyebrow = (text, before = 60) => new Paragraph({ spacing: { before, after: 40 }, keepNext: true, children: [run(text, { bold: true, color: TEAL, size: 18 })] });
+const formTitle = (text) => new Paragraph({ spacing: { after: 60 }, keepNext: true, children: [run(text, { bold: true, color: TEXT, size: 40 })] });
+const subtitle = (text) => new Paragraph({ spacing: { after: 160 }, children: [run(text, { color: GRAY, size: 18 })] });
+/** "Label: value" line with a teal bold label, as used in the faculty form. */
+const labelLine = (label, value, o = {}) =>
+  new Paragraph({
+    spacing: { before: 40, after: 80, line: 276 },
+    shading: o.shade ? { type: ShadingType.CLEAR, color: 'auto', fill: ROW } : undefined,
+    indent: o.shade ? { left: 100, right: 100 } : undefined,
+    children: [run(`${label}  `, { bold: true, color: TEAL, size: 18 }), ...runs(value, { size: 18, color: o.muted ? GRAY : TEXT })],
+  });
 
 let listInstance = 0;
 const bullets = (items) =>
-  items.map((i) => new Paragraph({ children: runs(i), numbering: { reference: 'bullets', level: 0 }, spacing: { after: 70, line: 290 } }));
+  items.map((i) => new Paragraph({ children: runs(i), numbering: { reference: 'bullets', level: 0 }, spacing: { after: 60, line: 276 } }));
 const numbered = (items) => {
   listInstance += 1;
   const instance = listInstance;
   return items.map(
-    (i) => new Paragraph({ children: runs(i), numbering: { reference: 'numbers', level: 0, instance }, spacing: { after: 70, line: 290 } }),
+    (i) => new Paragraph({ children: runs(i), numbering: { reference: 'numbers', level: 0, instance }, spacing: { after: 60, line: 276 } }),
   );
 };
 
-const border = { style: BorderStyle.SINGLE, size: 4, color: LINE };
+const border = { style: BorderStyle.SINGLE, size: 4, color: RULE };
 const BORDERS = { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border };
 const NO_BORDER = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
 const NO_BORDERS = { top: NO_BORDER, bottom: NO_BORDER, left: NO_BORDER, right: NO_BORDER, insideHorizontal: NO_BORDER, insideVertical: NO_BORDER };
 
-function cell(content, width, { header = false, fill, bold = false, align, size = 19 } = {}) {
+function cell(content, width, { header = false, fill, bold = false, color, align, size = 17, span } = {}) {
   const paragraphs = (Array.isArray(content) ? content : [content]).map(
     (c) =>
       new Paragraph({
         alignment: align,
-        spacing: { after: 40, line: 264 },
-        children: runs(c, { bold: header || bold, size, color: header ? INK : undefined }),
+        spacing: { after: 30, line: 256 },
+        children: runs(c, { bold: header || bold, size, color: header ? 'FFFFFF' : color ?? TEXT }),
       }),
   );
   return new TableCell({
     width: { size: width, type: WidthType.DXA },
-    shading: header || fill ? { type: ShadingType.CLEAR, color: 'auto', fill: header ? HEAD_FILL : fill } : undefined,
-    margins: { top: 70, bottom: 70, left: 100, right: 100 },
-    verticalAlign: VerticalAlign.TOP,
+    columnSpan: span,
+    shading: header || fill ? { type: ShadingType.CLEAR, color: 'auto', fill: header ? NAVY : fill } : undefined,
+    margins: { top: 55, bottom: 55, left: 100, right: 100 },
+    verticalAlign: VerticalAlign.CENTER,
     children: paragraphs,
   });
 }
 
-/** widths are relative weights; they are scaled to the page width. */
-function table(headers, rows, weights, o = {}) {
+const scale = (weights, total = PAGE_W) => {
   const sum = weights.reduce((a, b) => a + b, 0);
-  const widths = weights.map((w) => Math.floor((w / sum) * PAGE_W));
-  widths[widths.length - 1] += PAGE_W - widths.reduce((a, b) => a + b, 0);
+  const widths = weights.map((w) => Math.floor((w / sum) * total));
+  widths[widths.length - 1] += total - widths.reduce((a, b) => a + b, 0);
+  return widths;
+};
+
+/**
+ * Data table in the form's style: navy header, zebra rows, optional teal key column.
+ * o.key: first column teal bold; o.total: last row as a highlighted total row.
+ */
+function table(headers, rows, weights, o = {}) {
+  const widths = scale(weights);
   const trs = [];
-  if (headers) trs.push(new TableRow({ tableHeader: true, children: headers.map((h, i) => cell(h, widths[i], { header: true })) }));
-  rows.forEach((r) =>
+  if (headers) trs.push(new TableRow({ tableHeader: true, cantSplit: true, children: headers.map((h, i) => cell(h, widths[i], { header: true, align: o.align?.[i] })) }));
+  rows.forEach((r, ri) => {
+    const isTotal = o.total && ri === rows.length - 1;
+    const fill = isTotal ? ACCENT : ri % 2 === 1 ? ROW : undefined;
     trs.push(
       new TableRow({
         cantSplit: true,
-        children: r.map((c, i) => cell(c, widths[i], { bold: o.boldFirst && i === 0, align: o.align?.[i], fill: o.fills?.[i] })),
+        children: r.map((c, i) =>
+          cell(c, widths[i], {
+            fill: o.fills?.[i] ?? fill,
+            bold: (o.key && i === 0) || o.teal?.includes(i) || isTotal,
+            color: (o.key && i === 0) || o.teal?.includes(i) || (isTotal && i > 0) ? TEAL : undefined,
+            align: o.align?.[i],
+          }),
+        ),
       }),
-    ),
-  );
+    );
+  });
   return [
     new Table({ width: { size: PAGE_W, type: WidthType.DXA }, columnWidths: widths, layout: TableLayoutType.FIXED, borders: o.borders ?? BORDERS, rows: trs }),
+    new Paragraph({ spacing: { after: 120 }, children: [] }),
+  ];
+}
+
+/** Two-column label/value grid like the form's "Student Name / USN" block. */
+function infoTable(rows) {
+  const widths = scale([1.25, 1.75, 1.0, 1.75]);
+  const label = (t, w) => cell(t, w, { fill: ROW, bold: true, size: 17 });
+  return [
+    new Table({
+      width: { size: PAGE_W, type: WidthType.DXA },
+      columnWidths: widths,
+      layout: TableLayoutType.FIXED,
+      borders: { ...BORDERS, left: NO_BORDER, right: NO_BORDER, insideVertical: NO_BORDER },
+      rows: rows.map(([a, b, c, d]) => new TableRow({ cantSplit: true, children: [label(a, widths[0]), cell(b, widths[1]), label(c, widths[2]), cell(d, widths[3])] })),
+    }),
     new Paragraph({ spacing: { after: 160 }, children: [] }),
   ];
 }
@@ -152,31 +203,26 @@ function image(key, widthIn) {
   const w = Math.round(widthIn * 96);
   return new ImageRun({ type: m.type, data: fs.readFileSync(path.join(TMP, m.file)), transformation: { width: w, height: Math.round((m.height / m.width) * w) } });
 }
-function figure(key, caption, widthIn = 6.27) {
+const caption = (text) =>
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { after: 200 },
+    children: [run(`Figure ${figureNo}: `, { bold: true, size: 17, color: TEAL }), ...runs(text, { size: 17, color: GRAY })],
+  });
+function figure(key, text, widthIn = 6.2) {
   figureNo += 1;
-  return [
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120, after: 60 }, keepNext: true, children: [image(key, widthIn)] }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 220 },
-      children: [run(`Figure ${figureNo}: `, { bold: true, size: 19, color: MUTED }), ...runs(caption, { size: 19, color: MUTED })],
-    }),
-  ];
+  return [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100, after: 50 }, keepNext: true, children: [image(key, widthIn)] }), caption(text)];
 }
-function figurePair(keyA, keyB, caption) {
+function figurePair(keyA, keyB, text, widthEach = 3.25) {
   figureNo += 1;
   return [
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 120, after: 60 },
+      spacing: { before: 100, after: 50 },
       keepNext: true,
-      children: [image(keyA, 2.3), run('      '), image(keyB, 2.3)],
+      children: [image(keyA, widthEach), run('    '), image(keyB, widthEach)],
     }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 220 },
-      children: [run(`Figure ${figureNo}: `, { bold: true, size: 19, color: MUTED }), ...runs(caption, { size: 19, color: MUTED })],
-    }),
+    caption(text),
   ];
 }
 
@@ -185,208 +231,192 @@ function code(lines) {
     ...lines.map(
       (l, i) =>
         new Paragraph({
-          shading: { type: ShadingType.CLEAR, color: 'auto', fill: 'F3F5F9' },
-          spacing: { before: i === 0 ? 80 : 0, after: 0, line: 252 },
+          shading: { type: ShadingType.CLEAR, color: 'auto', fill: ROW },
+          spacing: { before: i === 0 ? 60 : 0, after: 0, line: 240 },
           indent: { left: 120, right: 120 },
-          children: [run(l || ' ', { font: 'Courier New', size: 17, color: INK })],
+          children: [run(l || ' ', { font: 'Courier New', size: 16, color: TEXT })],
         }),
     ),
-    new Paragraph({ spacing: { after: 160 }, children: [] }),
+    new Paragraph({ spacing: { after: 140 }, children: [] }),
   ];
 }
 
-const link = (text, url) => new ExternalHyperlink({ link: url, children: [run(text, { color: BRAND, underline: {} })] });
-const blank = (label = '') => `${label}________________________`;
+const link = (text, url) => new ExternalHyperlink({ link: url, children: [run(text, { color: TEAL, underline: {} })] });
+
+// ---------- student details ----------
+const STUDENT = { name: 'Amitosh Biswas', usn: 'NB25MCA005' };
+const PROJECT_TITLE = 'Kosha: Personal Finance Tracker (MERN)';
+const SUBMITTED = 'November 2026';
+const BLANK = '______________________';
 
 // ---------- 1. Cover page ----------
+const logo = fs.readFileSync(path.join(HERE, 'assets/nitte-logo.png'));
 const cover = [
-  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200, after: 60 }, children: [run('[Institution name]', { size: 26, bold: true, color: INK })] }),
-  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 40 }, children: [run('Master of Computer Applications, Semester 3', { size: 22, color: MUTED })] }),
   new Paragraph({
     alignment: AlignmentType.CENTER,
-    spacing: { after: 600 },
-    children: [run('Full-Stack Web Development Using MERN (25MCA301)', { size: 22, color: MUTED })],
+    spacing: { before: 120, after: 160 },
+    children: [new ImageRun({ type: 'png', data: logo, transformation: { width: Math.round(5.4 * 96), height: Math.round(5.4 * 96 * (76 / 800)) } })],
   }),
-  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [run('Kosha', { size: 96, bold: true, color: BRAND })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 30 }, children: [run('Department of Computer Applications (MCA)', { bold: true, size: 22, color: TEXT })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 30 }, children: [run('Master of Computer Applications, Semester III', { size: 20, color: GRAY })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 1900 }, children: [run('Full-Stack Web Development Using MERN (25MCA301)', { size: 20, color: GRAY })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 60 }, children: [run('FULL-STACK PROJECT REPORT', { bold: true, size: 20, color: TEAL })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 60 }, children: [run('Kosha', { size: 96, bold: true, color: TEXT })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 80 }, children: [run('Personal finance tracker built on the MERN stack', { size: 28, color: TEXT })] }),
   new Paragraph({
     alignment: AlignmentType.CENTER,
-    spacing: { after: 120 },
-    children: [run('Personal finance tracker built on the MERN stack', { size: 30, color: INK })],
+    spacing: { after: 1500 },
+    border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: TEAL, space: 14 } },
+    children: [run('with Kosha Copilot, an AI assistant powered by the Google Gemini API', { size: 20, color: GRAY, italics: true })],
   }),
-  new Paragraph({
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 500 },
-    border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: 'D99A1E', space: 12 } },
-    children: [run('with Kosha Copilot, an AI assistant powered by the Google Gemini API', { size: 22, color: MUTED, italics: true })],
-  }),
-  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 300, after: 200 }, children: [run('Full-Stack Project Report', { size: 28, bold: true, color: INK })] }),
-  ...table(
-    ['', 'Name', 'USN'],
-    [
-      ['Student 1', '[Name]', '[USN]'],
-      ['Student 2', '[Name]', '[USN]'],
-      ['Student 3', '[Name]', '[USN]'],
-    ],
-    [1.2, 3, 2],
-    { boldFirst: true },
-  ),
-  ...table(
-    null,
-    [
-      ['Section / Batch', '[Section / Batch]', 'Team / Group No.', '[Group No.]'],
-      ['Faculty', 'Dr. Vidya Sagar S D', 'Date of submission', 'November 2026'],
-    ],
-    [1.6, 2.4, 1.7, 1.8],
-    { fills: ['F3F5F9', undefined, 'F3F5F9', undefined] },
-  ),
-  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200 }, children: [run('Source code: ', { size: 20, color: MUTED }), link(REPO, REPO)] }),
+  ...infoTable([
+    ['Student Name', STUDENT.name, 'USN', STUDENT.usn],
+    ['Section / Batch', BLANK, 'Date', SUBMITTED],
+    ['Project Title', PROJECT_TITLE, 'Faculty', 'Dr. Vidya Sagar S D'],
+  ]),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 120 }, children: [run('Source code: ', { size: 18, color: GRAY }), link(REPO, REPO)] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 1500, after: 40 }, children: [run('Submitted to', { size: 18, color: GRAY })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 20 }, children: [run('Dr. Vidya Sagar S D', { bold: true, size: 22, color: TEXT })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, children: [run('Department of Computer Applications (MCA), Nitte Meenakshi Institute of Technology, Bengaluru', { size: 18, color: GRAY })] }),
 ];
 
 // ---------- Contents ----------
 const contents = [
-  new Paragraph({ heading: HeadingLevel.HEADING_1, pageBreakBefore: true, children: [run('Contents')] }),
+  eyebrow('REPORT CONTENTS'),
   ...table(
-    ['No.', 'Section', 'What it covers'],
+    ['No.', 'Section', 'No.', 'Section'],
     [
-      ['1', 'Cover page', 'Title, course, team and faculty'],
-      ['2', 'Rubrics', 'Marks allocation, scoring guide and where each criterion is evidenced'],
-      ['3', 'Contribution of work done', 'Role, work and share of each student (Annexure A)'],
-      ['4', 'About the project', 'Abstract, problem statement, objectives, scope, modules, requirements'],
-      ['5', 'Hardware and software requirements', 'Machines, runtimes and libraries with versions'],
-      ['6', 'Methodology', 'Process, architecture, database, API, aggregation, frontend, Copilot, security, testing'],
-      ['7', 'Results', 'Screenshots of every screen, database and test runs'],
-      ['8', 'Conclusion', 'Outcomes against objectives, limitations, future scope'],
-      ['9', 'GitHub proof', 'Repository and commit history'],
-      ['10', 'References', 'Documentation and standards used'],
+      ['1', 'Cover page', '6', 'Methodology'],
+      ['2', 'Rubrics (evaluation form and scoring guide)', '7', 'Results (screenshots)'],
+      ['3', 'Contribution of work done (Annexure A)', '8', 'Conclusion'],
+      ['4', 'About the project', '9', 'GitHub proof'],
+      ['5', 'Hardware and software requirements', '10', 'References'],
     ],
-    [0.6, 3, 6],
-    { boldFirst: true },
+    [0.5, 3.6, 0.5, 3.6],
+    { fills: [ROW, undefined, ROW, undefined] },
   ),
 ];
 
-// ---------- 2. Rubrics ----------
+// ---------- 2. Rubrics (reproduces the faculty's evaluation form) ----------
 const rubrics = [
   H1('2. Rubrics'),
-  P('The project is marked out of 20 under the course rubric. The table reproduces the marks allocation, with a final column pointing to where each criterion is shown in this report and in the source code.'),
+  eyebrow('ACADEMIC EVALUATION FORM'),
+  formTitle('Full-Stack Project & Report Rubric'),
+  subtitle('Course: Full-Stack Web Development Using MERN (25MCA301)    •    Maximum Marks: 20'),
+  ...infoTable([
+    ['Student Name', STUDENT.name, 'USN', STUDENT.usn],
+    ['Section / Batch', BLANK, 'Date', SUBMITTED],
+    ['Project Title', PROJECT_TITLE, 'Faculty', 'Dr. Vidya Sagar S D'],
+  ]),
+  H2('A. Marks allocation and assessment'),
   ...table(
-    ['No.', 'Assessment component', 'Evidence to evaluate', 'Max', 'Awarded', 'Where to find it'],
+    ['No.', 'Assessment component', 'Evidence to evaluate', 'Max / Awarded'],
     [
-      ['01', 'Problem definition & requirements', 'Clear problem statement, objectives, scope and planned modules.', '2', '', 'Sections 4.3 to 4.7'],
-      ['02', 'Frontend design & usability', 'Functional interface, navigation, forms, responsiveness and validation.', '3', '', 'Sections 6.7, 7; client/src'],
-      ['03', 'Backend APIs & business logic', 'Appropriate routes, working server-side functions, validation/error handling.', '3', '', 'Sections 6.5, 6.6; server/src'],
-      ['04', 'Database design & operations', 'Suitable data model and correct persistent CRUD operations.', '2', '', 'Section 6.4'],
-      ['05', 'End-to-end integration', 'Connected frontend, backend and database; core use cases work.', '3', '', 'Sections 6.2, 7; e2e/specs'],
-      ['06', 'Testing & live demonstration', 'Test evidence, handling of common failures and stable demonstration.', '2', '', 'Sections 6.10 and 7.6'],
-      ['07', 'Written project report', 'Completeness, technical accuracy, screenshots, test results and presentation.', '4', '', 'This document'],
-      ['08', 'Viva & individual contribution', 'Explains implementation decisions and own contribution.', '1', '', 'Section 3'],
-      ['', '**Total**', 'Final score (out of 20 marks)', '**20**', '', ''],
+      ['01', 'Problem definition & requirements', 'Clear problem statement, objectives, scope and planned modules.', '2 / ____'],
+      ['02', 'Frontend design & usability', 'Functional interface, navigation, forms, responsiveness and validation.', '3 / ____'],
+      ['03', 'Backend APIs & business logic', 'Appropriate routes, working server-side functions, validation/error handling.', '3 / ____'],
+      ['04', 'Database design & operations', 'Suitable data model and correct persistent CRUD operations.', '2 / ____'],
+      ['05', 'End-to-end integration', 'Connected frontend, backend and database; core use cases work.', '3 / ____'],
+      ['06', 'Testing & live demonstration', 'Test evidence, handling of common failures and stable demonstration.', '2 / ____'],
+      ['07', 'Written project report', 'Completeness, technical accuracy, screenshots, test results and presentation.', '4 / ____'],
+      ['08', 'Viva & individual contribution', 'Explains implementation decisions and own contribution.', '1 / ____'],
+      ['', 'TOTAL', 'Final score (out of 20 marks)', '20 / ____'],
     ],
-    [0.6, 2.1, 3.2, 0.75, 1.25, 1.9],
-    { align: [AlignmentType.CENTER, undefined, undefined, AlignmentType.CENTER, AlignmentType.CENTER] },
+    [0.55, 2.4, 4.2, 1.1],
+    { total: true, teal: [1], align: [AlignmentType.CENTER, undefined, undefined, AlignmentType.CENTER] },
   ),
-  H2('Scoring guide'),
+  labelLine('Scoring rule:', 'Award whole-number marks in each category, using the criterion-specific anchors below. A missing or non-functioning element receives 0 for that criterion.', { muted: true }),
+  H2('B. Faculty observations'),
+  labelLine('Key strengths:', '_______________________________________________________________________'),
+  labelLine('Improvements required:', '_______________________________________________________________'),
+  labelLine('Faculty signature:', '____________________________                    Date: ___________________'),
+  eyebrow('SCORING GUIDE', 320),
+  formTitle('Criterion-wise grading anchors'),
+  subtitle('Use the description closest to the observed performance. Partial marks are permitted only at the indicated whole-number levels.'),
   ...table(
     ['Component', 'Scoring anchors (marks)'],
     [
-      ['Problem definition (2)', ['2: Specific problem, measurable objectives and coherent requirements.', '1: Basic idea and partially defined objectives.', '0: Unclear or absent definition.']],
-      ['Frontend (3)', ['3: Consistent, functional, responsive pages and validated inputs.', '2: Main screens functional; minor usability/validation gaps.', '1: Limited screens or major UI issues. 0: Not working/not built.']],
-      ['Backend (3)', ['3: Core APIs/business rules work with input and error handling.', '2: Key APIs work; small functional or validation gaps.', '1: Partial API functionality. 0: No working backend.']],
-      ['Database (2)', ['2: Appropriate schema/model and reliable create/read/update/delete.', '1: Partial persistence/CRUD or data-model issues.', '0: No usable database integration.']],
-      ['Integration (3)', ['3: Main user journeys work end-to-end across all layers.', '2: Most important flows work; minor breakages.', '1: Only isolated/partial integration. 0: No integrated workflow.']],
-      ['Testing & demo (2)', ['2: Relevant test cases/evidence and a successful live demo.', '1: Limited testing or partially working demonstration.', '0: No credible testing or demo.']],
-      ['Project report (4)', ['4: Complete, technically accurate, well-structured report with diagrams, screenshots, results and references.', '3: Complete overall; minor gaps. 2: Important sections or evidence incomplete.', '1: Poorly organized, substantial omissions. 0: Not submitted/unusable.']],
-      ['Viva & contribution (1)', ['1: Student can explain design, implementation and individual work.', '0: Cannot adequately demonstrate understanding/contribution.']],
+      ['Problem definition (2)', ['2 — Specific problem, measurable objectives and coherent requirements.', '1 — Basic idea and partially defined objectives.', '0 — Unclear or absent definition.']],
+      ['Frontend (3)', ['3 — Consistent, functional, responsive pages and validated inputs.', '2 — Main screens functional; minor usability/validation gaps.', '1 — Limited screens or major UI issues.  0 — Not working/not built.']],
+      ['Backend (3)', ['3 — Core APIs/business rules work with input and error handling.', '2 — Key APIs work; small functional or validation gaps.', '1 — Partial API functionality.  0 — No working backend.']],
+      ['Database (2)', ['2 — Appropriate schema/model and reliable create/read/update/delete.', '1 — Partial persistence/CRUD or data-model issues.', '0 — No usable database integration.']],
+      ['Integration (3)', ['3 — Main user journeys work end-to-end across all layers.', '2 — Most important flows work; minor breakages.', '1 — Only isolated/partial integration.  0 — No integrated workflow.']],
+      ['Testing & demo (2)', ['2 — Relevant test cases/evidence and a successful live demo.', '1 — Limited testing or partially working demonstration.', '0 — No credible testing or demo.']],
+      ['Project report (4)', ['4 — Complete, technically accurate, well-structured report with diagrams, screenshots, results and references.', '3 — Complete overall; minor gaps in technical depth/evidence/format.', '2 — Important sections or evidence incomplete.', '1 — Poorly organized, substantial omissions.  0 — Not submitted/unusable.']],
+      ['Viva & contribution (1)', ['1 — Student can explain design, implementation and individual work.', '0 — Cannot adequately demonstrate understanding/contribution.']],
     ],
-    [2.2, 7],
-    { boldFirst: true },
+    [1.7, 6],
+    { key: true },
   ),
-  H2('Required report contents and where they appear'),
+  H2('C. Required contents of the project report (4-mark criterion)'),
+  labelLine('Include:', 'title page, abstract, introduction and objectives, requirements, architecture/flow diagram, technology stack, database design, API/module description, implementation screenshots, test cases and results, conclusion/future scope, and references.'),
+  labelLine('Report scoring guide:', 'Structure and completeness (1), technical diagrams/design explanation (1), implementation and testing evidence (1), language/formatting/references (1).'),
+  labelLine('Evaluation note:', 'Assess the submitted implementation and authentic student work. The technology stack may be MERN or an approved equivalent; evaluate against the same functional criteria.', { shade: true, muted: true }),
+  H2('D. Where each criterion is evidenced in this report'),
   ...table(
-    ['Rubric item (Annexure C)', 'Section in this report'],
+    ['Criterion', 'Evidence in this report', 'Criterion', 'Evidence in this report'],
     [
-      ['Title page', '1. Cover page'],
-      ['Abstract', '4.1'],
-      ['Introduction and objectives', '4.2 to 4.4'],
-      ['Requirements', '4.6, 4.7 and 5'],
-      ['Architecture / flow diagram', '6.2 and 6.8'],
-      ['Technology stack', '6.3'],
-      ['Database design', '6.4'],
-      ['API / module description', '4.5 and 6.5'],
-      ['Implementation screenshots', '7'],
-      ['Test cases and results', '6.10 and 7.6'],
-      ['Conclusion / future scope', '8'],
-      ['References', '10'],
+      ['01 Problem definition', 'Sections 4.3 to 4.7', '05 Integration', 'Sections 6.2, 7; Figure 2'],
+      ['02 Frontend', 'Sections 6.7 and 7', '06 Testing & demo', 'Sections 6.10 and 7.6'],
+      ['03 Backend', 'Sections 6.5 and 6.6', '07 Report', 'Sections 1 to 10'],
+      ['04 Database', 'Section 6.4; Figure 3', '08 Contribution', 'Section 3'],
     ],
-    [4, 5],
+    [1.6, 2.2, 1.6, 2.2],
+    { fills: [ROW, undefined, ROW, undefined] },
   ),
 ];
 
-// ---------- 3. Contribution ----------
-function studentBlock(n, role, contribution, evidence, share) {
+// ---------- 3. Contribution (Annexure A for one student) ----------
+function contributionRecord() {
+  const widths = scale([1.6, 6.4]);
+  const labelCell = (t) => cell(t, widths[0], { fill: ROW, bold: true });
+  const row = (label, value) => new TableRow({ cantSplit: true, children: [labelCell(label), cell(value, widths[1])] });
   return [
-    H2(`Student ${String(n).padStart(2, '0')}`),
-    ...table(
-      null,
-      [
-        ['Name', '[Name]'],
-        ['USN', '[USN]'],
-        ['Assigned role', role],
-        ['Actual contribution', contribution],
-        ['Work evidence', evidence],
-        ['Estimated work share', `${share}%`],
-        ['Student signature', ''],
+    new Table({
+      width: { size: PAGE_W, type: WidthType.DXA },
+      columnWidths: widths,
+      layout: TableLayoutType.FIXED,
+      borders: BORDERS,
+      rows: [
+        new TableRow({
+          cantSplit: true,
+          children: [cell('STUDENT 01', widths[0], { header: true }), cell(`Name: **${STUDENT.name}**          USN: **${STUDENT.usn}**`, widths[1], { fill: ACCENT })],
+        }),
+        row('Assigned role', 'Frontend / Backend / Database / Integration / Testing / Report: all roles (individual project)'),
+        row('Actual contribution', [
+          'Defined the problem, objectives and modules, and designed the MongoDB data model (money as integer paise, compound indexes, unique constraints).',
+          'Built the Express 5 REST API (JWT cookie authentication, categories, transactions, budgets, analytics) with Zod validation and MongoDB aggregation pipelines, and the Kosha Copilot agent with Gemini function calling and confirm-before-save drafts.',
+          'Designed and built the React 18 interface: dashboard, transactions, analytics, budgets, Copilot and settings, responsive with light and dark themes.',
+          `Set up Docker, the seed dataset and its dump, followed test-driven development with ${TOTAL_TESTS} automated tests including Playwright end-to-end journeys, and prepared the diagrams and this report.`,
+        ]),
+        row('Work evidence', `Repository biswas2200/financial-managment-mern: server/src, client/src, shared/src, e2e/, database/, docs/report/. Tests: shared ${T.shared}, server ${T.server}, client ${T.client}, end-to-end ${T.e2e}. Report sections 4 to 9.`),
       ],
-      [2, 7],
-      { boldFirst: true, fills: ['F3F5F9', undefined] },
-    ),
+    }),
+    new Paragraph({
+      spacing: { before: 80, after: 200 },
+      children: [run('Estimated work share: ', { size: 17, color: GRAY }), run('100%', { size: 17, bold: true, color: TEXT }), run('          Student signature: ______________________________', { size: 17, color: GRAY })],
+    }),
   ];
 }
+
 const contribution = [
   H1('3. Contribution of work done'),
-  P('Kosha was built by a team of three. The record follows Annexure A of the rubric. Each member owned one layer of the system, and all work went into one shared GitHub repository.'),
-  ...studentBlock(
-    1,
-    'Frontend and user experience',
-    [
-      'Designed the Kosha visual system (indigo ink, the banknote-style balance card, the Anek Latin typeface and a colour-blind-safe chart palette checked with a validator) and built every screen in React 18.',
-      'Dashboard: balance card, KPI strip, 12-month cash flow, category ranking, daily heatmap, budgets and recent activity. Transactions page with URL-synced filters, day-grouped table, optimistic delete with undo and CSV export. Analytics, budgets, settings, sign-in and registration pages. Responsive layout with a mobile tab bar and a dark theme.',
-    ],
-    'client/src/features, client/src/components, client/src/styles/index.css; tests TransactionForm.test.jsx, KpiStrip.test.jsx, ActionCard.test.jsx, filters.test.js; report sections 6.7 and 7.',
-    34,
-  ),
-  ...studentBlock(
-    2,
-    'Backend, database and Copilot agent',
-    [
-      'Designed the MongoDB data model (money as integer paise, compound indexes, unique constraints) and the Express 5 REST API: JWT cookie authentication, categories, transactions, budgets and analytics, with Zod validation and a central error handler.',
-      'Wrote the aggregation pipelines ($facet, $lookup, $dateToString in Indian time) and the Copilot agent: nine tools over the user’s data, the Gemini function-calling provider, the offline rule engine and the confirm-before-save drafts. Wrote the server unit and integration tests.',
-    ],
-    `server/src/models, services, routes, agent; shared/src/money.js and schemas.js; server/tests (${T.server} tests); report sections 6.4 to 6.6 and 6.8.`,
-    36,
-  ),
-  ...studentBlock(
-    3,
-    'Integration, testing, DevOps and report',
-    [
-      'Set up the npm workspace monorepo, Docker Compose (MongoDB 7 and mongo-express) and the seed pipeline: a deterministic data generator, a mongodump archive in the repository and automatic restore on a fresh volume.',
-      `Connected the React app to the API (Vite proxy, TanStack Query hooks, cache invalidation), wrote the Playwright end-to-end suite (${T.e2e} journeys in Chrome) and the screenshot capture script, ran the test-first Git workflow on GitHub, and prepared the diagrams and this report.`,
-    ],
-    'docker-compose.yml, database/, server/scripts/seed.js, server/src/seed/generator.js, client/src/api/hooks.js, e2e/, docs/report/; report sections 5, 6.1, 6.10, 7 and 9.',
-    30,
-  ),
-  H2('Group confirmation and faculty verification'),
-  ...table(
-    null,
-    [
-      ['Group declaration', 'The three students confirm that the entries above reflect their actual work. Combined shares total 100%.'],
-      ['Total recorded contribution', '100% (Expected: 100%)'],
-      ['Faculty verification', 'Individual contributions checked through code, demonstration, report and/or viva.'],
-      ['Faculty', 'Dr. Vidya Sagar S D        Signature: ____________________        Date: ______________'],
-    ],
-    [2.4, 6.6],
-    { boldFirst: true, fills: ['F3F5F9', undefined] },
-  ),
+  eyebrow('ANNEXURE A  |  INDIVIDUAL PROJECT'),
+  formTitle('Individual Contribution Record'),
+  subtitle('Full-Stack Web Development Using MERN (25MCA301)    •    Supporting record for the 20-mark project rubric'),
+  ...infoTable([
+    ['Project Title', PROJECT_TITLE, 'Date', SUBMITTED],
+    ['Section / Batch', BLANK, 'Student', `${STUDENT.name} (${STUDENT.usn})`],
+  ]),
+  H2('A. Student responsibilities and completed work'),
+  ...contributionRecord(),
+  H2('B. Confirmation and faculty verification'),
+  labelLine('Declaration:', 'The student confirms that the entries above reflect their actual work.'),
+  labelLine('Total recorded contribution:', '100%  (Expected: 100%)'),
+  labelLine('Faculty verification:', 'Individual contributions checked through code, demonstration, report, and/or viva.'),
+  labelLine('Faculty:', 'Dr. Vidya Sagar S D      Signature: ______________________      Date: ______________'),
 ];
+
 
 // ---------- 4. About the project ----------
 const about = [
@@ -521,13 +551,13 @@ const requirements = [
 const methodology = [
   H1('6. Methodology'),
   H2('6.1 Development process'),
-  P(`The team worked in short iterations, each ending with something that ran: project scaffold and Docker database, shared money and validation logic, authentication, the transaction, category and budget APIs, analytics, the Copilot agent, the seed dataset, the React screens, end-to-end tests and finally this report.`),
-  P(`Inside each iteration the team followed test-driven development. A failing test describing the next behaviour was written and committed first with a message ending in "(red)". The implementation was then written until the suite passed and committed as "(green)", followed by refactoring with the tests as a safety net. Every commit was pushed straight to the main branch on GitHub. At the time of writing the repository has ${COMMITS} commits, including ${RED} red and green pairs that show the test-first order.`),
+  P(`The project was built in short iterations, each ending with something that ran: project scaffold and Docker database, shared money and validation logic, authentication, the transaction, category and budget APIs, analytics, the Copilot agent, the seed dataset, the React screens, end-to-end tests and finally this report.`),
+  P(`Each iteration followed test-driven development. A failing test describing the next behaviour was written and committed first with a message ending in "(red)". The implementation was then written until the suite passed and committed as "(green)", followed by refactoring with the tests as a safety net. Every commit was pushed straight to the main branch on GitHub. At the time of writing the repository has ${COMMITS} commits, including ${RED} red and green pairs that show the test-first order.`),
   H2('6.2 System architecture'),
   P('Kosha is a three-tier web application. The React single-page app runs in the browser and talks to the Express REST API under /api/v1 using JSON. During development Vite serves the app and forwards /api requests to Express, so the browser sees a single origin and the httpOnly session cookie works without extra CORS setup. The API is stateless: each request carries a signed JWT in the cookie, and the requireAuth middleware loads the user before any route runs. Mongoose maps the models to MongoDB, which runs in Docker. When a Gemini API key is configured, the Copilot agent calls the Google Gemini API from the server; the key never reaches the browser.'),
-  ...figure('diagram-architecture', 'System architecture.'),
+  ...figure('diagram-architecture', 'System architecture.', 6.5),
   P('Figure 2 traces one request through every layer: adding an expense, from the form to the database and back to the refreshed dashboard.'),
-  ...figure('diagram-request', 'Request lifecycle for adding an expense.'),
+  ...figure('diagram-request', 'Request lifecycle for adding an expense.', 6.5),
   H2('6.3 Technology stack'),
   ...table(
     ['Layer', 'Technology', 'Why it was chosen'],
@@ -548,7 +578,7 @@ const methodology = [
   ),
   H2('6.4 Database design'),
   P('The database has five collections. Every document except User has a user field, and every query includes it, so one user can never read or change another user’s data. Figure 3 shows the model.'),
-  ...figure('diagram-er', 'Entity relationship diagram of the kosha database.'),
+  ...figure('diagram-er', 'Entity relationship diagram of the kosha database.', 6.3),
   ...table(
     ['Collection', 'Purpose', 'Keys and indexes'],
     [
@@ -632,7 +662,7 @@ const methodology = [
   ]),
   H2('6.8 Kosha Copilot: the AI agent'),
   P(`Copilot is built around tools. The server defines nine functions over the user’s data, each with a JSON schema. When the Gemini engine is active, the user’s message, a system instruction and the tool declarations are sent to the Gemini API with \`generateContent\`. Gemini decides which tools it needs and returns function calls; Kosha runs them against MongoDB and sends the results back as function responses, repeating for up to five rounds until Gemini replies in text. The model never queries the database directly and only sees the figures the tools return.`),
-  ...figure('diagram-agent', 'Copilot request flow with Gemini function calling and the offline fallback.'),
+  ...figure('diagram-agent', 'Copilot request flow with Gemini function calling and the offline fallback.', 6.5),
   ...table(
     ['Tool', 'What it returns'],
     [
@@ -674,7 +704,7 @@ const methodology = [
     [1.5, 2.3, 0.8, 4.6],
     { boldFirst: true, align: [undefined, undefined, AlignmentType.CENTER] },
   ),
-  ...figure('diagram-tdd', 'The red, green, refactor loop used for every feature, and the test pyramid with counts from the final run.'),
+  ...figure('diagram-tdd', 'The red, green, refactor loop used for every feature, and the test pyramid with counts from the final run.', 6.0),
   P(`Server coverage on the final run: ${cov.statements}% of statements, ${cov.branches}% of branches and ${cov.functions}% of functions. The React pages are covered by the end-to-end suite rather than by unit tests, so client unit coverage is lower by design.`),
   H3('Selected test cases'),
   ...table(
@@ -731,35 +761,30 @@ const methodology = [
 const copilotCaption =
   ENGINE === 'gemini'
     ? 'Copilot answering from the user’s data with the Gemini engine, and a drafted expense waiting for confirmation.'
-    : 'Copilot answering from the user’s data (offline engine shown; the badge switches to Gemini when a key is configured), and a drafted expense waiting for confirmation.';
+    : 'Copilot answering from the user’s data, with a drafted expense waiting for confirmation. The header badge shows the active engine.';
 
 const results = [
   H1('7. Results'),
   P('The screenshots were captured from the running application on the seed dataset with a headless Chrome browser at 1440 x 900, using the script in e2e/capture-screenshots.js. Every figure shows live data served by the API.'),
-  H2('7.1 Sign-in and dashboard'),
-  ...figure('login', 'Sign-in page. The demo account button fills the seed-dataset credentials.'),
-  ...figure('dashboard-full', 'Dashboard: balance card, insights, the month’s income, spending, savings and savings rate, 12-month income and spending, category ranking, daily heatmap, budgets and recent activity.', 5.5),
-  ...figure('dashboard-dark', 'Dashboard in the dark theme.'),
+  H2('7.1 Dashboard and sign-in'),
+  ...figure('dashboard-full', 'Dashboard: balance card, insights, the month\u2019s income, spending, savings and savings rate, 12-month income and spending, category ranking, daily heatmap, budgets and recent activity.', 4.55),
+  ...figurePair('login', 'dashboard-dark', 'Left: sign-in page. Right: the dashboard in the dark theme.'),
   H2('7.2 Transactions'),
-  ...figure('transactions', 'Transactions grouped by day with category, payment method and signed amounts, plus filters, sort and CSV export.'),
-  ...figure('transactions-filtered', 'Expenses filtered by the search "swiggy". The filters are kept in the URL and the totals reflect the filtered set.'),
-  ...figure('add-transaction', 'Add transaction dialog: type, amount in rupees, date, category filtered by type, payment method, description, merchant and notes.'),
-  ...figure('form-validation', 'Validation: the same Zod schema as the API blocks an amount with three decimals and a missing description.'),
-  H2('7.3 Analytics and budgets'),
-  ...figure('analytics-full', 'Analytics over six months: savings rate, spending by weekday with the peak day emphasised, category trends as small multiples, top merchants and a category breakdown table.', 5.8),
-  ...figure('budgets', 'Budgets for the month with spent, limit, percentage and status. Over-budget categories carry an icon and a label as well as colour.'),
-  H2('7.4 Copilot and settings'),
-  ...figure('copilot', copilotCaption),
-  ...figure('settings', 'Settings: profile, password, theme, category management with usage counts, and the active Copilot engine.'),
-  H2('7.5 Mobile layout and database'),
-  ...figurePair('mobile-dashboard', 'mobile-transactions', 'Mobile layout at 390 px: the sidebar becomes a bottom tab bar and tables become stacked rows.'),
-  ...(manifest['database'] ? figure('database', 'The kosha database in mongo-express, showing the collections restored from the seed dump.') : []),
-  ...(manifest['database-transactions'] ? figure('database-transactions', 'Transaction documents in MongoDB: amounts are integers in paise and every document carries its user id.') : []),
+  ...figurePair('transactions', 'transactions-filtered', 'Left: transactions grouped by day with category, payment method and signed amounts. Right: expenses filtered by the search "swiggy"; the filters are kept in the URL and the totals follow the filter.'),
+  ...figurePair('add-transaction', 'form-validation', 'Left: the add transaction dialog. Right: validation from the shared Zod schema blocks an amount with three decimals and a missing description.'),
+  H2('7.3 Analytics, budgets and settings'),
+  ...figure('analytics-full', 'Analytics over six months: savings rate, spending by weekday with the peak day emphasised, category trends as small multiples, top merchants and a category breakdown table.', 5.2),
+  ...figurePair('budgets', 'settings', 'Left: budgets with spent, limit, percentage and status; over-budget categories carry an icon and a label as well as colour. Right: settings for profile, password, theme, categories and the active Copilot engine.'),
+  H2('7.4 Copilot and mobile layout'),
+  ...figure('copilot', copilotCaption, 5.9),
+  ...figurePair('mobile-dashboard', 'mobile-transactions', 'Mobile layout at 390 px: the sidebar becomes a bottom tab bar and tables become stacked rows.', 2.2),
+  H2('7.5 Database'),
+  ...figurePair('database', 'database-transactions', 'Left: the kosha database in mongo-express with the collections restored from the seed dump. Right: transaction documents, with amounts stored as integers in paise and the owner\u2019s user id.'),
   H2('7.6 Test results'),
-  ...figure('tests-server', `Server suite: ${T.server} tests across ${count(ev('server-tests.txt'), /Test Files\s+(\d+) passed/)} files with the coverage summary.`),
-  ...figure('tests-unit-client', `Shared package (${T.shared} tests) and React component tests (${T.client} tests).`),
-  ...figure('tests-e2e', `End-to-end journeys in Google Chrome (${T.e2e} tests).`),
+  ...figure('tests-server', `Server suite: ${T.server} tests across ${count(ev('server-tests.txt'), /Test Files\s+(\d+) passed/)} files with the coverage summary.`, 6.2),
+  ...figurePair('tests-unit-client', 'tests-e2e', `Left: shared package (${T.shared} tests) and React component tests (${T.client} tests). Right: end-to-end journeys in Google Chrome (${T.e2e} tests).`),
 ];
+
 
 // ---------- 8. Conclusion ----------
 const conclusion = [
@@ -789,8 +814,7 @@ const github = [
   H1('9. GitHub proof'),
   new Paragraph({ spacing: { after: 140 }, children: [run('Repository: ', { bold: true }), link(REPO, REPO)] }),
   P(`The complete source code, seed data dump, tests, diagrams and this report are on GitHub. Work was pushed to the main branch after every step, so the history shows the order of development: ${COMMITS} commits at the time of writing, with each feature introduced by a failing test commit marked "(red)" and completed by a passing "(green)" commit.`),
-  ...(manifest['github-repo'] ? figure('github-repo', 'Repository home page on GitHub.') : [Note('[Insert screenshot of the repository home page]')]),
-  ...(manifest['github-commits'] ? figure('github-commits', 'Commit history on the main branch, showing the test-first red and green commits.') : [Note('[Insert screenshot of the commit history]')]),
+  ...figurePair('github-repo', 'github-commits', 'Left: repository home page on GitHub. Right: commit history on the main branch, showing the test-first red and green commits.'),
 ];
 
 // ---------- 10. References ----------
@@ -829,41 +853,68 @@ const references = [
 ];
 
 // ---------- assemble ----------
-const footer = new Footer({
+const pageHeader = new Header({
+  children: [
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 0 }, children: [run('Nitte Meenakshi Institute of Technology, Nitte (Deemed to be University)', { bold: true, size: 17, color: TEXT })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 0 }, children: [run('Department of Computer Applications (MCA)', { bold: true, size: 17, color: TEXT })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: [run('Bengaluru, India', { size: 16, color: TEXT })] }),
+  ],
+});
+
+const pageFooter = new Footer({
   children: [
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      children: [new TextRun({ children: ['Kosha project report, page ', PageNumber.CURRENT], font: FONT, size: 17, color: MUTED })],
+      children: [new TextRun({ children: ['Dr. Vidya Sagar S D  |  Kosha: Full-Stack Project Report  |  ', PageNumber.CURRENT], font: FONT, size: 16, color: GRAY })],
     }),
   ],
 });
 
+const emptyHF = { children: [new Paragraph({ children: [] })] };
+
 const doc = new Document({
-  creator: 'Kosha project team',
+  creator: STUDENT.name,
   title: 'Kosha: MERN Project Report',
   description: 'Full-Stack Web Development Using MERN (25MCA301) project report',
   styles: {
-    default: { document: { run: { font: FONT, size: 21, color: INK } } },
+    default: { document: { run: { font: FONT, size: 20, color: TEXT } } },
     paragraphStyles: [
-      { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, size: 34, bold: true, color: BRAND }, paragraph: { spacing: { before: 0, after: 220 }, keepNext: true, outlineLevel: 0 } },
-      { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, size: 26, bold: true, color: INK }, paragraph: { spacing: { before: 300, after: 120 }, keepNext: true, outlineLevel: 1 } },
-      { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, size: 22, bold: true, color: MUTED }, paragraph: { spacing: { before: 220, after: 100 }, keepNext: true, outlineLevel: 2 } },
+      { id: 'Heading1', name: 'Heading 1', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, size: 30, bold: true, color: TEXT }, paragraph: { spacing: { before: 320, after: 120 }, keepNext: true, outlineLevel: 0, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: RULE, space: 4 } } } },
+      { id: 'Heading2', name: 'Heading 2', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, size: 22, bold: true, color: TEAL }, paragraph: { spacing: { before: 220, after: 90 }, keepNext: true, outlineLevel: 1 } },
+      { id: 'Heading3', name: 'Heading 3', basedOn: 'Normal', next: 'Normal', quickFormat: true, run: { font: FONT, size: 20, bold: true, color: TEXT }, paragraph: { spacing: { before: 180, after: 70 }, keepNext: true, outlineLevel: 2 } },
     ],
   },
   numbering: {
     config: [
-      { reference: 'bullets', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 540, hanging: 270 } } } }] },
-      { reference: 'numbers', levels: [{ level: 0, format: LevelFormat.DECIMAL, text: '%1.', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 540, hanging: 340 } } } }] },
+      { reference: 'bullets', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 480, hanging: 240 } } } }] },
+      { reference: 'numbers', levels: [{ level: 0, format: LevelFormat.DECIMAL, text: '%1.', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 480, hanging: 300 } } } }] },
     ],
   },
   sections: [
     {
       properties: {
         titlePage: true,
-        page: { margin: { top: 1300, bottom: 1300, left: 1440, right: 1440 } },
+        page: {
+          size: { width: 11909, height: 16834 },
+          margin: { top: 1008, right: 1080, bottom: 1008, left: 1080, header: 504, footer: 490 },
+        },
       },
-      footers: { default: footer, first: new Footer({ children: [new Paragraph({ children: [] })] }) },
-      children: [...cover, ...contents, ...rubrics, ...contribution, ...about, ...requirements, ...methodology, ...results, ...conclusion, ...github, ...references],
+      headers: { default: pageHeader, first: new Header(emptyHF) },
+      footers: { default: pageFooter, first: new Footer(emptyHF) },
+      children: [
+        ...cover,
+        new Paragraph({ pageBreakBefore: true, children: [] }),
+        ...contents,
+        ...rubrics,
+        ...contribution,
+        ...about,
+        ...requirements,
+        ...methodology,
+        ...results,
+        ...conclusion,
+        ...github,
+        ...references,
+      ],
     },
   ],
 });
