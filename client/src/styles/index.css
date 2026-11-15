@@ -509,6 +509,25 @@
   }
 }
 
+/* Dropdown lists open from the control and their rows settle in one after another. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+.menu-in {
+  transform-origin: top;
+  animation: menu-in 0.17s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+}
+.menu-in[data-up] {
+  transform-origin: bottom;
+}
+.menu-in > li {
+  animation: fade-in 0.2s ease-out backwards;
+  animation-delay: calc(var(--i, 0) * 14ms);
+}
+
 @keyframes drawer-in {
   from {
     transform: translateX(24px);

@@ -31,3 +31,17 @@ window.matchMedia ??= (query) => ({
   addListener() {},
   removeListener() {},
 });
+
+// jsdom has no modal <dialog>: open it with the same attribute the browser sets.
+if (typeof HTMLDialogElement !== 'undefined') {
+  HTMLDialogElement.prototype.showModal ??= function showModal() {
+    this.setAttribute('open', '');
+  };
+  HTMLDialogElement.prototype.show ??= function show() {
+    this.setAttribute('open', '');
+  };
+  HTMLDialogElement.prototype.close ??= function close() {
+    this.removeAttribute('open');
+    this.dispatchEvent(new Event('close'));
+  };
+}
