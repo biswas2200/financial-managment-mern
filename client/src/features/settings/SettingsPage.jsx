@@ -16,6 +16,7 @@ import { useTheme } from '../../app/theme.jsx';
 import { PageHeader } from '../../components/layout/AppShell.jsx';
 import { Button, Dialog, Field, Input, Select, Segmented, Skeleton } from '../../components/ui/primitives.jsx';
 import { CategoryIcon, CATEGORY_ICONS } from '../../components/ui/CategoryIcon.jsx';
+import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
 import { useToast } from '../../components/ui/toast.jsx';
 import { EngineBadge } from '../assistant/CopilotChat.jsx';
 import { moneyWhole } from '../../lib/format.js';
