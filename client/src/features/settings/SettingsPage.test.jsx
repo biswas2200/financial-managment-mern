@@ -13,7 +13,14 @@ vi.mock('../../api/hooks.js', () => {
     useMe: () => ({ data: { id: 'u1', name: 'Aarav Mehta', email: 'demo@kosha.app' } }),
     useUpdateProfile: mutation,
     useChangePassword: mutation,
-    useCategories: () => ({ data: [], isLoading: false }),
+    useCategories: () => ({
+      isLoading: false,
+      data: [
+        { id: 'c1', name: 'Gifts', type: 'income', icon: 'gift', color: '#e87ba4', transactionCount: 1, totalAmount: 500000 },
+        { id: 'c2', name: 'Groceries', type: 'expense', icon: 'shopping-basket', color: '#eb6834', transactionCount: 171, totalAmount: 21204800 },
+        { id: 'c3', name: 'Travel', type: 'expense', icon: 'plane', color: '#1baf7a', transactionCount: 0, totalAmount: 0 },
+      ],
+    }),
     useSaveCategory: mutation,
     useDeleteCategory: mutation,
     useAssistantStatus: () => ({ data: { provider: 'offline' } }),
@@ -39,6 +46,13 @@ describe('SettingsPage', () => {
     for (const name of ['Profile', 'Password', 'Appearance', 'Categories', 'Copilot engine']) {
       expect(screen.getByRole('heading', { name })).toBeInTheDocument();
     }
+  });
+
+  it('says "1 transaction" in the singular and "transactions" otherwise', () => {
+    renderPage();
+    expect(screen.getByText('1 transaction, ₹5,000')).toBeInTheDocument();
+    expect(screen.getByText('171 transactions, ₹2,12,048')).toBeInTheDocument();
+    expect(screen.getByText('Not used yet')).toBeInTheDocument();
   });
 
   it('has password fields with a show/hide toggle', async () => {
