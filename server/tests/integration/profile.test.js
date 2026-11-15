@@ -80,4 +80,42 @@ describe('Profile, consent and contact details', () => {
       expect(res.body.user.openingBalance ?? 0).toBe(0);
     });
   });
+
+  describe('DELETE /me (delete the account)', () => {
+    it('needs the right password, and removes the account with everything in it', async () => {
+      const ctx = await signUp(app);
+      await ctx.agent
+        .post('/api/v1/transactions')
+        .send({ type: 'expense', amount: 5000, category: ctx.categories.Groceries.id, description: 'Milk', date: '2026-11-02' })
+        .expect(201);
+      await ctx.agent.post('/api/v1/budgets').send({}).catch(() => {});
+
+      await ctx.agent.delete(`${base}/me`).send({ password: 'wrong-pass1' }).expect(400);
+      await ctx.agent.get(`${base}/me`).expect(200); // still signed in, still there
+
+      await ctx.agent.delete(`${base}/me`).send({ password: ctx.credentials.password }).expect(204);
+      await ctx.agent.get(`${base}/me`).expect(401);
+      await request(app).post(`${base}/login`).send({ email: ctx.credentials.email, password: ctx.credentials.password }).expect(401);
+
+      const { Transaction } = await import('../../src/models/Transaction.js');
+      const { Category } = await import('../../src/models/Category.js');
+      const { User } = await import('../../src/models/User.js');
+      expect(await Transaction.countDocuments({ user: ctx.user.id })).toBe(0);
+      expect(await Category.countDocuments({ user: ctx.user.id })).toBe(0);
+      expect(await User.countDocuments({ _id: ctx.user.id })).toBe(0);
+    });
+
+    it('leaves other people untouched', async () => {
+      const a = await signUp(app);
+      const b = await signUp(app);
+      await a.agent.delete(`${base}/me`).send({ password: a.credentials.password }).expect(204);
+      await b.agent.get(`${base}/me`).expect(200);
+      expect((await b.agent.get('/api/v1/categories')).body.length).toBeGreaterThan(0);
+    });
+
+    it('asks for the password', async () => {
+      const { agent } = await signUp(app);
+      await agent.delete(`${base}/me`).send({}).expect(400);
+    });
+  });
 });
