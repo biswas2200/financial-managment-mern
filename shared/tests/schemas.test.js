@@ -14,14 +14,14 @@ const OID = '665f1f77bcf86cd799439011';
 
 describe('registerSchema', () => {
   it('accepts a valid sign-up and normalises email', () => {
-    const r = registerSchema.parse({ name: ' Asha Rao ', email: 'Asha@Example.COM', password: 'secret123' });
-    expect(r).toEqual({ name: 'Asha Rao', email: 'asha@example.com', password: 'secret123' });
+    const r = registerSchema.parse({ name: ' Asha Rao ', email: 'Asha@Example.COM', password: 'secret123', acceptedTerms: true });
+    expect(r).toEqual({ name: 'Asha Rao', email: 'asha@example.com', password: 'secret123', acceptedTerms: true });
   });
 
   it('requires passwords with at least 8 chars, a letter and a digit', () => {
-    expect(registerSchema.safeParse({ name: 'Al', email: 'a@b.co', password: 'short1' }).success).toBe(false);
-    expect(registerSchema.safeParse({ name: 'Al', email: 'a@b.co', password: 'allletters' }).success).toBe(false);
-    expect(registerSchema.safeParse({ name: 'Al', email: 'a@b.co', password: '12345678' }).success).toBe(false);
+    expect(registerSchema.safeParse({ name: 'Al', email: 'a@b.co', password: 'short1', acceptedTerms: true }).success).toBe(false);
+    expect(registerSchema.safeParse({ name: 'Al', email: 'a@b.co', password: 'allletters', acceptedTerms: true }).success).toBe(false);
+    expect(registerSchema.safeParse({ name: 'Al', email: 'a@b.co', password: '12345678', acceptedTerms: true }).success).toBe(false);
   });
 
   it('rejects malformed email', () => {

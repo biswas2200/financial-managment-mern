@@ -12,6 +12,7 @@ export async function signUp(app, overrides = {}) {
     name: 'Test User',
     email: `user${counter}-${Date.now()}@kosha.test`,
     password: 'testpass123',
+    acceptedTerms: true,
     ...overrides,
   };
   const agent = request.agent(app);

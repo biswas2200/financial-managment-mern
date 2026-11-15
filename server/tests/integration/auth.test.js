@@ -15,7 +15,7 @@ describe('Auth API', () => {
     it('creates the account, sets an httpOnly session cookie and hides the hash', async () => {
       const res = await request(app)
         .post(`${base}/register`)
-        .send({ name: 'Asha Rao', email: 'Asha@Kosha.test', password: 'secret123' })
+        .send({ name: 'Asha Rao', email: 'Asha@Kosha.test', password: 'secret123', acceptedTerms: true })
         .expect(201);
 
       expect(res.body.user).toMatchObject({ name: 'Asha Rao', email: 'asha@kosha.test', currency: 'INR' });
@@ -36,7 +36,7 @@ describe('Auth API', () => {
     });
 
     it('rejects a duplicate email with 409', async () => {
-      const body = { name: 'One', email: 'dup@kosha.test', password: 'secret123' };
+      const body = { name: 'One', email: 'dup@kosha.test', password: 'secret123', acceptedTerms: true };
       await request(app).post(`${base}/register`).send(body).expect(201);
       const res = await request(app).post(`${base}/register`).send(body).expect(409);
       expect(res.body.error.message).toMatch(/already registered/i);
@@ -45,7 +45,7 @@ describe('Auth API', () => {
     it('returns field-level validation errors', async () => {
       const res = await request(app)
         .post(`${base}/register`)
-        .send({ name: 'A', email: 'bad', password: 'short' })
+        .send({ name: 'A', email: 'bad', password: 'short', acceptedTerms: true })
         .expect(400);
       expect(res.body.error.code).toBe('VALIDATION_ERROR');
       const fields = res.body.error.details.map((d) => d.path);
