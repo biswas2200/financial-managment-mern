@@ -350,15 +350,16 @@ export default function TransactionsPage() {
               <tbody key={group.key} className="border-b border-line last:border-0">
                 {group.key !== 'all' && (
                   <tr>
-                    <th colSpan={5} scope="rowgroup" className="bg-surface-2/40 py-2 pl-5 text-left text-[0.8125rem] font-semibold text-ink-2">
+                    <th colSpan={5} scope="rowgroup" className="bg-surface-2/40 py-2 pl-4 text-left md:pl-5 text-[0.8125rem] font-semibold text-ink-2">
                       {dayHeader(group.key)}
                     </th>
                   </tr>
                 )}
                 {group.items.map((t) => (
                   <tr key={t.id} className="group border-t border-line/60 first:border-0 hover:bg-surface-2/40">
-                    <td className="py-3 pr-3 pl-5">
-                      <div className="flex items-center gap-3">
+                    {/* w-full + max-w-0 lets the text column absorb the slack and truncate instead of widening the table past the card on phones. */}
+                    <td className="w-full max-w-0 py-3 pr-1 pl-4 md:w-auto md:max-w-none md:pr-3 md:pl-5">
+                      <div className="flex items-center gap-2.5 md:gap-3">
                         <CategoryIcon icon={t.category?.icon} color={t.category?.color} className="md:hidden" />
                         <div className="min-w-0">
                           <p className="truncate font-medium">{t.description}</p>
@@ -376,15 +377,15 @@ export default function TransactionsPage() {
                       </span>
                     </td>
                     <td className="hidden px-3 py-3 text-sm text-ink-2 md:table-cell">{PAYMENT_LABELS[t.paymentMethod]}</td>
-                    <td className="px-3 py-3 text-right">
+                    <td className="px-1.5 py-3 text-right md:px-3">
                       <Amount txn={t} />
                     </td>
-                    <td className="py-3 pr-4 pl-1">
-                      <div className="flex justify-end gap-0.5 md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
-                        <Button variant="ghost" size="icon" aria-label={`Edit ${t.description}`} onClick={() => openEdit(t)}>
+                    <td className="py-3 pr-1.5 pl-0 md:pr-4 md:pl-1">
+                      <div className="flex justify-end md:gap-0.5 md:opacity-0 md:group-focus-within:opacity-100 md:group-hover:opacity-100">
+                        <Button variant="ghost" size="icon" className="max-md:h-8 max-md:w-8" aria-label={`Edit ${t.description}`} onClick={() => openEdit(t)}>
                           <Pencil size={16} />
                         </Button>
-                        <Button variant="ghost" size="icon" aria-label={`Delete ${t.description}`} onClick={() => handleDelete(t)}>
+                        <Button variant="ghost" size="icon" className="max-md:h-8 max-md:w-8" aria-label={`Delete ${t.description}`} onClick={() => handleDelete(t)}>
                           <Trash2 size={16} />
                         </Button>
                       </div>

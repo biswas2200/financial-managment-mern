@@ -3,7 +3,10 @@ import { MessageCircle, X } from 'lucide-react';
 import { Button } from '../../components/ui/primitives.jsx';
 import { CopilotChat } from './CopilotChat.jsx';
 
-/** Floating button that opens Copilot in a side panel from any page. */
+/**
+ * Floating button that opens Copilot in a side panel from any page.
+ * Hidden on phones: the bottom tab bar already has a Copilot tab, and the button covered amounts and actions.
+ */
 export function CopilotLauncher() {
   const [open, setOpen] = useState(false);
 
@@ -22,10 +25,10 @@ export function CopilotLauncher() {
           data-copilot-launcher
           onClick={() => setOpen(true)}
           aria-label="Ask Copilot"
-          className="fixed right-4 bottom-20 z-40 inline-flex h-12 w-12 items-center justify-center gap-2 rounded-full bg-ink text-[0.9375rem] font-semibold text-paper shadow-[var(--shadow-pop)] hover:opacity-90 sm:w-auto sm:pr-5 sm:pl-4 lg:right-8 lg:bottom-8"
+          className="fixed right-4 bottom-20 z-40 hidden h-12 items-center justify-center gap-2 rounded-full bg-ink pr-5 pl-4 text-[0.9375rem] font-semibold text-paper shadow-[var(--shadow-pop)] hover:opacity-90 sm:inline-flex lg:right-8 lg:bottom-8"
         >
           <MessageCircle size={19} aria-hidden />
-          <span className="hidden sm:inline">Ask Copilot</span>
+          <span>Ask Copilot</span>
         </button>
       )}
       {open && (
