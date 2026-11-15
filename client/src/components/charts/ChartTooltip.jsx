@@ -1,7 +1,7 @@
 /** Shared tooltip shell for Recharts: values in ink, the coloured swatch carries identity. */
 export function ChartTooltip({ title, rows, footer }) {
   return (
-    <div className="min-w-44 rounded-xl bg-surface px-3.5 py-3 text-sm shadow-[var(--shadow-pop)] ring-1 ring-line">
+    <div className="min-w-44 rounded-xl bg-surface px-3.5 py-3 text-sm shadow-raise-2">
       <p className="mb-1.5 font-semibold text-ink">{title}</p>
       <ul className="flex flex-col gap-1">
         {rows.map((r) => (

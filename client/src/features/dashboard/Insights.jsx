@@ -15,7 +15,7 @@ const TONES = {
 export function Insights({ className }) {
   const { data, isLoading } = useInsights();
   return (
-    <section className={clsx('flex flex-col rounded-[22px] bg-surface p-5 ring-1 ring-line sm:p-6', className)}>
+    <section className={clsx('flex flex-col rounded-[22px] raised bg-surface p-5 shadow-raise-1 sm:p-6', className)}>
       <h2 className="font-wide text-[1.0625rem] font-semibold">What stands out this month</h2>
       <ul className="mt-4 flex flex-1 flex-col gap-4">
         {isLoading &&

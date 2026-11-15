@@ -65,7 +65,7 @@ export default function DashboardPage() {
   const firstName = user?.name?.split(' ')[0] ?? '';
 
   return (
-    <>
+    <div className="rise">
       <PageHeader
         title={`${greeting()}, ${firstName}`}
         description={`Here's how ${label} is going.`}
@@ -242,6 +242,6 @@ export default function DashboardPage() {
           )}
         </Panel>
       </div>
-    </>
+    </div>
   );
 }

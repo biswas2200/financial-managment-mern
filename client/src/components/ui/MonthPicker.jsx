@@ -7,7 +7,7 @@ export function MonthPicker({ value, onChange, min }) {
   const isCurrent = value >= currentMonthKey();
   const atMin = min ? value <= min : false;
   return (
-    <div className="inline-flex items-center gap-1 rounded-xl bg-surface p-1 ring-1 ring-line" role="group" aria-label="Choose month">
+    <div className="inline-flex items-center gap-1 rounded-xl raised bg-surface p-1 shadow-raise-1" role="group" aria-label="Choose month">
       <Button variant="ghost" size="icon" aria-label="Previous month" disabled={atMin} onClick={() => onChange(shiftMonth(value, -1))}>
         <ChevronLeft size={18} />
       </Button>

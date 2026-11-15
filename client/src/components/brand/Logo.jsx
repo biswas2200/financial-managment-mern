@@ -15,11 +15,11 @@ export function LogoMark({ size = 28, className }) {
   );
 }
 
-export function Logo({ className, size = 28 }) {
+export function Logo({ className, size = 28, textClassName = 'text-ink' }) {
   return (
     <span className={clsx('inline-flex items-center gap-2.5', className)}>
       <LogoMark size={size} />
-      <span className="font-extrawide text-[1.375rem] leading-none font-bold tracking-[-0.01em] text-ink">Kosha</span>
+      <span className={`font-extrawide text-[1.375rem] leading-none font-bold tracking-[-0.01em] ${textClassName}`}>Kosha</span>
     </span>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { InstallButton } from '../../pwa/InstallButton.jsx';
 import { Settings, Sun, Moon, LogOut, Keyboard } from 'lucide-react';
 import { useTheme } from '../../app/theme.jsx';
 
@@ -71,7 +72,7 @@ export function AccountMenu({ user, onSignOut, onShowShortcuts }) {
           ref={menuRef}
           role="menu"
           aria-label="Account"
-          className="absolute right-0 z-50 mt-2 w-64 rounded-2xl bg-surface p-2 shadow-[var(--shadow-pop)] ring-1 ring-line"
+          className="pop-in raised absolute right-0 z-50 mt-2 w-64 rounded-2xl bg-surface p-2 shadow-raise-2"
         >
           <div className="border-b border-line px-3 pt-1.5 pb-3">
             <p className="truncate font-semibold">{user?.name}</p>
@@ -100,6 +101,7 @@ export function AccountMenu({ user, onSignOut, onShowShortcuts }) {
                 Keyboard shortcuts
               </button>
             )}
+            <InstallButton role="menuitem" className={`${itemClass} !font-semibold !text-brand`} />
             <button
               role="menuitem"
               type="button"

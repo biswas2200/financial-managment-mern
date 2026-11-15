@@ -117,7 +117,7 @@ export default function BudgetsPage() {
       {isLoading ? (
         <Skeleton className="h-96 rounded-2xl" />
       ) : !data?.items.length ? (
-        <section className="rounded-2xl bg-surface ring-1 ring-line">
+        <section className="rounded-2xl raised bg-surface shadow-raise-1">
           <EmptyState
             icon={<PiggyBank size={22} />}
             title={`No budgets for ${formatMonthLabel(month)}`}
@@ -135,7 +135,7 @@ export default function BudgetsPage() {
         </section>
       ) : (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="rounded-2xl bg-surface ring-1 ring-line">
+          <section className="rounded-2xl raised bg-surface shadow-raise-1">
             <div className="border-b border-line p-5 sm:p-6">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
@@ -200,7 +200,7 @@ export default function BudgetsPage() {
           </section>
 
           {unbudgeted.length > 0 && (
-            <aside className="self-start rounded-2xl bg-surface p-5 ring-1 ring-line">
+            <aside className="self-start rounded-2xl raised bg-surface p-5 shadow-raise-1">
               <h2 className="font-wide font-semibold">Not budgeted yet</h2>
               <p className="mt-1 text-sm text-ink-2">Spending in these categories isn&apos;t tracked against a limit.</p>
               <ul className="mt-4 flex flex-col gap-1">

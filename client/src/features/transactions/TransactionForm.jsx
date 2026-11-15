@@ -37,9 +37,9 @@ const Chip = forwardRef(function Chip({ checked, children, className, ...input }
   return (
     <label
       className={clsx(
-        'relative inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition-colors select-none',
+        'chip-pick relative inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition-[background-color,box-shadow,color] select-none active:scale-95',
         'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-brand',
-        checked ? 'bg-brand-soft text-brand ring-brand/50' : 'bg-surface text-ink-2 ring-line-strong hover:bg-surface-2 hover:text-ink',
+        checked ? 'bg-brand-soft text-brand ring-brand/50 shadow-inset' : 'bg-surface text-ink-2 ring-line-strong shadow-[0_1px_0_rgb(21_27_51/0.08),0_2px_5px_-2px_rgb(21_27_51/0.18)] hover:bg-surface-2 hover:text-ink',
         className,
       )}
     >

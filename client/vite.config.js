@@ -11,6 +11,8 @@ export default defineConfig({
     // httpOnly session cookie works without any CORS setup.
     proxy: { '/api': 'http://localhost:5000' },
   },
+  // `npm run build && npm run preview` serves the installable PWA build with the same /api proxy.
+  preview: { port: 4173, proxy: { '/api': 'http://localhost:5000' } },
   build: {
     rollupOptions: {
       output: {

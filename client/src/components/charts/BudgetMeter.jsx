@@ -14,14 +14,14 @@ export function BudgetMeter({ spent, limit, status = 'ok', className, showLabel 
   return (
     <div className={className}>
       <div
-        className="relative h-2.5 overflow-hidden rounded-full bg-surface-2"
+        className="relative h-2.5 overflow-hidden rounded-full bg-surface-2 shadow-inset"
         role="meter"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={Math.round(pct)}
         aria-label="Share of budget used"
       >
-        <div className="h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: s.fill }} />
+        <div className="bar-fill h-full rounded-full" style={{ width: `${Math.min(pct, 100)}%`, background: s.fill }} />
       </div>
       {showLabel && s.label && (
         <p className={clsx('mt-1.5 flex items-center gap-1 text-[0.8125rem] font-medium', s.text)}>

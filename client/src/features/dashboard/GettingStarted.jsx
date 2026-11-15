@@ -21,7 +21,7 @@ export function GettingStarted({ counts, onAddIncome, onAddExpense, onDismiss })
     return (
       <Link
         to={to}
-        className="inline-flex h-8 shrink-0 items-center rounded-lg bg-surface px-3 text-sm font-semibold ring-1 ring-line-strong ring-inset hover:bg-surface-2"
+        className="inline-flex h-8 shrink-0 items-center rounded-lg btn-3d-soft bg-surface px-3 text-sm font-semibold hover:bg-surface-2"
       >
         {text}
       </Link>
@@ -29,7 +29,7 @@ export function GettingStarted({ counts, onAddIncome, onAddExpense, onDismiss })
   };
 
   return (
-    <section aria-labelledby="getting-started" className="mb-5 rounded-[22px] bg-surface p-5 ring-1 ring-line sm:p-6">
+    <section aria-labelledby="getting-started" className="mb-5 rounded-[22px] raised bg-surface p-5 shadow-raise-1 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 id="getting-started" className="font-wide text-lg font-semibold">

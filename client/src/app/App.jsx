@@ -7,6 +7,7 @@ import { keys } from '../api/hooks.js';
 import { ToastProvider } from '../components/ui/toast.jsx';
 import { AppShell } from '../components/layout/AppShell.jsx';
 import { Skeleton } from '../components/ui/primitives.jsx';
+import { OfflineBanner } from '../pwa/OfflineBanner.jsx';
 import { LoginPage, RegisterPage } from '../features/auth/AuthPages.jsx';
 import DashboardPage from '../features/dashboard/DashboardPage.jsx';
 
@@ -82,6 +83,7 @@ export function App() {
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
           <RouterProvider router={router} />
+          <OfflineBanner />
         </ToastProvider>
       </QueryClientProvider>
     </ThemeProvider>

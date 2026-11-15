@@ -1,8 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { wavePaths, rosettePath } from '../../components/brand/guilloche.js';
 import { money, moneyWhole } from '../../lib/format.js';
+import { tiltFromPointer, prefersReducedMotion } from '../../lib/motion.js';
+import { useCountUp } from '../../hooks/useCountUp.js';
+
+function setTilt(el, { rx, ry, gx, gy }) {
+  el.style.setProperty('--rx', `${rx}deg`);
+  el.style.setProperty('--ry', `${ry}deg`);
+  el.style.setProperty('--gx', `${gx}%`);
+  el.style.setProperty('--gy', `${gy}%`);
+}
 
 const W = 720;
 const H = 260;
@@ -29,14 +38,33 @@ export function BalanceNote({ balance = 0, net = 0, monthLabel, partial, classNa
     }),
     [],
   );
-  const { rupees, paise } = splitAmount(balance);
+  const shown = useCountUp(balance, { duration: 1100 });
+  const { rupees, paise } = splitAmount(shown);
+  const ref = useRef(null);
+
+  // Hold the note to the light: it tips towards a mouse or pen and a sheen follows.
+  const onPointerMove = (e) => {
+    if (e.pointerType === 'touch' || prefersReducedMotion()) return;
+    const el = ref.current;
+    setTilt(el, tiltFromPointer(el.getBoundingClientRect(), e.clientX, e.clientY, 7));
+    el.dataset.tilting = 'true';
+  };
+  const onPointerLeave = () => {
+    const el = ref.current;
+    setTilt(el, { rx: 0, ry: 0, gx: 50, gy: 50 });
+    delete el.dataset.tilting;
+  };
   const saved = net >= 0;
 
   return (
     <section
+      ref={ref}
       aria-label="Balance"
-      className={clsx('relative isolate min-h-[15rem] overflow-hidden rounded-[22px] bg-note text-ink ring-1 ring-note-line/15', className)}
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
+      className={clsx('note-3d relative isolate min-h-[15rem] overflow-hidden rounded-[22px] bg-note text-ink ring-1 ring-note-line/15', className)}
     >
+      <div aria-hidden className="note-sheen pointer-events-none absolute inset-0 z-10" />
       <svg
         viewBox={`0 0 ${W} ${H}`}
         preserveAspectRatio="xMidYMid slice"
@@ -62,7 +90,7 @@ export function BalanceNote({ balance = 0, net = 0, monthLabel, partial, classNa
       {/* Windowed security thread */}
       <div
         aria-hidden
-        className="absolute inset-y-0 left-[86%] -z-10 w-[7px] sm:left-[66%]"
+        className="note-thread absolute inset-y-0 left-[86%] -z-10 w-[7px] sm:left-[66%]"
         style={{
           background:
             'repeating-linear-gradient(to bottom, var(--thread) 0 18px, color-mix(in oklch, var(--thread) 35%, transparent) 18px 26px)',
@@ -74,7 +102,7 @@ export function BalanceNote({ balance = 0, net = 0, monthLabel, partial, classNa
           <p className="text-[0.9375rem] font-medium text-ink-2">Balance</p>
           <p className="mt-1 flex items-baseline font-condensed leading-none font-semibold tracking-[-0.01em]">
             <span className="text-[3.25rem] sm:text-[4rem]">
-              {balance < 0 && '-'}
+              {shown < 0 && '-'}
               {rupees}
             </span>
             <span className="text-[1.75rem] text-ink-2 sm:text-[2rem]">{paise}</span>

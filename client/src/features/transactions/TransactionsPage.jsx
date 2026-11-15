@@ -132,7 +132,7 @@ export default function TransactionsPage() {
           <>
             <a
               href={downloadUrl('/transactions/export.csv', exportQuery)}
-              className="inline-flex h-10 items-center gap-2 rounded-[10px] bg-surface px-4 text-[0.9375rem] font-semibold ring-1 ring-line-strong ring-inset hover:bg-surface-2"
+              className="inline-flex h-10 items-center gap-2 rounded-[10px] btn-3d-soft bg-surface px-4 text-[0.9375rem] font-semibold hover:bg-surface-2"
             >
               <Download size={17} aria-hidden />
               Export CSV
@@ -145,7 +145,7 @@ export default function TransactionsPage() {
         }
       />
 
-      <section aria-label="Filters" className="rounded-2xl bg-surface p-4 ring-1 ring-line">
+      <section aria-label="Filters" className="rounded-2xl raised bg-surface p-4 shadow-raise-1">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative min-w-56 flex-1">
             <Search size={17} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-3" aria-hidden />
@@ -301,7 +301,7 @@ export default function TransactionsPage() {
 
       {isError && <ErrorNote error={error} onRetry={refetch} />}
 
-      <section className={clsx('overflow-hidden rounded-2xl bg-surface ring-1 ring-line', isPlaceholderData && 'opacity-60')}>
+      <section className={clsx('overflow-hidden rounded-2xl raised bg-surface shadow-raise-1', isPlaceholderData && 'opacity-60')}>
         {isLoading ? (
           <div className="space-y-3 p-5">
             {Array.from({ length: 8 }, (_, i) => (

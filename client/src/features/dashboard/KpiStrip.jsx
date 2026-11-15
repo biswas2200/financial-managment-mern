@@ -3,6 +3,13 @@ import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { moneyWhole, percent } from '../../lib/format.js';
 import { Sparkline } from '../../components/charts/Sparkline.jsx';
 import { InfoTip } from '../../components/ui/InfoTip.jsx';
+import { useCountUp } from '../../hooks/useCountUp.js';
+
+/** Numbers roll up to their value when the month changes. */
+function CountUp({ value, format }) {
+  const shown = useCountUp(value, { duration: 800 });
+  return format(shown);
+}
 
 const TIPS = {
   income: 'Money you received in this period. The arrow compares it with the same days of last month, so a month that has only just started is compared fairly.',
@@ -46,13 +53,14 @@ export function KpiStrip({ summary, trend }) {
         : 'vs previous month';
 
   const cells = [
-    { key: 'income', label: 'Income', value: moneyWhole(summary.income), delta: summary.change?.income, goodWhenUp: true, spark: trend?.map((t) => t.income), color: 'var(--income)' },
-    { key: 'expense', label: 'Spent', value: moneyWhole(summary.expense), delta: summary.change?.expense, goodWhenUp: false, spark: trend?.map((t) => t.expense), color: 'var(--expense)' },
-    { key: 'net', label: summary.net >= 0 ? 'Saved' : 'Overspent', value: moneyWhole(Math.abs(summary.net)), delta: summary.change?.net, goodWhenUp: true },
+    { key: 'income', label: 'Income', value: summary.income, format: moneyWhole, delta: summary.change?.income, goodWhenUp: true, spark: trend?.map((t) => t.income), color: 'var(--income)' },
+    { key: 'expense', label: 'Spent', value: summary.expense, format: moneyWhole, delta: summary.change?.expense, goodWhenUp: false, spark: trend?.map((t) => t.expense), color: 'var(--expense)' },
+    { key: 'net', label: summary.net >= 0 ? 'Saved' : 'Overspent', value: Math.abs(summary.net), format: moneyWhole, delta: summary.change?.net, goodWhenUp: true },
     {
       key: 'rate',
       label: 'Savings rate',
-      value: summary.savingsRate === null || summary.savingsRate === undefined ? 'n/a' : `${summary.savingsRate}%`,
+      value: summary.savingsRate ?? null,
+      format: (v) => `${v}%`,
       note: summary.savingsRate === null ? 'No income recorded' : 'Share of income kept',
     },
   ];
@@ -60,7 +68,7 @@ export function KpiStrip({ summary, trend }) {
   return (
     <section
       aria-label="This period at a glance"
-      className="grid grid-cols-2 rounded-2xl bg-surface ring-1 ring-line lg:grid-cols-4"
+      className="grid grid-cols-2 rounded-2xl raised bg-surface shadow-raise-1 lg:grid-cols-4"
     >
       {cells.map((cell, i) => (
         <div
@@ -82,7 +90,9 @@ export function KpiStrip({ summary, trend }) {
             </h3>
             {cell.spark && <Sparkline values={cell.spark} color={cell.color} width={72} height={22} className="hidden sm:block" />}
           </div>
-          <p className="font-condensed text-[1.75rem] leading-tight font-semibold text-ink sm:text-[2rem]">{cell.value}</p>
+          <p className="font-condensed text-[1.75rem] leading-tight font-semibold text-ink tabular sm:text-[2rem]">
+            {cell.value === null ? 'n/a' : <CountUp value={cell.value} format={cell.format} />}
+          </p>
           {cell.delta !== undefined ? (
             <Delta id={`kpi-${cell.key}-delta`} value={cell.delta} goodWhenUp={cell.goodWhenUp} windowLabel={windowLabel} />
           ) : (

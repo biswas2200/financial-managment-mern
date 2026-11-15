@@ -241,7 +241,7 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" description="Your profile, categories and how Kosha looks." />
-      <div className="rounded-2xl bg-surface px-5 py-8 ring-1 ring-line sm:px-8">
+      <div className="raised rounded-2xl bg-surface px-5 py-8 shadow-raise-1 sm:px-8">
         <Section title="Profile">{user && <ProfileForm user={user} />}</Section>
         <Section title="Password" description="Use a password you don't use anywhere else.">
           <PasswordForm />

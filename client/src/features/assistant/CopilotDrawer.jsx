@@ -31,7 +31,7 @@ export function CopilotLauncher() {
       {open && (
         <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label="Copilot">
           <div className="absolute inset-0 bg-ink/30" onClick={() => setOpen(false)} aria-hidden />
-          <div className="drawer-in relative flex h-full w-full max-w-[440px] flex-col bg-paper shadow-[var(--shadow-pop)] ring-1 ring-line">
+          <div className="drawer-in relative flex h-full w-full max-w-[440px] flex-col bg-paper shadow-raise-2">
             <Button variant="ghost" size="icon" aria-label="Close Copilot" onClick={() => setOpen(false)} className="absolute top-2.5 right-3 z-10">
               <X size={18} />
             </Button>

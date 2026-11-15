@@ -177,7 +177,7 @@ function MerchantList({ merchants }) {
               </span>
             </div>
             <div className="h-2 rounded-full bg-surface-2">
-              <div className="h-2 rounded-full bg-expense" style={{ width: `${(m.total / top) * 100}%` }} />
+              <div className="bar-fill h-2 rounded-full bg-expense" style={{ width: `${(m.total / top) * 100}%` }} />
             </div>
           </div>
           <span className="w-24 text-right text-sm font-semibold tabular">{moneyWhole(m.total)}</span>

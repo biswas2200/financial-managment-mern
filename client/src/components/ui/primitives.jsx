@@ -5,10 +5,10 @@ import { Loader, X } from 'lucide-react';
 // ---------- Button ----------
 
 const BUTTON_VARIANTS = {
-  primary: 'bg-brand text-brand-ink hover:bg-brand-hover',
-  secondary: 'bg-surface text-ink ring-1 ring-inset ring-line-strong hover:bg-surface-2',
-  ghost: 'text-ink-2 hover:bg-surface-2 hover:text-ink',
-  danger: 'bg-bad text-white hover:brightness-95',
+  primary: 'btn-3d bg-brand text-brand-ink hover:bg-brand-hover',
+  secondary: 'btn-3d-soft bg-surface text-ink hover:bg-surface-2',
+  ghost: 'text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink active:scale-95',
+  danger: 'btn-3d bg-bad text-white hover:brightness-95',
 };
 const BUTTON_SIZES = {
   sm: 'h-8 px-3 text-sm gap-1.5 rounded-lg',
@@ -27,7 +27,7 @@ export const Button = forwardRef(function Button(
       type={type}
       disabled={disabled || loading}
       className={clsx(
-        'inline-flex shrink-0 items-center justify-center font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-55',
+        'inline-flex shrink-0 items-center justify-center font-semibold whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-55',
         BUTTON_VARIANTS[variant],
         BUTTON_SIZES[size],
         className,
@@ -43,7 +43,7 @@ export const Button = forwardRef(function Button(
 // ---------- Form controls ----------
 
 const controlBase =
-  'w-full rounded-[10px] bg-surface px-3 text-[0.9375rem] text-ink ring-1 ring-inset ring-line-strong placeholder:text-ink-3 transition-shadow focus:outline-none focus:ring-2 focus:ring-brand aria-[invalid=true]:ring-bad';
+  'w-full rounded-[10px] bg-surface px-3 text-[0.9375rem] text-ink shadow-inset placeholder:text-ink-3 transition-shadow focus:outline-none focus:ring-2 focus:ring-brand aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-bad';
 
 export const Input = forwardRef(function Input({ className, ...props }, ref) {
   return <input ref={ref} className={clsx(controlBase, 'h-10', className)} {...props} />;
@@ -89,7 +89,7 @@ export function Field({ label, error, hint, children, className, optional }) {
 export function Segmented({ value, onChange, options, label, size = 'md', className }) {
   const name = useId();
   return (
-    <div role="radiogroup" aria-label={label} className={clsx('inline-flex rounded-[10px] bg-surface-2 p-1', className)}>
+    <div role="radiogroup" aria-label={label} className={clsx('inline-flex rounded-[10px] bg-surface-2 p-1 shadow-inset', className)}>
       {options.map((opt) => {
         const checked = opt.value === value;
         return (
@@ -98,7 +98,7 @@ export function Segmented({ value, onChange, options, label, size = 'md', classN
             className={clsx(
               'relative flex cursor-pointer items-center gap-1.5 rounded-lg font-medium transition-colors',
               size === 'sm' ? 'px-2.5 py-1 text-sm' : 'px-3.5 py-1.5 text-[0.9375rem]',
-              checked ? 'bg-surface text-ink shadow-sm ring-1 ring-line' : 'text-ink-2 hover:text-ink',
+              checked ? 'raised bg-surface text-ink shadow-raise-1' : 'text-ink-2 hover:text-ink',
             )}
           >
             <input
@@ -143,7 +143,7 @@ export function Dialog({ open, onClose, title, description, children, size = 'md
       }}
       aria-labelledby="dialog-title"
       className={clsx(
-        'm-auto w-[calc(100%-2rem)] rounded-2xl bg-surface p-0 text-ink shadow-[var(--shadow-pop)] ring-1 ring-line',
+        'raised m-auto w-[calc(100%-2rem)] rounded-2xl bg-surface p-0 text-ink shadow-raise-2',
         size === 'lg' ? 'max-w-2xl' : 'max-w-lg',
       )}
     >
@@ -176,7 +176,7 @@ export function Skeleton({ className }) {
 export function EmptyState({ icon, title, children, action }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-10 text-center">
-      {icon && <div className="mb-1 rounded-full bg-surface-2 p-3 text-ink-2">{icon}</div>}
+      {icon && <div className="mb-1 rounded-2xl bg-surface p-3 text-brand shadow-raise-1 raised">{icon}</div>}
       <p className="font-semibold text-ink">{title}</p>
       {children && <p className="max-w-sm text-sm text-ink-2">{children}</p>}
       {action && <div className="mt-3">{action}</div>}

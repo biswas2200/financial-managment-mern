@@ -49,7 +49,7 @@ function MiniTrend({ items }) {
 /** Renders the chart/table payload a Copilot reply carries (data.kind). */
 export function MessageData({ data }) {
   if (!data) return null;
-  const frame = 'mt-3 rounded-xl bg-surface p-4 ring-1 ring-line';
+  const frame = 'mt-3 rounded-xl raised bg-surface p-4 shadow-raise-1';
 
   switch (data.kind) {
     case 'summary':

@@ -44,6 +44,19 @@
   --grid: #e7eaf1;
   --axis: #c3c9d6;
   --shadow-pop: 0 18px 40px -18px rgb(21 27 51 / 0.35);
+
+  /* Depth: three tinted elevations plus an inset well. Shadows are ink-tinted, never flat grey. */
+  --hi: rgb(255 255 255 / 0.9); /* top-edge highlight on raised surfaces */
+  --raise-1: 0 0 0 1px rgb(21 27 51 / 0.06), 0 1px 0 0 rgb(21 27 51 / 0.05), 0 2px 4px -1px rgb(21 27 51 / 0.07), 0 10px 22px -10px rgb(30 40 110 / 0.22);
+  --raise-2: 0 0 0 1px rgb(21 27 51 / 0.06), 0 2px 3px rgb(21 27 51 / 0.06), 0 22px 40px -18px rgb(30 40 110 / 0.38);
+  --inset: inset 0 1.5px 2px rgb(21 27 51 / 0.09), inset 0 0 0 1px rgb(21 27 51 / 0.1);
+  --btn-edge: rgb(15 20 70 / 0.55);
+
+  /* The rail: a dark indigo slab the paper sits beside */
+  --rail: #171d45;
+  --rail-2: #222a5c;
+  --rail-ink: #eef0fb;
+  --rail-ink-2: #a9b0d6;
 }
 
 :root[data-theme="dark"] {
@@ -78,6 +91,16 @@
   --grid: #222842;
   --axis: #343c5a;
   --shadow-pop: 0 18px 40px -16px rgb(0 0 0 / 0.6);
+
+  --hi: rgb(255 255 255 / 0.06);
+  --raise-1: 0 0 0 1px rgb(255 255 255 / 0.05), 0 1px 0 0 rgb(0 0 0 / 0.4), 0 12px 24px -12px rgb(0 0 0 / 0.7);
+  --raise-2: 0 0 0 1px rgb(255 255 255 / 0.06), 0 24px 44px -16px rgb(0 0 0 / 0.8);
+  --inset: inset 0 2px 3px rgb(0 0 0 / 0.45), inset 0 0 0 1px rgb(255 255 255 / 0.06);
+  --btn-edge: rgb(0 0 0 / 0.5);
+  --rail: #0a0d1a;
+  --rail-2: #171c33;
+  --rail-ink: #e9ecf6;
+  --rail-ink-2: #8e96b6;
 }
 
 @theme inline {
@@ -108,6 +131,13 @@
   --color-note: var(--note);
   --color-note-line: var(--note-line);
   --color-thread: var(--thread);
+  --color-rail: var(--rail);
+  --color-rail-2: var(--rail-2);
+  --color-rail-ink: var(--rail-ink);
+  --color-rail-ink-2: var(--rail-ink-2);
+  --shadow-raise-1: var(--raise-1);
+  --shadow-raise-2: var(--raise-2);
+  --shadow-inset: var(--inset);
 
   /* Type scale (major third, 16px base) */
   --text-2xs: 0.75rem;
@@ -133,7 +163,10 @@
   }
   body {
     min-height: 100dvh;
-    background: var(--paper);
+    background:
+      radial-gradient(1200px 600px at 70% -10%, color-mix(in oklch, var(--brand) 7%, transparent), transparent 70%),
+      var(--paper);
+    background-attachment: fixed;
     line-height: 1.5;
   }
   ::selection {
@@ -158,7 +191,11 @@
   }
   dialog::backdrop {
     background: rgb(13 17 32 / 0.45);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(3px);
+    animation: fade-in 0.2s ease-out;
+  }
+  dialog[open] {
+    animation: dialog-in 0.28s cubic-bezier(0.2, 0.9, 0.25, 1.15);
   }
 }
 
@@ -179,6 +216,45 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+  /* Raised paper: a highlight along the top edge and a tinted two-stage shadow */
+  .raised {
+    background-image: linear-gradient(to bottom, var(--hi), transparent 3px);
+  }
+  /* A card that lifts when it is something you can open */
+  .lift {
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease;
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--raise-2);
+  }
+  /* Bevelled keys: light from above, an edge below, and they sink when pressed */
+  .btn-3d {
+    background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0) 55%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 0 var(--btn-edge), 0 4px 10px -4px var(--btn-edge);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease;
+  }
+  .btn-3d-soft {
+    background-image: linear-gradient(to bottom, var(--hi), transparent 60%);
+    box-shadow: inset 0 0 0 1px var(--line-strong), 0 1px 0 rgb(21 27 51 / 0.08), 0 3px 8px -4px rgb(21 27 51 / 0.2);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.15s ease;
+  }
+  .btn-3d:active:not(:disabled),
+  .btn-3d-soft:active:not(:disabled) {
+    transform: translateY(1px);
+    box-shadow: inset 0 1px 3px rgb(0 0 0 / 0.2);
+  }
+  /* The dark rail: a faint top light and an edge where it meets the paper */
+  .rail {
+    --brand: #aab4ff; /* lighter ink on the dark slab: logo mark and focus rings stay visible */
+    background-image: radial-gradient(120% 60% at 0% 0%, rgb(255 255 255 / 0.07), transparent 60%);
+    box-shadow: inset -1px 0 0 rgb(255 255 255 / 0.06), 6px 0 24px -12px rgb(10 14 40 / 0.45);
+    position: relative;
+    z-index: 1;
+  }
+  .rail-active {
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1), 0 1px 0 rgb(0 0 0 / 0.35), 0 8px 18px -8px rgb(0 0 0 / 0.6);
+  }
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: var(--line-strong) transparent;
@@ -192,6 +268,137 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------- Motion ----------------
+   The orchestrated moment is the dashboard load: the note's linework draws,
+   the balance counts up and the panels rise in sequence. Everything else
+   answers an action: dialogs open, menus pop, keys sink, chips settle. */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+.pop-in {
+  animation: pop-in 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  transform-origin: top right;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+}
+.toast-in {
+  animation: toast-in 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.page-in {
+  animation: page-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* Panels rise in sequence on first paint; set --i on each child */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+}
+.rise > * {
+  /* backwards, not both: no transform lingers, so tooltips are never trapped in a stacking context */
+  animation: rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: 60ms;
+}
+.rise > :nth-child(2) { animation-delay: 120ms; }
+.rise > :nth-child(3) { animation-delay: 190ms; }
+.rise > :nth-child(4) { animation-delay: 260ms; }
+.rise > :nth-child(5) { animation-delay: 330ms; }
+.rise > :nth-child(6) { animation-delay: 400ms; }
+.rise > :nth-child(n + 7) { animation-delay: 460ms; }
+@keyframes chip-pick {
+  50% {
+    transform: scale(0.94);
+  }
+}
+.chip-pick:has(input:checked) {
+  animation: chip-pick 0.22s ease-out;
+}
+@keyframes bar-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+.bar-fill {
+  transform-origin: left;
+  animation: bar-fill 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  animation-delay: 0.3s;
+}
+
+/* The banknote in 3D: it tips towards the pointer and a sheen follows the light. */
+.note-3d {
+  --rx: 0deg;
+  --ry: 0deg;
+  --gx: 50%;
+  --gy: 50%;
+  transform: perspective(1100px) rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.6s ease;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.6) inset,
+    0 2px 4px rgb(31 94 88 / 0.12),
+    0 24px 40px -22px rgb(31 94 88 / 0.55);
+  will-change: transform;
+}
+.note-3d[data-tilting] {
+  transition: transform 0.08s linear, box-shadow 0.3s ease;
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.6) inset,
+    calc(var(--ry) * -1.2) calc(var(--rx) * 1.2 + 26px) 46px -20px rgb(31 94 88 / 0.6);
+}
+.note-sheen {
+  background: radial-gradient(520px circle at var(--gx) var(--gy), rgb(255 255 255 / 0.4), transparent 45%);
+  mix-blend-mode: soft-light;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.note-3d[data-tilting] .note-sheen {
+  opacity: 1;
+}
+/* The thread shimmers like foil as the light moves across it */
+.note-thread::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 0 35%, rgb(255 246 214 / 0.95) 50%, transparent 65% 100%);
+  background-size: 100% 300%;
+  background-position: 0 calc(var(--gy, 50%) * 1.4);
+  mix-blend-mode: screen;
+  animation: thread-glint 3.2s ease-in-out 1.6s 1 both;
+}
+@keyframes thread-glint {
+  from {
+    background-position: 0 100%;
+  }
+  to {
+    background-position: 0 0;
   }
 }
 
@@ -229,6 +436,13 @@
 }
 .typing-dot:nth-child(3) {
   animation-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-3d,
+  .lift:hover {
+    transform: none !important;
+  }
 }
 
 @keyframes drawer-in {

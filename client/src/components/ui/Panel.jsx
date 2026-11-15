@@ -9,7 +9,7 @@ import { Table, ChartColumn } from 'lucide-react';
 export function Panel({ title, subtitle, actions, table, children, className, bodyClassName, as: Tag = 'section' }) {
   const [showTable, setShowTable] = useState(false);
   return (
-    <Tag className={clsx('flex min-w-0 flex-col rounded-2xl bg-surface ring-1 ring-line', className)}>
+    <Tag className={clsx('raised flex min-w-0 flex-col rounded-2xl bg-surface shadow-raise-1', className)}>
       {(title || actions || table) && (
         <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-5">
           <div className="min-w-0">
@@ -23,7 +23,7 @@ export function Panel({ title, subtitle, actions, table, children, className, bo
                 type="button"
                 aria-pressed={showTable}
                 onClick={() => setShowTable((s) => !s)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-ink-2 ring-1 ring-line hover:bg-surface-2 hover:text-ink aria-pressed:bg-surface-2 aria-pressed:text-ink"
+                className="btn-3d-soft inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-ink-2 hover:text-ink aria-pressed:bg-surface-2 aria-pressed:text-ink aria-pressed:shadow-inset"
               >
                 {showTable ? <ChartColumn size={15} aria-hidden /> : <Table size={15} aria-hidden />}
                 {showTable ? 'Chart' : 'Table'}

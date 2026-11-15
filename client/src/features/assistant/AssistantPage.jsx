@@ -17,12 +17,12 @@ export default function AssistantPage() {
     <>
       <PageHeader title="Copilot" description="Ask questions about your money in plain language. Copilot only reads your own Kosha data." />
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="flex h-[calc(100dvh-15rem)] min-h-[32rem] flex-col overflow-hidden rounded-2xl bg-surface ring-1 ring-line lg:h-[calc(100dvh-13rem)]">
+        <section className="flex h-[calc(100dvh-15rem)] min-h-[32rem] flex-col overflow-hidden rounded-2xl raised bg-surface shadow-raise-1 lg:h-[calc(100dvh-13rem)]">
           <CopilotChat className="h-full" />
         </section>
 
         <aside className="flex flex-col gap-5">
-          <section className="rounded-2xl bg-surface p-5 ring-1 ring-line">
+          <section className="rounded-2xl raised bg-surface p-5 shadow-raise-1">
             <h2 className="font-wide font-semibold">What you can ask</h2>
             <dl className="mt-3 flex flex-col gap-3 text-sm">
               {CAPABILITIES.map(([title, example]) => (
@@ -34,7 +34,7 @@ export default function AssistantPage() {
             </dl>
           </section>
 
-          <section className="rounded-2xl bg-surface p-5 text-sm ring-1 ring-line">
+          <section className="rounded-2xl raised bg-surface p-5 text-sm shadow-raise-1">
             <h2 className="font-wide font-semibold">How it works</h2>
             {status?.provider === 'gemini' ? (
               <p className="mt-2 text-ink-2">

@@ -160,7 +160,7 @@ export function CopilotChat({ compact = false, className }) {
                   key={s}
                   type="button"
                   onClick={() => submit(s)}
-                  className="rounded-full bg-surface px-3.5 py-2 text-left text-sm text-ink ring-1 ring-line-strong hover:bg-surface-2"
+                  className="btn-3d-soft rounded-full bg-surface px-3.5 py-2 text-left text-sm text-ink hover:bg-surface-2"
                 >
                   {s}
                 </button>
@@ -190,7 +190,7 @@ export function CopilotChat({ compact = false, className }) {
           submit(text);
         }}
       >
-        <div className="flex items-end gap-2 rounded-xl bg-surface p-1.5 ring-1 ring-line-strong focus-within:ring-2 focus-within:ring-brand">
+        <div className="flex items-end gap-2 rounded-xl bg-surface p-1.5 shadow-inset focus-within:ring-2 focus-within:ring-brand">
           <label htmlFor={compact ? 'copilot-input-drawer' : 'copilot-input'} className="sr-only">
             Message Copilot
           </label>

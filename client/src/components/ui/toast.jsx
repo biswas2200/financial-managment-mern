@@ -43,7 +43,7 @@ export function ToastProvider({ children }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="pointer-events-auto flex max-w-md items-center gap-3 rounded-xl bg-ink px-4 py-3 text-sm text-paper shadow-[var(--shadow-pop)]"
+            className="toast-in pointer-events-auto flex max-w-md items-center gap-3 rounded-xl bg-ink px-4 py-3 text-sm text-paper shadow-raise-2"
           >
             {t.tone === 'error' ? (
               <CircleAlert size={18} className="shrink-0 text-bad" aria-hidden />
