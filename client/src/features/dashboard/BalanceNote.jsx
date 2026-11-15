@@ -121,8 +121,12 @@ export function BalanceNote({ balance = 0, net = 0, monthLabel, partial, classNa
           </span>
           <span>
             <strong className="font-semibold">{moneyWhole(Math.abs(net))}</strong>{' '}
-            {saved ? 'saved' : 'overspent'} in {monthLabel}
-            {partial ? ' so far' : ''}
+            {saved ? 'saved' : 'overspent'} in{' '}
+            {/* Kept together so a narrow card wraps before the month, never leaving "far" alone. */}
+            <span className="whitespace-nowrap">
+              {monthLabel}
+              {partial ? ' so far' : ''}
+            </span>
           </span>
         </p>
       </div>
