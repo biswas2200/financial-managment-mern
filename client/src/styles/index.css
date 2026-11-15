@@ -16,7 +16,7 @@
   --surface-2: #eef1f6;
   --ink: #151b33;
   --ink-2: #4b5371;
-  --ink-3: #737b96;
+  --ink-3: #646c87; /* 4.6:1 or better on every light surface (WCAG AA) */
   --line: #dfe3ec;
   --line-strong: #c9cfdc;
 

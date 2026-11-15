@@ -90,8 +90,15 @@ const transactionFields = {
   tags: z.array(z.string().trim().min(1).max(24)).max(5, 'Use at most 5 tags').optional(),
 };
 
-/** Used by the React form: amount is typed in rupees and converted to paise. */
-export const transactionFormSchema = z.object({ ...transactionFields, amount: rupeeAmount });
+/**
+ * Used by the React form: amount is typed in rupees and converted to paise.
+ * The description is optional here; the form fills it from the merchant or category.
+ */
+export const transactionFormSchema = z.object({
+  ...transactionFields,
+  description: z.string().trim().max(120, 'Keep it under 120 characters').optional(),
+  amount: rupeeAmount,
+});
 
 /** Used by the API: amount must already be integer paise. */
 export const transactionApiSchema = z.object({ ...transactionFields, amount: paiseAmount });
