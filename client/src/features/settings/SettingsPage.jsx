@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { updateProfileSchema, changePasswordSchema } from '@kosha/shared';
+import { Link, useNavigate } from 'react-router-dom';
+import { updateProfileSchema, changePasswordSchema, deleteAccountSchema } from '@kosha/shared';
 import { Trash2, Plus, Pencil, Monitor, Sun, Moon } from 'lucide-react';
 import {
   useMe,
   useUpdateProfile,
+  useDeleteAccount,
   useChangePassword,
   useCategories,
   useDeleteCategory,
@@ -17,9 +19,11 @@ import { Button, Dialog, Field, Input, Segmented, Skeleton } from '../../compone
 import { CategoryIcon } from '../../components/ui/CategoryIcon.jsx';
 import { CategoryForm } from '../categories/CategoryForm.jsx';
 import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
+import { DobInput } from '../../components/ui/DobInput.jsx';
+import { AvatarPicker } from './AvatarPicker.jsx';
 import { useToast } from '../../components/ui/toast.jsx';
 import { EngineBadge } from '../assistant/CopilotChat.jsx';
-import { moneyWhole } from '../../lib/format.js';
+import { moneyWhole, dateLong } from '../../lib/format.js';
 
 function Section({ title, description, children }) {
   return (
@@ -36,18 +40,32 @@ function Section({ title, description, children }) {
 function ProfileForm({ user }) {
   const update = useUpdateProfile();
   const toast = useToast();
-  const { register, handleSubmit, formState } = useForm({ resolver: zodResolver(updateProfileSchema), defaultValues: { name: user.name } });
+  const { register, handleSubmit, control, formState } = useForm({
+    resolver: zodResolver(updateProfileSchema),
+    defaultValues: { name: user.name, phone: user.phone ?? '', dateOfBirth: user.dateOfBirth ?? '', avatar: user.avatar ?? null },
+  });
   return (
     <form
       noValidate
-      className="flex max-w-md flex-col gap-4"
+      className="flex max-w-xl flex-col gap-5"
       onSubmit={handleSubmit((v) => update.mutate(v, { onSuccess: () => toast.success('Profile updated'), onError: (e) => toast.error(e.message) }))}
     >
+      <Controller
+        control={control}
+        name="avatar"
+        render={({ field }) => <AvatarPicker name={user.name} value={field.value} onChange={field.onChange} />}
+      />
       <Field label="Name" error={formState.errors.name?.message}>
         {(a11y) => <Input {...a11y} {...register('name')} autoComplete="name" />}
       </Field>
       <Field label="Email" hint="Your email is your sign-in and can't be changed here.">
         {(a11y) => <Input {...a11y} value={user.email} readOnly disabled />}
+      </Field>
+      <Field label="Phone number" optional error={formState.errors.phone?.message} hint="Only used to reach you about your account. Clear it to remove it.">
+        {(a11y) => <Input {...a11y} type="tel" inputMode="tel" autoComplete="tel" placeholder="98765 43210" {...register('phone')} />}
+      </Field>
+      <Field label="Date of birth" optional error={formState.errors.dateOfBirth?.message} hint="Used to check you are old enough (13+) and to show your age.">
+        {(a11y) => <Controller control={control} name="dateOfBirth" render={({ field }) => <DobInput {...a11y} value={field.value} onChange={field.onChange} />} />}
       </Field>
       <Button type="submit" className="self-start" loading={update.isPending}>
         Save profile
@@ -87,6 +105,84 @@ function PasswordForm() {
         Change password
       </Button>
     </form>
+  );
+}
+
+function DeleteAccountDialog({ open, onClose }) {
+  const del = useDeleteAccount();
+  const navigate = useNavigate();
+  const { register, handleSubmit, reset, formState } = useForm({ resolver: zodResolver(deleteAccountSchema), defaultValues: { password: '' } });
+  const [serverError, setServerError] = useState(null);
+
+  const close = () => {
+    reset();
+    setServerError(null);
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onClose={close} title="Delete your account?">
+      <form
+        noValidate
+        className="flex flex-col gap-4"
+        onSubmit={handleSubmit((values) => {
+          setServerError(null);
+          // The session is gone, so go to sign-in the same way signing out does.
+          del.mutate(values, { onSuccess: () => navigate('/login', { replace: true }), onError: (e) => setServerError(e.message) });
+        })}
+      >
+        <p className="text-sm text-ink-2">
+          This permanently deletes your profile, transactions, budgets, categories and Copilot messages. It cannot be undone. If you want a copy first, use
+          Export CSV on the Transactions page.
+        </p>
+        <Field label="Your password" error={formState.errors.password?.message}>
+          {(a11y) => <PasswordInput {...a11y} autoComplete="current-password" {...register('password')} />}
+        </Field>
+        {serverError && (
+          <p role="alert" className="rounded-lg bg-bad/10 px-3 py-2 text-sm text-bad-text">
+            {serverError}
+          </p>
+        )}
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={close}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="danger" loading={del.isPending}>
+            Delete everything
+          </Button>
+        </div>
+      </form>
+    </Dialog>
+  );
+}
+
+function PrivacySection({ user }) {
+  const [deleting, setDeleting] = useState(false);
+  const consent = user?.consent;
+  return (
+    <div className="flex flex-col gap-4 text-sm text-ink-2">
+      <p>
+        {consent
+          ? `You accepted version ${consent.termsVersion} of the Terms and Privacy Policy on ${dateLong(consent.acceptedAt)}.`
+          : 'Your account was created before Kosha recorded this. You can read the documents below at any time.'}
+      </p>
+      <p className="flex flex-wrap gap-x-5 gap-y-1">
+        <Link to="/privacy" target="_blank" rel="noreferrer" className="font-semibold text-brand hover:underline">
+          Privacy Policy
+        </Link>
+        <Link to="/terms" target="_blank" rel="noreferrer" className="font-semibold text-brand hover:underline">
+          Terms of Use
+        </Link>
+      </p>
+      <div className="mt-2 rounded-xl border border-bad/30 bg-bad/5 p-4">
+        <p className="font-semibold text-ink">Delete your account</p>
+        <p className="mt-1">Removes your profile and every record you have added. Your password is needed to confirm.</p>
+        <Button variant="danger" size="sm" className="mt-3" onClick={() => setDeleting(true)}>
+          Delete my account
+        </Button>
+      </div>
+      <DeleteAccountDialog open={deleting} onClose={() => setDeleting(false)} />
+    </div>
   );
 }
 
@@ -180,13 +276,16 @@ export default function SettingsPage() {
         <Section title="Categories" description="Rename the defaults or add your own. Categories that have transactions can't be deleted.">
           <CategoryManager />
         </Section>
+        <Section title="Privacy and your data" description="What you agreed to, and how to leave.">
+          {user && <PrivacySection user={user} />}
+        </Section>
         <Section title="Copilot engine" description="Which engine is answering your questions.">
           <div className="flex flex-col gap-2 text-sm text-ink-2">
             <EngineBadge status={status} />
             <p>
               {status?.provider === 'gemini'
-                ? `Connected to Google Gemini (${status.model}). Your questions and the figures Copilot looks up are sent to Gemini to write each answer.`
-                : 'No Gemini API key is configured on the server, so Copilot answers with its built-in offline engine.'}
+                ? `Connected to Google Gemini (${status.model}) ${status.auth === 'adc' ? 'through your Google Cloud sign-in (Application Default Credentials), so no API key is stored' : 'with an API key'}. Your questions and the figures Copilot looks up are sent to Gemini to write each answer.`
+                : 'Gemini is not set up on the server (no API key or Google Cloud project), so Copilot answers with its built-in offline engine.'}
             </p>
           </div>
         </Section>

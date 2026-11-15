@@ -73,6 +73,18 @@ export function useUpdateProfile() {
   });
 }
 
+/** Deletes the account for good; the session is gone afterwards, so the app returns to sign-in. */
+export function useDeleteAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => api('/auth/me', { method: 'DELETE', body }),
+    onSuccess: () => {
+      qc.clear();
+      qc.setQueryData(keys.me, null);
+    },
+  });
+}
+
 export const useChangePassword = () =>
   useMutation({ mutationFn: (body) => api('/auth/change-password', { method: 'POST', body }) });
 

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Logo, LogoMark } from '../brand/Logo.jsx';
 import { Button, Dialog } from '../ui/primitives.jsx';
+import { Avatar } from '../ui/Avatar.jsx';
 import { useTheme } from '../../app/theme.jsx';
 import { useLogout, useMe } from '../../api/hooks.js';
 import { useHotkeys } from '../../hooks/useHotkeys.js';
@@ -56,15 +57,6 @@ export const Kbd = ({ children, className, inverse = false, plain = false }) => 
     {children}
   </kbd>
 );
-
-function initials(name = '') {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join('');
-}
 
 function ThemeToggle({ className }) {
   const { resolved, setTheme } = useTheme();
@@ -150,12 +142,7 @@ function Sidebar({ onAdd, onShortcuts }) {
             <Kbd plain className="ml-auto bg-white/10 text-rail-ink ring-white/20">?</Kbd>
           </button>
           <div className="flex items-center gap-3 rounded-xl border-t border-white/10 px-2 pt-3">
-            <span
-              aria-hidden
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-thread text-sm font-semibold text-[#2a1c00] shadow-[inset_0_1px_0_rgb(255_255_255/0.4),0_2px_6px_rgb(0_0_0/0.35)]"
-            >
-              {initials(user?.name)}
-            </span>
+            <Avatar user={user} size={36} fallbackClassName="bg-thread text-[#2a1c00] shadow-[inset_0_1px_0_rgb(255_255_255/0.4),0_2px_6px_rgb(0_0_0/0.35)]" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">{user?.name}</p>
               <p className="truncate text-[0.8125rem] text-rail-ink-2">{user?.email}</p>

@@ -1,5 +1,9 @@
 import { POLICY_VERSION } from '@kosha/shared';
 import { User } from '../models/User.js';
+import { Transaction } from '../models/Transaction.js';
+import { Category } from '../models/Category.js';
+import { Budget } from '../models/Budget.js';
+import { AssistantMessage } from '../models/AssistantMessage.js';
 import { ApiError } from '../utils/ApiError.js';
 import { seedDefaultCategories } from './category.service.js';
 
@@ -51,4 +55,19 @@ export async function changePassword(userId, { currentPassword, newPassword }) {
   }
   user.passwordHash = await User.hashPassword(newPassword);
   await user.save();
+}
+
+/** Permanently removes the account and everything that belongs to it. Needs the current password. */
+export async function deleteAccount(userId, { password }) {
+  const user = await User.findById(userId).select('+passwordHash');
+  if (!user || !(await user.verifyPassword(password))) {
+    throw ApiError.badRequest('Your password is incorrect', [{ path: 'password', message: 'Incorrect password' }]);
+  }
+  await Promise.all([
+    Transaction.deleteMany({ user: user._id }),
+    Budget.deleteMany({ user: user._id }),
+    Category.deleteMany({ user: user._id }),
+    AssistantMessage.deleteMany({ user: user._id }),
+  ]);
+  await user.deleteOne();
 }

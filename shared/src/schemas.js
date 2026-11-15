@@ -131,6 +131,10 @@ export const updateProfileSchema = z.object({
   avatar: avatarSchema.nullable().optional(),
 });
 
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, 'Enter your password to confirm'),
+});
+
 // ---------- Balance ----------
 
 /** Used by the API: the balance the user really has, in whole paise (may be negative). */

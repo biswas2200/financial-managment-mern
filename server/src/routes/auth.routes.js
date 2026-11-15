@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
-import { registerSchema, loginSchema, updateProfileSchema, changePasswordSchema } from '@kosha/shared';
+import { registerSchema, loginSchema, updateProfileSchema, changePasswordSchema, deleteAccountSchema } from '@kosha/shared';
 import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/auth.js';
 import { env } from '../config/env.js';
@@ -24,6 +24,7 @@ router.post('/login', authLimiter, validate({ body: loginSchema }), auth.login);
 router.post('/logout', auth.logout);
 router.get('/me', requireAuth, auth.me);
 router.patch('/me', requireAuth, validate({ body: updateProfileSchema }), auth.updateMe);
+router.delete('/me', requireAuth, validate({ body: deleteAccountSchema }), auth.deleteMe);
 router.post('/change-password', requireAuth, validate({ body: changePasswordSchema }), auth.changePassword);
 
 export default router;

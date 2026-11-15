@@ -3,15 +3,7 @@ import { Link } from 'react-router-dom';
 import { InstallButton } from '../../pwa/InstallButton.jsx';
 import { Settings, Sun, Moon, LogOut, Keyboard } from 'lucide-react';
 import { useTheme } from '../../app/theme.jsx';
-
-function initials(name = '') {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0].toUpperCase())
-    .join('');
-}
+import { Avatar } from '../ui/Avatar.jsx';
 
 const itemClass =
   'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[0.9375rem] text-ink hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-none';
@@ -62,9 +54,9 @@ export function AccountMenu({ user, onSignOut, onShowShortcuts }) {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-sm font-semibold text-brand-ink"
+        className="rounded-full"
       >
-        {initials(user?.name)}
+        <Avatar user={user} size={36} />
       </button>
 
       {open && (

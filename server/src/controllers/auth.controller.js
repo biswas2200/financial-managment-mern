@@ -31,3 +31,9 @@ export async function changePassword(req, res) {
   await authService.changePassword(req.user._id, req.valid.body);
   res.status(204).end();
 }
+
+export async function deleteMe(req, res) {
+  await authService.deleteAccount(req.user._id, req.valid.body);
+  clearAuthCookie(res);
+  res.status(204).end();
+}
