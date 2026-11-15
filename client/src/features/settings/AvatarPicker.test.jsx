@@ -33,6 +33,12 @@ describe('AvatarPicker', () => {
     expect(onChange).toHaveBeenCalledWith({ type: 'preset', preset: 'leaf', color: '#eb6834' });
   });
 
+  it('picking a colour before an icon gives you a friendly default icon in it', async () => {
+    const { onChange, user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Background #1baf7a' }));
+    expect(onChange).toHaveBeenCalledWith({ type: 'preset', preset: 'smile', color: '#1baf7a' });
+  });
+
   it('marks the chosen icon', () => {
     setup({ type: 'preset', preset: 'leaf', color: '#2c3a8f' });
     expect(screen.getByRole('button', { name: 'Use the leaf icon' })).toHaveAttribute('aria-pressed', 'true');

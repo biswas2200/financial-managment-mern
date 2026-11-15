@@ -15,7 +15,12 @@ are saved only after you confirm them.
 - **Analytics:** savings rate by month, spending by weekday, category trends as small multiples, top merchants and a category table over 3, 6 or 12 months.
 - **Budgets:** a monthly limit per category with spent, remaining and status (a heads-up at 75%, over budget past 100%), plus copying last month's budgets.
 - **Kosha Copilot:** plain-language questions ("Where is my money going?", "Compare this month with last month") answered from your data, with inline charts. Say "Spent 450 on groceries yesterday" and it drafts the entry for you to confirm.
-- **Settings:** profile, password, light/dark/system theme, custom categories, and which Copilot engine is active.
+- **Going back in time:** click the month name for a grid of months, click a month on the 12-month chart, or step with the arrows. Months from before you signed up show the calendar but no insights, and you can fill them in.
+- **Click a day:** the spending calendar lists what you spent that day and lets you add an expense dated that day.
+- **A balance you can trust:** if spending outruns income the balance goes below zero and says why. Type what you really have (a minus sign is fine for an overdraft), or try the clearly labelled demo bank, which fetches a sample figure. Your transactions are never rewritten.
+- **Budgets with your own categories:** every expense category can be picked, and a new category with its own icon (55+ to choose from) can be made without leaving the budget form.
+- **Settings:** profile picture (an icon on a colour, or your own photo shrunk in the browser), phone number, date of birth, password, light/dark/system theme, custom categories, what you agreed to, deleting your account, and which Copilot engine is active.
+- **Privacy:** a plain-language Privacy Policy and Terms of Use, accepted at sign-up and recorded with the version and time. Phone number and date of birth are optional.
 - Responsive from 360 px phones (bottom tab bar and account menu) to wide desktops, with keyboard support and a table view for every chart.
 - **Installable app (PWA):** add Kosha to a phone's home screen or a desktop dock. It opens full screen, starts offline, and has "Add expense" and "Add income" shortcuts on the app icon.
 
@@ -25,7 +30,7 @@ are saved only after you confirm them.
 - **Fast entry:** "Add expense" and "Add income" buttons everywhere. Only the amount and a category are required; categories and payment methods are one-tap chips, the date has Today/Yesterday shortcuts, and the description fills itself from the merchant or category.
 - **Calmer filters:** search, type and a "When" menu (This month, Last month, Last 30 days) up front; everything else under "More filters", with every active filter shown as a removable chip.
 - **Plain-language help:** a "?" next to terms like Savings rate explains what they mean.
-- **Accessible:** WCAG AA text contrast in both themes, labelled controls, visible focus, a show/hide toggle on password fields.
+- **Accessible:** WCAG AA text contrast in both themes, labelled controls, a focus ring that eases in, themed dropdowns that work from the keyboard, a show/hide toggle on password fields.
 
 ### Depth and motion
 
@@ -89,15 +94,33 @@ The service worker caches only the app shell (HTML, scripts, styles, icons, font
 
 ### Enable the Gemini engine for Copilot
 
+Pick one of two ways to sign in to Google Gemini.
+
+**A. An API key**
+
 1. Create a free API key at [Google AI Studio](https://aistudio.google.com/apikey).
 2. Put it in `server/.env`:
    ```
    GEMINI_API_KEY=your-key-here
    GEMINI_MODEL=gemini-2.5-flash
    ```
-3. Restart `npm run dev`. The Copilot header badge changes from "Offline mode" to "Gemini".
 
-`server/.env` is gitignored, so the key never reaches the repository. Without a key, or when Gemini's
+**B. Google Application Default Credentials (no key stored anywhere)**
+
+1. Sign in once on your machine: `gcloud auth application-default login`.
+2. Enable Vertex AI on your project: `gcloud services enable aiplatform.googleapis.com`.
+3. Tell Kosha which project to use in `server/.env`:
+   ```
+   GOOGLE_CLOUD_PROJECT=your-project-id
+   GOOGLE_CLOUD_LOCATION=us-central1
+   GEMINI_AUTH=adc
+   ```
+   On Google Cloud (Cloud Run, GCE) the attached service account is picked up the same way, with no `gcloud` login.
+
+Restart `npm run dev`. The Copilot header badge changes from "Offline mode" to "Gemini", and Settings says which sign-in is in use.
+An API key wins when both are set, unless `GEMINI_AUTH=adc`.
+
+`server/.env` is gitignored, so nothing secret reaches the repository. Without Gemini configured, or when Gemini's
 quota is exhausted or unreachable, Copilot answers with its built-in rule-based engine using the same tools.
 When Gemini is enabled, your question and the figures Copilot looks up are sent to Google to write the reply.
 
@@ -126,10 +149,10 @@ Development followed test-driven development: each feature started with a failin
 
 | Suite | Tests | Notes |
 |---|---|---|
-| shared | 63 | money parsing and formatting, IST dates, validation schemas |
-| server | 153 | unit (parser, intents, Gemini loop, seed) and API integration against MongoDB, 89% statement coverage |
-| client | 83 | API client, filters, transaction form, KPI strip, onboarding, menus, hotkeys, 3D tilt and count-up, PWA manifest, service worker, install and offline |
-| e2e | 10 | sign-up, CRUD and dashboard totals, filters, undo, validation, Copilot confirm, budgets |
+| shared | 79 | money parsing and formatting, IST dates, validation schemas, phone, date of birth, avatar and balance rules |
+| server | 184 | unit (parser, intents, Gemini loop and sign-in, seed) and API integration against MongoDB: profile, consent, balance, account deletion |
+| client | 170 | API client, filters, forms, dropdown, month picker, calendar, balance dialog, avatar and date-of-birth inputs, policy pages, menus, hotkeys, 3D tilt and count-up, PWA |
+| e2e | 43 | sign-up and consent, CRUD and dashboard totals, filters, undo, Copilot confirm, budgets and custom categories, months and days, balance, profile, phone layout |
 
 ## Project structure
 
@@ -153,10 +176,11 @@ All routes are under `/api/v1` and return JSON; everything except `/auth` needs 
 
 | Resource | Endpoints |
 |---|---|
-| Auth | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /auth/me`, `POST /auth/change-password` |
+| Auth | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout`, `GET/PATCH/DELETE /auth/me`, `POST /auth/change-password` |
 | Categories | `GET/POST /categories`, `PATCH/DELETE /categories/:id` |
 | Transactions | `GET/POST /transactions`, `GET/PATCH/DELETE /transactions/:id`, `GET /transactions/export.csv` |
 | Budgets | `GET/PUT /budgets`, `POST /budgets/copy`, `DELETE /budgets/:id` |
+| Balance | `GET/PUT /balance`, `GET /balance/banks`, `POST /balance/bank-demo` (sample figures, nothing is connected) |
 | Analytics | `GET /analytics/summary`, `/by-category`, `/trend`, `/daily`, `/weekday`, `/merchants`, `/category-trend` |
 | Copilot | `GET /assistant/status`, `/insights`, `GET/DELETE /assistant/history`, `POST /assistant/message`, `POST /assistant/actions/:id/confirm` and `/cancel` |
 
@@ -167,6 +191,11 @@ All routes are under `/api/v1` and return JSON; everything except `/auth` needs 
 | ![Transactions](docs/report/screenshots/transactions.png) | ![Analytics](docs/report/screenshots/analytics.png) |
 | ![Budgets](docs/report/screenshots/budgets.png) | ![Copilot](docs/report/screenshots/copilot.png) |
 | ![Dark theme](docs/report/screenshots/dashboard-dark.png) | ![Sign in](docs/report/screenshots/login.png) |
+| ![A balance below zero](docs/report/screenshots/balance-negative.png) | ![Fetch a balance from the demo bank](docs/report/screenshots/balance-bank.png) |
+| ![Budget category list](docs/report/screenshots/budget-dropdown.png) | ![A new category with its own icon](docs/report/screenshots/budget-new-category.png) |
+| ![Month picker](docs/report/screenshots/month-picker.png) | ![A month before sign-up](docs/report/screenshots/before-account.png) |
+| ![A day's spending](docs/report/screenshots/day-detail.png) | ![Settings](docs/report/screenshots/settings.png) |
+| ![Sign up with consent](docs/report/screenshots/register.png) | ![Privacy Policy](docs/report/screenshots/privacy.png) |
 
 ## Troubleshooting
 

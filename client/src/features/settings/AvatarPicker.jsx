@@ -88,10 +88,8 @@ export function AvatarPicker({ name, value, onChange }) {
               type="button"
               aria-label={`Background ${c}`}
               aria-pressed={isPreset && value.color === c}
-              disabled={!isPreset}
-              title={isPreset ? undefined : 'Pick an icon first'}
-              onClick={() => onChange({ ...value, color: c })}
-              className="h-7 w-7 rounded-full ring-offset-2 ring-offset-surface transition-transform duration-150 hover:scale-110 disabled:opacity-40 disabled:hover:scale-100 aria-pressed:scale-110 aria-pressed:ring-2 aria-pressed:ring-ink"
+              onClick={() => onChange(isPreset ? { ...value, color: c } : { type: 'preset', preset: 'smile', color: c })}
+              className="h-7 w-7 rounded-full ring-offset-2 ring-offset-surface transition-transform duration-150 hover:scale-110 aria-pressed:scale-110 aria-pressed:ring-2 aria-pressed:ring-ink"
               style={{ background: c }}
             />
           ))}

@@ -151,10 +151,113 @@ async function main() {
     }
     await ctx?.close();
 
+
+    const NEW_SHOTS = ['balance', 'budget-add', 'months', 'day-detail', 'register', 'privacy'];
+    if (NEW_SHOTS.some(want)) {
+      const ym = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Kolkata' }).slice(0, 7);
+      const nctx = await signedInContext(browser, { colorScheme: 'light' });
+      const n = await nctx.newPage();
+      await n.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+
+      if (want('balance')) {
+        // A balance below zero is explained and fixable. Nothing is saved: the dialog is closed each time.
+        await n.goto(`${BASE}/`);
+        await settle(n, 2600);
+        await n.addStyleTag({ content: '[data-copilot-launcher]{display:none!important}' });
+        await shot(n, 'balance-negative');
+        await n.getByRole('button', { name: 'Set my balance' }).click();
+        await n.getByLabel(/in your accounts/i).fill('-2,500');
+        await n.waitForTimeout(500);
+        await shot(n, 'balance-dialog');
+        await n.getByRole('dialog').getByText('Fetch from bank (demo)').click();
+        await n.getByRole('button', { name: 'Fetch balance' }).click();
+        await n.getByText(/sample data/i).waitFor({ timeout: 8000 });
+        await n.waitForTimeout(500);
+        await shot(n, 'balance-bank');
+        await n.keyboard.press('Escape');
+        await n.waitForTimeout(300);
+      }
+
+      if (want('budget-add')) {
+        await n.goto(`${BASE}/budgets`);
+        await settle(n, 1200);
+        await n.getByRole('button', { name: 'Add budget' }).first().click();
+        const dlg = n.getByRole('dialog', { name: 'Add a budget' });
+        await dlg.getByRole('combobox', { name: 'Category' }).click();
+        await n.waitForTimeout(500);
+        await shot(n, 'budget-dropdown');
+        await n.getByRole('option', { name: 'New category…' }).click();
+        await n.getByRole('dialog', { name: 'New category' }).getByLabel('Name').fill('Pets');
+        await n.getByRole('button', { name: 'Icon paw-print' }).click();
+        await n.waitForTimeout(400);
+        await shot(n, 'budget-new-category');
+        await n.keyboard.press('Escape');
+        await n.keyboard.press('Escape');
+      }
+
+      if (want('months')) {
+        await n.goto(`${BASE}/`);
+        await settle(n, 1800);
+        await n.getByRole('group', { name: 'Choose month' }).getByRole('button', { name: /\d{4}$/ }).click();
+        await n.waitForTimeout(500);
+        await shot(n, 'month-picker');
+        await n.keyboard.press('Escape');
+        // A month from before the account: the calendar stays, the insights go.
+        await n.getByRole('group', { name: 'Choose month' }).getByRole('button', { name: /\d{4}$/ }).click();
+        const year = Number(ym.slice(0, 4)) - 1;
+        await n.getByRole('dialog', { name: 'Pick a month' }).getByRole('button', { name: 'Previous year' }).click();
+        await n.getByRole('button', { name: `October ${year}` }).click();
+        await settle(n, 900);
+        await shot(n, 'before-account', { fullPage: false });
+      }
+
+      if (want('day-detail')) {
+        await n.goto(`${BASE}/`);
+        await settle(n, 2200);
+        await n.addStyleTag({ content: '[data-copilot-launcher]{display:none!important}' });
+        const cell = n.locator(`[role="gridcell"][data-date="${ym}-05"]`);
+        await cell.scrollIntoViewIfNeeded();
+        await cell.click();
+        await n.waitForTimeout(900);
+        const panel = n.getByRole('region', { name: /Spending on/ });
+        await panel.scrollIntoViewIfNeeded();
+        await shot(n, 'day-detail');
+      }
+      await nctx.close();
+
+      if (want('register')) {
+        const rctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'en-IN', timezoneId: 'Asia/Kolkata', colorScheme: 'light' });
+        const r = await rctx.newPage();
+        await r.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+        await r.goto(`${BASE}/register`);
+        await settle(r, 1500);
+        await r.getByLabel('Name').fill('Priya Nair');
+        await r.getByLabel('Email').fill('priya@example.com');
+        await r.getByLabel('Password', { exact: true }).fill('firstRun2026');
+        await r.getByLabel(/phone number/i).fill('98765 43210');
+        await r.getByLabel('Date of birth, day').click();
+        await r.keyboard.type('14081999');
+        await r.getByRole('checkbox', { name: /I agree/ }).check();
+        await r.waitForTimeout(500);
+        await shot(r, 'register');
+        await r.goto(`${BASE}/privacy`);
+        await settle(r, 800);
+        await shot(r, 'privacy');
+        await rctx.close();
+      } else if (want('privacy')) {
+        const pctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'en-IN', colorScheme: 'light' });
+        const pp = await pctx.newPage();
+        await pp.goto(`${BASE}/privacy`);
+        await settle(pp, 800);
+        await shot(pp, 'privacy');
+        await pctx.close();
+      }
+    }
+
     if (want('onboarding')) {
       const octx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-IN', timezoneId: 'Asia/Kolkata', colorScheme: 'light' });
       const email = `newuser-${Date.now()}@kosha.test`;
-      const res = await octx.request.post(`${BASE}/api/v1/auth/register`, { data: { name: 'Priya Nair', email, password: 'firstRun2026' } });
+      const res = await octx.request.post(`${BASE}/api/v1/auth/register`, { data: { name: 'Priya Nair', email, password: 'firstRun2026', acceptedTerms: true } });
       if (!res.ok()) throw new Error(`Could not create the onboarding account (${res.status()})`);
       const o = await octx.newPage();
       await o.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
