@@ -17,7 +17,8 @@ export default function AssistantPage() {
     <>
       <PageHeader title="Copilot" description="Ask questions about your money in plain language. Copilot only reads your own Kosha data." />
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="flex h-[calc(100dvh-15rem)] min-h-[32rem] flex-col overflow-hidden rounded-2xl raised bg-surface shadow-raise-1 lg:h-[calc(100dvh-13rem)]">
+        {/* Below lg the bottom tab bar (about 4 rem plus the phone's safe area) sits under the page, so the card stops short of it. */}
+        <section className="flex h-[calc(100dvh-16.5rem-env(safe-area-inset-bottom))] min-h-[24rem] flex-col overflow-hidden rounded-2xl raised bg-surface shadow-raise-1 lg:h-[calc(100dvh-13rem)] lg:min-h-[32rem]">
           <CopilotChat className="h-full" />
         </section>
 

@@ -206,7 +206,7 @@ export function CopilotChat({ compact = false, className }) {
                 submit(text);
               }
             }}
-            placeholder='Try "How did I do in October?" or "Spent 300 on Uber"'
+            placeholder="Ask about your money…"
             className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-[0.9375rem] placeholder:text-ink-3 focus:outline-none"
           />
           <Button type="submit" size="icon" aria-label="Send" disabled={!text.trim() || send.isPending} className="h-10 w-10">
