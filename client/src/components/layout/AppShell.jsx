@@ -45,11 +45,11 @@ const SHORTCUTS = [
 const QuickAddContext = createContext({ openAdd: () => {}, openEdit: () => {} });
 export const useQuickAdd = () => useContext(QuickAddContext);
 
-export const Kbd = ({ children, className, inverse = false }) => (
+export const Kbd = ({ children, className, inverse = false, plain = false }) => (
   <kbd
     className={clsx(
       'inline-flex min-w-6 items-center justify-center rounded-md px-1.5 py-0.5 font-sans text-[0.75rem] font-semibold ring-1',
-      inverse ? 'bg-white/20 text-brand-ink ring-white/30' : 'bg-surface-2 text-ink-2 ring-line-strong',
+      !plain && (inverse ? 'bg-white/20 text-brand-ink ring-white/30' : 'bg-surface-2 text-ink-2 ring-line-strong'),
       className,
     )}
   >
@@ -101,14 +101,14 @@ function Sidebar({ onAdd, onShortcuts }) {
               <Plus size={18} aria-hidden />
               Add expense
             </span>
-            <Kbd className="bg-black/10 text-[#2a1c00] ring-black/15">N</Kbd>
+            <Kbd plain className="bg-black/10 text-[#2a1c00] ring-black/15">N</Kbd>
           </Button>
           <Button className="w-full justify-between !bg-white/8 !text-rail-ink ring-1 ring-white/12 hover:!bg-white/14" onClick={() => onAdd('income')} title="Shortcut: I">
             <span className="inline-flex items-center gap-2">
               <ArrowUpRight size={18} aria-hidden />
               Add income
             </span>
-            <Kbd className="bg-white/10 text-rail-ink ring-white/20">I</Kbd>
+            <Kbd plain className="bg-white/10 text-rail-ink ring-white/20">I</Kbd>
           </Button>
         </div>
 
@@ -147,7 +147,7 @@ function Sidebar({ onAdd, onShortcuts }) {
           >
             <Keyboard size={16} aria-hidden />
             Keyboard shortcuts
-            <Kbd className="ml-auto bg-white/10 text-rail-ink ring-white/20">?</Kbd>
+            <Kbd plain className="ml-auto bg-white/10 text-rail-ink ring-white/20">?</Kbd>
           </button>
           <div className="flex items-center gap-3 rounded-xl border-t border-white/10 px-2 pt-3">
             <span

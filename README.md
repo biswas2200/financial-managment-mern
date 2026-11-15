@@ -17,6 +17,7 @@ are saved only after you confirm them.
 - **Kosha Copilot:** plain-language questions ("Where is my money going?", "Compare this month with last month") answered from your data, with inline charts. Say "Spent 450 on groceries yesterday" and it drafts the entry for you to confirm.
 - **Settings:** profile, password, light/dark/system theme, custom categories, and which Copilot engine is active.
 - Responsive from 360 px phones (bottom tab bar and account menu) to wide desktops, with keyboard support and a table view for every chart.
+- **Installable app (PWA):** add Kosha to a phone's home screen or a desktop dock. It opens full screen, starts offline, and has "Add expense" and "Add income" shortcuts on the app icon.
 
 ### Designed to be easy to use
 
@@ -25,6 +26,12 @@ are saved only after you confirm them.
 - **Calmer filters:** search, type and a "When" menu (This month, Last month, Last 30 days) up front; everything else under "More filters", with every active filter shown as a removable chip.
 - **Plain-language help:** a "?" next to terms like Savings rate explains what they mean.
 - **Accessible:** WCAG AA text contrast in both themes, labelled controls, visible focus, a show/hide toggle on password fields.
+
+### Depth and motion
+
+- **Tactile surfaces:** cards are raised paper with a top-edge highlight and ink-tinted shadows, inputs and toggles are pressed-in wells, and buttons are bevelled keys that sink when you press them. A dark indigo rail holds the navigation.
+- **The banknote:** the balance card tips towards your mouse in 3D, a sheen follows the light and the security thread glints like foil.
+- **Motion with a reason:** the balance and monthly figures count up, dashboard panels rise in sequence on load, and dialogs, menus, chips, toasts and page changes animate to show what changed. All of it switches off when the system asks for reduced motion.
 
 ### Keyboard shortcuts
 
@@ -68,6 +75,18 @@ Open http://localhost:5173 and sign in with the seed-dataset demo account
 
 mongo-express is available at http://localhost:8081 to browse the database.
 
+### Use it on your phone (PWA)
+
+```bash
+npm run pwa        # production build on http://localhost:4173 with the API, reachable on your network
+```
+
+- **On the laptop:** open http://localhost:4173 in Chrome or Edge and choose **Install Kosha app** in the sidebar (or the install icon in the address bar).
+- **On a phone on the same Wi-Fi:** open `http://<your-laptop-ip>:4173` (Vite prints the Network address). Browsers only allow installing and offline mode over HTTPS or localhost, so on a plain LAN address Kosha works as a normal mobile website. To install it on the phone, serve it over HTTPS (for example with a tunnel such as `cloudflared tunnel --url http://localhost:4173`) and use **Add to Home Screen**.
+- `npm run dev:lan` is the same as `npm run dev` but reachable from other devices, for testing layouts on a real phone.
+
+The service worker caches only the app shell (HTML, scripts, styles, icons, fonts). Balances and transactions always come live from the API and are never cached on the device.
+
 ### Enable the Gemini engine for Copilot
 
 1. Create a free API key at [Google AI Studio](https://aistudio.google.com/apikey).
@@ -87,6 +106,8 @@ When Gemini is enabled, your question and the figures Copilot looks up are sent 
 | Command | What it does |
 |---|---|
 | `npm run dev` | API (watch mode) and Vite dev server together |
+| `npm run dev:lan` | The same, reachable from phones on your network |
+| `npm run pwa` | Production build plus API on :4173, installable as an app |
 | `npm test` | Shared, server and client test suites |
 | `npm run test:coverage` | Server and client tests with coverage |
 | `npm run e2e` | Playwright end-to-end journeys in Google Chrome (starts the dev servers if needed) |
@@ -105,9 +126,9 @@ Development followed test-driven development: each feature started with a failin
 
 | Suite | Tests | Notes |
 |---|---|---|
-| shared | 62 | money parsing and formatting, IST dates, validation schemas |
+| shared | 63 | money parsing and formatting, IST dates, validation schemas |
 | server | 153 | unit (parser, intents, Gemini loop, seed) and API integration against MongoDB, 89% statement coverage |
-| client | 28 | API client, filter reducer, transaction form, KPI strip, Copilot draft card |
+| client | 83 | API client, filters, transaction form, KPI strip, onboarding, menus, hotkeys, 3D tilt and count-up, PWA manifest, service worker, install and offline |
 | e2e | 10 | sign-up, CRUD and dashboard totals, filters, undo, validation, Copilot confirm, budgets |
 
 ## Project structure
@@ -120,7 +141,7 @@ server/      Express API
   src/agent         Copilot: tools, Gemini provider, offline engine, insights
   scripts/          seed.js, dump.sh
   tests/            unit and integration suites
-client/      React app (features/, components/, api/, styles/)
+client/      React app (features/, components/, api/, pwa/, styles/); public/ holds the manifest, icons and sw.js
 e2e/         Playwright specs and the screenshot script
 database/    initdb restore script and the committed seed dump
 docs/report/ project report, diagrams, screenshots and test evidence
