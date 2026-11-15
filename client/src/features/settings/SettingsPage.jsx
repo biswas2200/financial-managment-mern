@@ -1,27 +1,25 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { updateProfileSchema, changePasswordSchema, categoryApiSchema } from '@kosha/shared';
+import { updateProfileSchema, changePasswordSchema } from '@kosha/shared';
 import { Trash2, Plus, Pencil, Monitor, Sun, Moon } from 'lucide-react';
 import {
   useMe,
   useUpdateProfile,
   useChangePassword,
   useCategories,
-  useSaveCategory,
   useDeleteCategory,
   useAssistantStatus,
 } from '../../api/hooks.js';
 import { useTheme } from '../../app/theme.jsx';
 import { PageHeader } from '../../components/layout/AppShell.jsx';
-import { Button, Dialog, Field, Input, Select, Segmented, Skeleton } from '../../components/ui/primitives.jsx';
-import { CategoryIcon, CATEGORY_ICONS } from '../../components/ui/CategoryIcon.jsx';
+import { Button, Dialog, Field, Input, Segmented, Skeleton } from '../../components/ui/primitives.jsx';
+import { CategoryIcon } from '../../components/ui/CategoryIcon.jsx';
+import { CategoryForm } from '../categories/CategoryForm.jsx';
 import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
 import { useToast } from '../../components/ui/toast.jsx';
 import { EngineBadge } from '../assistant/CopilotChat.jsx';
 import { moneyWhole } from '../../lib/format.js';
-
-const SWATCHES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6', '#e34948'];
 
 function Section({ title, description, children }) {
   return (
@@ -88,88 +86,6 @@ function PasswordForm() {
       <Button type="submit" variant="secondary" className="self-start" loading={change.isPending}>
         Change password
       </Button>
-    </form>
-  );
-}
-
-function CategoryForm({ editing, onDone }) {
-  const save = useSaveCategory();
-  const toast = useToast();
-  const { register, handleSubmit, watch, setValue, formState } = useForm({
-    resolver: zodResolver(editing ? categoryApiSchema.partial() : categoryApiSchema),
-    defaultValues: { name: editing?.name ?? '', type: editing?.type ?? 'expense', color: editing?.color ?? SWATCHES[0], icon: editing?.icon ?? 'circle' },
-  });
-  const color = watch('color');
-  const icon = watch('icon');
-
-  return (
-    <form
-      noValidate
-      className="flex flex-col gap-4"
-      onSubmit={handleSubmit((v) =>
-        save.mutate(editing ? { id: editing.id, name: v.name, color: v.color, icon: v.icon } : v, {
-          onSuccess: () => {
-            toast.success(editing ? 'Category updated' : `Added "${v.name}"`);
-            onDone();
-          },
-          onError: (e) => toast.error(e.message),
-        }),
-      )}
-    >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Name" error={formState.errors.name?.message}>
-          {(a11y) => <Input {...a11y} {...register('name')} placeholder="e.g. Pets" autoFocus />}
-        </Field>
-        <Field label="Type">
-          {(a11y) => (
-            <Select {...a11y} {...register('type')} disabled={Boolean(editing)}>
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </Select>
-          )}
-        </Field>
-      </div>
-      <fieldset>
-        <legend className="mb-2 text-sm font-medium text-ink-2">Colour</legend>
-        <div className="flex flex-wrap gap-2">
-          {SWATCHES.map((s) => (
-            <button
-              key={s}
-              type="button"
-              aria-label={`Colour ${s}`}
-              aria-pressed={color === s}
-              onClick={() => setValue('color', s)}
-              className="h-8 w-8 rounded-full ring-offset-2 ring-offset-surface aria-pressed:ring-2 aria-pressed:ring-ink"
-              style={{ background: s }}
-            />
-          ))}
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend className="mb-2 text-sm font-medium text-ink-2">Icon</legend>
-        <div className="flex flex-wrap gap-1.5">
-          {Object.keys(CATEGORY_ICONS).map((name) => (
-            <button
-              key={name}
-              type="button"
-              aria-label={`Icon ${name}`}
-              aria-pressed={icon === name}
-              onClick={() => setValue('icon', name)}
-              className="rounded-[11px] p-0.5 aria-pressed:ring-2 aria-pressed:ring-brand"
-            >
-              <CategoryIcon icon={name} color={color} />
-            </button>
-          ))}
-        </div>
-      </fieldset>
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={onDone}>
-          Cancel
-        </Button>
-        <Button type="submit" loading={save.isPending}>
-          {editing ? 'Save category' : 'Add category'}
-        </Button>
-      </div>
     </form>
   );
 }

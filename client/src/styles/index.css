@@ -19,8 +19,6 @@
   --ink-3: #646c87; /* 4.6:1 or better on every light surface (WCAG AA) */
   --line: #dfe3ec;
   --line-strong: #c9cfdc;
-  /* Lucide's chevron-down in --ink-3, for dropdowns (a data URI cannot read CSS variables, so each theme has its own). */
-  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23646c87' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
   --brand: #2c3a8f;
   --brand-hover: #24307a;
@@ -71,7 +69,6 @@
   --ink-3: #848ca8;
   --line: #262d46;
   --line-strong: #343c5a;
-  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23848ca8' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
   --brand: #8e9bff;
   --brand-hover: #a7b1ff;
@@ -205,14 +202,6 @@
   button {
     font: inherit;
     color: inherit;
-  }
-  /* Dropdowns: drop the browser's heavy arrow for the same thin chevron the icons use. Padding comes from the Select component. */
-  select {
-    appearance: none;
-    background-image: var(--select-chevron);
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 1rem;
   }
   /* Native date input icon follows the theme */
   [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {

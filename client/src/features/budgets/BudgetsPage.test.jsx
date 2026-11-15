@@ -10,9 +10,9 @@ const saveBudget = vi.fn();
 const saveCategory = vi.fn();
 
 const CATS = [
-  { id: 'c1', name: 'Groceries', type: 'expense', icon: 'shopping-basket', color: '#eb6834' },
-  { id: 'c2', name: 'Travel', type: 'expense', icon: 'plane', color: '#1baf7a' },
-  { id: 'c3', name: 'Education', type: 'expense', icon: 'graduation-cap', color: '#eb6834' },
+  { id: '665f1f77bcf86cd799430001', name: 'Groceries', type: 'expense', icon: 'shopping-basket', color: '#eb6834' },
+  { id: '665f1f77bcf86cd799430002', name: 'Travel', type: 'expense', icon: 'plane', color: '#1baf7a' },
+  { id: '665f1f77bcf86cd799430003', name: 'Education', type: 'expense', icon: 'graduation-cap', color: '#eb6834' },
 ];
 
 vi.mock('../../api/hooks.js', () => ({
@@ -84,13 +84,13 @@ describe('Add a budget', () => {
     await user.type(within(dialog).getByLabelText(/Monthly limit/), '8000');
     await user.click(within(dialog).getByRole('button', { name: 'Save budget' }));
     await vi.waitFor(() => expect(saveBudget).toHaveBeenCalled());
-    expect(saveBudget.mock.calls[0][0]).toMatchObject({ category: 'c2', limit: 800000 });
+    expect(saveBudget.mock.calls[0][0]).toMatchObject({ category: '665f1f77bcf86cd799430002', limit: 800000 });
   });
 
   it('can start a brand-new category with its own icon, and picks it for the budget', async () => {
     const user = userEvent.setup();
     saveCategory.mockImplementation((vars, opts) =>
-      opts.onSuccess({ id: 'c9', name: vars.name, type: vars.type, icon: vars.icon, color: vars.color }),
+      opts.onSuccess({ id: '665f1f77bcf86cd799430009', name: vars.name, type: vars.type, icon: vars.icon, color: vars.color }),
     );
     renderPage();
     const dialog = await openAddBudget(user);

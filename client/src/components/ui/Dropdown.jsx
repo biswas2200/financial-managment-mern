@@ -11,7 +11,7 @@ import { Check, ChevronDown } from 'lucide-react';
  *
  * options: [{ value, label, icon?, hint?, disabled? }]   footer: { label, icon?, onSelect }
  */
-export function Dropdown({ id, value, onChange, options, placeholder = 'Select…', footer, disabled = false, className, menuClassName, ...aria }) {
+export function Dropdown({ id, value, onChange, options, placeholder = 'Select…', footer, disabled = false, size = 'md', className, menuClassName, ...aria }) {
   const uid = useId().replace(/:/g, '');
   const listId = `dd-${uid}`;
   const optionId = (i) => `${listId}-${i}`;
@@ -137,7 +137,7 @@ export function Dropdown({ id, value, onChange, options, placeholder = 'Select�
         disabled={disabled}
         onClick={() => (open ? close(false) : openList())}
         onKeyDown={onKeyDown}
-        className="control flex h-10 w-full cursor-pointer items-center gap-2.5 rounded-[10px] bg-surface px-3 text-left text-[0.9375rem] text-ink"
+        className={clsx('control flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] bg-surface px-3 text-left text-[0.9375rem] text-ink', size === 'sm' ? 'h-9' : 'h-10')}
         {...aria}
       >
         {selected?.icon}

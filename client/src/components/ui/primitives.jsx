@@ -49,14 +49,6 @@ export const Input = forwardRef(function Input({ className, ...props }, ref) {
   return <input ref={ref} className={clsx(controlBase, 'h-10', className)} {...props} />;
 });
 
-export const Select = forwardRef(function Select({ className, children, ...props }, ref) {
-  return (
-    <select ref={ref} className={clsx(controlBase, 'h-10 cursor-pointer pr-8', className)} {...props}>
-      {children}
-    </select>
-  );
-});
-
 export const Textarea = forwardRef(function Textarea({ className, ...props }, ref) {
   return <textarea ref={ref} className={clsx(controlBase, 'min-h-20 py-2', className)} {...props} />;
 });
@@ -153,6 +145,7 @@ export function Segmented({ value, onChange, options, label, size = 'md', classN
 
 export function Dialog({ open, onClose, title, description, children, size = 'md' }) {
   const ref = useRef(null);
+  const titleId = useId(); // unique, so a dialog opened from inside another still has the right name
 
   useEffect(() => {
     const el = ref.current;
@@ -164,15 +157,16 @@ export function Dialog({ open, onClose, title, description, children, size = 'md
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      // React bubbles a nested dialog's close/cancel up to the dialog around it, so only react to our own.
+      onClose={(e) => e.target === ref.current && onClose()}
       onCancel={(e) => {
         e.preventDefault();
-        onClose();
+        if (e.target === ref.current) onClose();
       }}
       onClick={(e) => {
         if (e.target === ref.current) onClose();
       }}
-      aria-labelledby="dialog-title"
+      aria-labelledby={titleId}
       className={clsx(
         'raised m-auto w-[calc(100%-2rem)] rounded-2xl bg-surface p-0 text-ink shadow-raise-2',
         size === 'lg' ? 'max-w-2xl' : 'max-w-lg',
@@ -182,7 +176,7 @@ export function Dialog({ open, onClose, title, description, children, size = 'md
         <div className="p-5 sm:p-6">
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <h2 id="dialog-title" className="font-wide text-xl font-semibold">
+              <h2 id={titleId} className="font-wide text-xl font-semibold">
                 {title}
               </h2>
               {description && <p className="mt-1 text-sm text-ink-2">{description}</p>}

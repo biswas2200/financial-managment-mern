@@ -1,23 +1,29 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { currentMonthKey, shiftMonth, formatMonthLabel, budgetFormSchema, fromMinor } from '@kosha/shared';
 import { Plus, Copy, Pencil, Trash2, PiggyBank } from 'lucide-react';
 import { useBudgets, useCategories, useSaveBudget, useDeleteBudget, useCopyBudgets } from '../../api/hooks.js';
 import { PageHeader } from '../../components/layout/AppShell.jsx';
 import { MonthPicker } from '../../components/ui/MonthPicker.jsx';
-import { Button, Dialog, Field, Input, Select, Skeleton, EmptyState } from '../../components/ui/primitives.jsx';
+import { Button, Dialog, Field, Input, Skeleton, EmptyState } from '../../components/ui/primitives.jsx';
+import { Dropdown } from '../../components/ui/Dropdown.jsx';
+import { CategoryForm } from '../categories/CategoryForm.jsx';
 import { CategoryIcon } from '../../components/ui/CategoryIcon.jsx';
 import { BudgetMeter } from '../../components/charts/BudgetMeter.jsx';
 import { useToast } from '../../components/ui/toast.jsx';
 import { moneyWhole, money } from '../../lib/format.js';
 
-function BudgetForm({ month, categories, editing, presetCategory, onDone }) {
+function BudgetForm({ month, categories, budgetedIds, editing, presetCategory, onDone }) {
   const save = useSaveBudget();
   const toast = useToast();
+  const [creating, setCreating] = useState(false);
+  const [created, setCreated] = useState([]); // categories made from this form, before the list refetches
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(budgetFormSchema),
@@ -27,6 +33,14 @@ function BudgetForm({ month, categories, editing, presetCategory, onDone }) {
       limit: editing ? fromMinor(editing.limit) : '',
     },
   });
+
+  const all = [...categories, ...created.filter((c) => !categories.some((x) => x.id === c.id))];
+  const options = all.map((c) => ({
+    value: c.id,
+    label: c.name,
+    icon: <CategoryIcon icon={c.icon} color={c.color} size="sm" />,
+    hint: budgetedIds.has(c.id) ? 'Budget set' : undefined,
+  }));
 
   const onSubmit = async (values) => {
     try {
@@ -39,38 +53,60 @@ function BudgetForm({ month, categories, editing, presetCategory, onDone }) {
   };
 
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <input type="hidden" {...register('month')} />
-      <Field label="Category" error={errors.category?.message}>
-        {(a11y) => (
-          <Select {...a11y} {...register('category')} disabled={Boolean(editing)}>
-            <option value="">Select a category</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
-        )}
-      </Field>
-      <Field label="Monthly limit (₹)" error={errors.limit?.message} hint="You'll see a heads-up at 75% and a warning past 100%.">
-        {(a11y) => <Input {...a11y} {...register('limit')} inputMode="decimal" placeholder="e.g. 6000" className="tabular" autoFocus />}
-      </Field>
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={onDone}>
-          Cancel
-        </Button>
-        <Button type="submit" loading={save.isPending}>
-          Save budget
-        </Button>
-      </div>
-    </form>
+    <>
+      <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        <input type="hidden" {...register('month')} />
+        <Field label="Category" error={errors.category?.message}>
+          {(a11y) => (
+            <Controller
+              control={control}
+              name="category"
+              render={({ field }) => (
+                <Dropdown
+                  {...a11y}
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={options}
+                  placeholder="Select a category"
+                  disabled={Boolean(editing)}
+                  footer={editing ? undefined : { label: 'New category…', icon: <Plus size={16} aria-hidden />, onSelect: () => setCreating(true) }}
+                />
+              )}
+            />
+          )}
+        </Field>
+        <Field label="Monthly limit (₹)" error={errors.limit?.message} hint="You'll see a heads-up at 75% and a warning past 100%.">
+          {(a11y) => <Input {...a11y} {...register('limit')} inputMode="decimal" placeholder="e.g. 6000" className="tabular" autoFocus />}
+        </Field>
+        <div className="flex justify-end gap-2">
+          <Button variant="ghost" onClick={onDone}>
+            Cancel
+          </Button>
+          <Button type="submit" loading={save.isPending}>
+            Save budget
+          </Button>
+        </div>
+      </form>
+
+      {/* A budget is always for an expense, so the new category is one too. */}
+      <Dialog open={creating} onClose={() => setCreating(false)} title="New category" description="Pick a name and an icon. You can change them later in Settings.">
+        <CategoryForm
+          fixedType="expense"
+          onDone={() => setCreating(false)}
+          onSaved={(saved) => {
+            setCreated((list) => [...list, saved]);
+            setValue('category', saved.id, { shouldValidate: true });
+          }}
+        />
+      </Dialog>
+    </>
   );
 }
 
 export default function BudgetsPage() {
   const [month, setMonth] = useState(currentMonthKey());
   const [dialog, setDialog] = useState(null); // { editing?, presetCategory? }
+  const [newCategory, setNewCategory] = useState(false);
   const { data, isLoading } = useBudgets(month);
   const { data: categories = [] } = useCategories({ type: 'expense' });
   const remove = useDeleteBudget();
@@ -218,6 +254,10 @@ export default function BudgetsPage() {
                   </li>
                 ))}
               </ul>
+              <Button variant="secondary" size="sm" className="mt-3" onClick={() => setNewCategory(true)}>
+                <Plus size={16} aria-hidden />
+                New category
+              </Button>
             </aside>
           )}
         </div>
@@ -232,12 +272,18 @@ export default function BudgetsPage() {
         {dialog && (
           <BudgetForm
             month={month}
-            categories={dialog.editing ? categories : unbudgeted.length ? unbudgeted : categories}
+            categories={categories}
+            budgetedIds={budgeted}
             editing={dialog.editing}
             presetCategory={dialog.presetCategory}
             onDone={() => setDialog(null)}
           />
         )}
+      </Dialog>
+
+      {/* From the "Not budgeted yet" list: make the category, then go straight to setting its limit. */}
+      <Dialog open={newCategory} onClose={() => setNewCategory(false)} title="New category" description="Pick a name and an icon. You can change them later in Settings.">
+        <CategoryForm fixedType="expense" onDone={() => setNewCategory(false)} onSaved={(saved) => setDialog({ presetCategory: saved.id })} />
       </Dialog>
     </>
   );

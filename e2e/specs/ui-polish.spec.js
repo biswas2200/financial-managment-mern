@@ -1,26 +1,45 @@
 import { test, expect } from '@playwright/test';
 import { registerNewUser } from './helpers.js';
 
-// The chevron colour is the theme's muted ink (--ink-3) so it reads on the field but stays quiet.
-const MUTED_INK = { light: '#646c87', dark: '#848ca8' };
+// The chevron is the theme's muted ink (--ink-3) so it reads on the field but stays quiet.
+const MUTED_INK = { light: 'rgb(100, 108, 135)', dark: 'rgb(132, 140, 168)' };
 
 for (const scheme of ['light', 'dark']) {
   test.describe(`Dropdowns (${scheme} theme)`, () => {
     test.use({ colorScheme: scheme, reducedMotion: 'reduce' });
 
-    test("use Kosha's own chevron instead of the browser's", async ({ page }) => {
+    test("open Kosha's own list instead of the browser's", async ({ page }) => {
       await registerNewUser(page);
       await page.goto('/transactions');
-      const when = page.getByLabel('When');
+      const when = page.getByRole('combobox', { name: 'When' });
       await expect(when).toBeVisible();
+      expect(await when.evaluate((el) => el.tagName), 'a styled control, not a <select>').toBe('BUTTON');
 
-      const style = await when.evaluate((el) => {
-        const s = getComputedStyle(el);
-        return { appearance: s.appearance, image: s.backgroundImage };
-      });
-      expect(style.appearance, 'the native arrow is switched off').toBe('none');
-      expect(style.image, 'a drawn chevron replaces it').toMatch(/^url\(/);
-      expect(decodeURIComponent(style.image), 'the chevron follows the theme').toContain(MUTED_INK[scheme]);
+      const chevron = await when.locator('svg').evaluate((el) => getComputedStyle(el).color);
+      expect(chevron, 'the chevron follows the theme').toBe(MUTED_INK[scheme]);
+
+      await when.click();
+      const list = page.getByRole('listbox');
+      await expect(list).toBeVisible();
+      await expect(list.getByRole('option', { name: 'This month' })).toBeVisible();
+      await list.getByRole('option', { name: 'This month' }).click();
+      await expect(list).toBeHidden();
+      await expect(when).toContainText('This month');
+    });
+
+    test('stay inside the dialog they open from', async ({ page }) => {
+      await registerNewUser(page);
+      await page.goto('/budgets');
+      await page.getByRole('button', { name: 'Add a budget' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Add a budget' });
+      await dialog.getByRole('combobox', { name: 'Category' }).click();
+      const list = page.getByRole('listbox');
+      await expect(list).toBeVisible();
+      const box = await list.boundingBox();
+      const viewport = page.viewportSize();
+      expect(box.y + box.height, 'fits on screen').toBeLessThanOrEqual(viewport.height);
+      await expect(list.getByRole('option', { name: 'Groceries' })).toBeVisible();
+      await expect(list.getByRole('option', { name: 'New category…' })).toBeVisible();
     });
   });
 }

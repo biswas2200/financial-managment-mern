@@ -40,7 +40,8 @@ test.describe('Copilot and budgets', () => {
 
     await page.getByRole('button', { name: 'Add budget' }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Category').selectOption({ label: 'Groceries' });
+    await dialog.getByRole('combobox', { name: 'Category' }).click();
+    await page.getByRole('option', { name: /Groceries/ }).click();
     await dialog.getByLabel('Monthly limit (₹)').fill('1000');
     await dialog.getByRole('button', { name: 'Save budget' }).click();
     await expect(dialog).toBeHidden();

@@ -6,7 +6,8 @@ import { PAYMENT_METHODS, toDayKey } from '@kosha/shared';
 import { useCategories, useTransactions, useDeleteTransaction, useSaveTransaction } from '../../api/hooks.js';
 import { downloadUrl } from '../../api/client.js';
 import { PageHeader, useQuickAdd, Kbd } from '../../components/layout/AppShell.jsx';
-import { Button, Input, Select, Segmented, Skeleton, EmptyState, ErrorNote } from '../../components/ui/primitives.jsx';
+import { Button, Input, Segmented, Skeleton, EmptyState, ErrorNote } from '../../components/ui/primitives.jsx';
+import { Dropdown } from '../../components/ui/Dropdown.jsx';
 import { CategoryIcon } from '../../components/ui/CategoryIcon.jsx';
 import { useToast } from '../../components/ui/toast.jsx';
 import { money, dayHeader, timeOfDay } from '../../lib/format.js';
@@ -175,16 +176,18 @@ export default function TransactionsPage() {
               { value: 'income', label: 'Income' },
             ]}
           />
-          <label className="flex min-w-0 flex-1 items-center gap-2 text-sm text-ink-2 sm:flex-none">
-            <span className="max-sm:sr-only">When</span>
-            <Select value={datePreset} onChange={(e) => choosePreset(e.target.value)} className="min-w-0 flex-1 sm:w-40 sm:flex-none">
-              {DATE_PRESETS.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </Select>
-          </label>
+          <div className="flex min-w-0 flex-1 items-center gap-2 text-sm text-ink-2 sm:flex-none">
+            <span aria-hidden className="max-sm:sr-only">
+              When
+            </span>
+            <Dropdown
+              aria-label="When"
+              value={datePreset}
+              onChange={choosePreset}
+              options={DATE_PRESETS.map((p) => ({ value: p.value, label: p.label }))}
+              className="min-w-0 flex-1 sm:w-44 sm:flex-none"
+            />
+          </div>
           <Button variant="secondary" aria-expanded={moreOpen} aria-controls="more-filters" onClick={() => setMoreOpen((o) => !o)}>
             <SlidersHorizontal size={16} aria-hidden />
             <span className="sm:hidden">Filters</span>
@@ -199,28 +202,27 @@ export default function TransactionsPage() {
 
         {moreOpen && (
           <div id="more-filters" className="mt-3 grid grid-cols-2 gap-3 border-t border-line pt-3 md:grid-cols-3 xl:grid-cols-6">
-            <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
-              Category
-              <Select value={filters.category} onChange={set('category')}>
-                <option value="">All categories</option>
-                {categoryOptions.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
-              Payment method
-              <Select value={filters.paymentMethod} onChange={set('paymentMethod')}>
-                <option value="">Any method</option>
-                {PAYMENT_METHODS.map((m) => (
-                  <option key={m} value={m}>
-                    {PAYMENT_LABELS[m]}
-                  </option>
-                ))}
-              </Select>
-            </label>
+            <div className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
+              <span id="filter-category">Category</span>
+              <Dropdown
+                aria-labelledby="filter-category"
+                value={filters.category}
+                onChange={set('category')}
+                options={[
+                  { value: '', label: 'All categories' },
+                  ...categoryOptions.map((c) => ({ value: c.id, label: c.name, icon: <CategoryIcon icon={c.icon} color={c.color} size="sm" /> })),
+                ]}
+              />
+            </div>
+            <div className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
+              <span id="filter-payment">Payment method</span>
+              <Dropdown
+                aria-labelledby="filter-payment"
+                value={filters.paymentMethod}
+                onChange={set('paymentMethod')}
+                options={[{ value: '', label: 'Any method' }, ...PAYMENT_METHODS.map((m) => ({ value: m, label: PAYMENT_LABELS[m] }))]}
+              />
+            </div>
             {datePreset === 'custom' && (
               <>
                 <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
@@ -289,16 +291,17 @@ export default function TransactionsPage() {
           )}
         </p>
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-sm text-ink-2">
-            Sort
-            <Select value={filters.sort} onChange={set('sort')} className="h-9 w-44">
-              {Object.entries(SORT_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </Select>
-          </label>
+          <div className="flex items-center gap-2 text-sm text-ink-2">
+            <span aria-hidden>Sort</span>
+            <Dropdown
+              aria-label="Sort"
+              size="sm"
+              value={filters.sort}
+              onChange={set('sort')}
+              options={Object.entries(SORT_LABELS).map(([value, label]) => ({ value, label }))}
+              className="w-44"
+            />
+          </div>
         </div>
       </div>
 
