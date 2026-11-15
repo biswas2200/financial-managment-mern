@@ -163,19 +163,21 @@ export default function TransactionsPage() {
             />
             {!search && <Kbd className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2">/</Kbd>}
           </div>
+          {/* On phones the type toggle fills the row, and "When" shares a row with the filters button. */}
           <Segmented
             label="Type"
             value={filters.type}
             onChange={set('type')}
+            className="max-sm:w-full max-sm:[&>label]:flex-1 max-sm:[&>label]:justify-center"
             options={[
               { value: '', label: 'All' },
               { value: 'expense', label: 'Expenses' },
               { value: 'income', label: 'Income' },
             ]}
           />
-          <label className="flex items-center gap-2 text-sm text-ink-2">
-            When
-            <Select value={datePreset} onChange={(e) => choosePreset(e.target.value)} className="w-40">
+          <label className="flex min-w-0 flex-1 items-center gap-2 text-sm text-ink-2 sm:flex-none">
+            <span className="max-sm:sr-only">When</span>
+            <Select value={datePreset} onChange={(e) => choosePreset(e.target.value)} className="min-w-0 flex-1 sm:w-40 sm:flex-none">
               {DATE_PRESETS.map((p) => (
                 <option key={p.value} value={p.value}>
                   {p.label}
@@ -185,7 +187,8 @@ export default function TransactionsPage() {
           </label>
           <Button variant="secondary" aria-expanded={moreOpen} aria-controls="more-filters" onClick={() => setMoreOpen((o) => !o)}>
             <SlidersHorizontal size={16} aria-hidden />
-            More filters
+            <span className="sm:hidden">Filters</span>
+            <span className="max-sm:hidden">More filters</span>
             {advancedCount > 0 && (
               <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[0.75rem] text-brand-ink">
                 {advancedCount}

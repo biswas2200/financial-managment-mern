@@ -39,18 +39,23 @@ test.describe('Phone layout (360 px)', () => {
     await addTransaction(page, { amount: '250', category: 'Transport', description: 'Auto ride', merchant: 'Uber' });
     await addTransaction(page, { amount: '90', category: 'Dining Out', description: 'Filter coffee', merchant: 'Third Wave' });
     await page.goto('/transactions');
-    const second = await page.getByRole('row', { name: /Auto ride/ }).boundingBox(); // the older of the two sorts last
+    const second = page.getByRole('row', { name: /Auto ride/ }); // the older of the two sorts last
     const tabBar = await page.getByRole('navigation', { name: 'Main' }).boundingBox();
-    expect(second.y + second.height, 'filters and sorting leave room for the list').toBeLessThanOrEqual(tabBar.y);
+    await expect
+      .poll(async () => (await second.boundingBox()).y + (await second.boundingBox()).height, { message: 'filters and sorting leave room for the list' })
+      .toBeLessThanOrEqual(tabBar.y);
   });
 
   test('the month picker spans the full width so its arrows sit at the edges', async ({ page }) => {
     await registerNewUser(page);
     const picker = page.getByRole('group', { name: 'Choose month' });
+    const main = await page.locator('#main').boundingBox();
+    // Poll: panels scale in on load, so the width is only final once that settles.
+    await expect
+      .poll(async () => (await picker.boundingBox()).width, { message: 'as wide as the content column (the page minus its 16 px gutters)' })
+      .toBeGreaterThanOrEqual(main.width - 32 - 2);
     const box = await picker.boundingBox();
     const next = await picker.getByRole('button', { name: 'Next month' }).boundingBox();
-    const main = await page.locator('#main').boundingBox();
-    expect(box.width, 'as wide as the content column (the page minus its 16 px gutters)').toBeGreaterThanOrEqual(main.width - 32 - 2);
     expect(next.x + next.width, 'next arrow hugs the right edge').toBeGreaterThanOrEqual(box.x + box.width - 8);
   });
 
@@ -59,9 +64,11 @@ test.describe('Phone layout (360 px)', () => {
     await page.goto('/copilot');
     const composer = page.locator('form', { has: page.getByLabel('Message Copilot') });
     await expect(composer).toBeVisible();
-    const box = await composer.boundingBox();
     const tabBar = await page.getByRole('navigation', { name: 'Main' }).boundingBox();
-    expect(box.y + box.height, 'bottom of the composer is clear of the tab bar').toBeLessThanOrEqual(tabBar.y);
+    // Poll: the page header briefly wraps to an extra line while the web font swaps in.
+    await expect
+      .poll(async () => (await composer.boundingBox()).y + (await composer.boundingBox()).height, { message: 'bottom of the composer is clear of the tab bar' })
+      .toBeLessThanOrEqual(tabBar.y);
   });
 
   test('the floating Copilot button gives way to the tab bar on phones', async ({ page }) => {
