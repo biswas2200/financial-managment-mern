@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 import { registerNewUser, addTransaction } from './helpers.js';
 
 // A small Android phone. Everything the user needs must fit without sideways scrolling.
-test.use({ viewport: { width: 360, height: 740 }, hasTouch: true });
+// Reduced motion keeps the entrance animations (which scale panels) from skewing the measurements.
+test.use({ viewport: { width: 360, height: 740 }, hasTouch: true, reducedMotion: 'reduce' });
 
 test.describe('Phone layout (360 px)', () => {
   test('a transaction row keeps its amount and actions inside the card', async ({ page }) => {
@@ -38,7 +39,8 @@ test.describe('Phone layout (360 px)', () => {
     const picker = page.getByRole('group', { name: 'Choose month' });
     const box = await picker.boundingBox();
     const next = await picker.getByRole('button', { name: 'Next month' }).boundingBox();
-    expect(box.width, 'as wide as the content column (360 px minus 16 px gutters)').toBeGreaterThanOrEqual(360 - 32 - 1);
+    const main = await page.locator('#main').boundingBox();
+    expect(box.width, 'as wide as the content column (the page minus its 16 px gutters)').toBeGreaterThanOrEqual(main.width - 32 - 2);
     expect(next.x + next.width, 'next arrow hugs the right edge').toBeGreaterThanOrEqual(box.x + box.width - 8);
   });
 

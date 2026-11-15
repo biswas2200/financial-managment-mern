@@ -7,11 +7,11 @@ export function MonthPicker({ value, onChange, min }) {
   const isCurrent = value >= currentMonthKey();
   const atMin = min ? value <= min : false;
   return (
-    <div className="inline-flex items-center gap-1 rounded-xl raised bg-surface p-1 shadow-raise-1" role="group" aria-label="Choose month">
+    <div className="flex w-full items-center gap-1 rounded-xl raised bg-surface p-1 shadow-raise-1 sm:inline-flex sm:w-auto" role="group" aria-label="Choose month">
       <Button variant="ghost" size="icon" aria-label="Previous month" disabled={atMin} onClick={() => onChange(shiftMonth(value, -1))}>
         <ChevronLeft size={18} />
       </Button>
-      <span className="min-w-[8.5rem] text-center text-[0.9375rem] font-semibold" aria-live="polite">
+      <span className="min-w-[8.5rem] flex-1 text-center sm:flex-none text-[0.9375rem] font-semibold" aria-live="polite">
         {formatMonthLabel(value)}
       </span>
       <Button variant="ghost" size="icon" aria-label="Next month" disabled={isCurrent} onClick={() => onChange(shiftMonth(value, 1))}>
