@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, registerSchema } from '@kosha/shared';
 import { useLogin, useRegister } from '../../api/hooks.js';
+import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
 import { Button, Field, Input } from '../../components/ui/primitives.jsx';
 import { Logo } from '../../components/brand/Logo.jsx';
 import { wavePaths, rosettePath } from '../../components/brand/guilloche.js';
@@ -95,7 +96,7 @@ export function LoginPage() {
           {(a11y) => <Input {...a11y} type="email" autoComplete="email" {...register('email')} />}
         </Field>
         <Field label="Password" error={formState.errors.password?.message}>
-          {(a11y) => <Input {...a11y} type="password" autoComplete="current-password" {...register('password')} />}
+          {(a11y) => <PasswordInput {...a11y} autoComplete="current-password" {...register('password')} />}
         </Field>
         <Button type="submit" size="lg" loading={login.isPending} className="mt-2">
           Sign in
@@ -161,7 +162,7 @@ export function RegisterPage() {
           {(a11y) => <Input {...a11y} type="email" autoComplete="email" {...register('email')} />}
         </Field>
         <Field label="Password" error={formState.errors.password?.message} hint="At least 8 characters with a letter and a number.">
-          {(a11y) => <Input {...a11y} type="password" autoComplete="new-password" {...register('password')} />}
+          {(a11y) => <PasswordInput {...a11y} autoComplete="new-password" {...register('password')} />}
         </Field>
         <Button type="submit" size="lg" loading={registerUser.isPending} className="mt-2">
           Create account

@@ -8,21 +8,20 @@ export async function registerNewUser(page, name = 'Neha Kulkarni') {
   await page.goto('/register');
   await page.getByLabel('Name').fill(name);
   await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(PASSWORD);
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText(name.split(' ')[0]);
   return { email, password: PASSWORD, name };
 }
 
-/** Adds a transaction through the global "Add transaction" dialog. */
+/** Adds a transaction through the "Add expense" / "Add income" buttons. */
 export async function addTransaction(page, { type = 'expense', amount, category, description, merchant }) {
-  await page.getByRole('button', { name: 'Add transaction' }).first().click();
+  await page.getByRole('button', { name: type === 'income' ? 'Add income' : 'Add expense' }).first().click();
   const dialog = page.getByRole('dialog');
-  if (type === 'income') await dialog.getByText('Income', { exact: true }).click();
   await dialog.getByLabel('Amount (₹)').fill(String(amount));
-  await dialog.getByLabel('Category').selectOption({ label: category });
-  await dialog.getByLabel('Description').fill(description);
+  await dialog.getByRole('radiogroup', { name: 'Category' }).getByText(category, { exact: true }).click();
   if (merchant) await dialog.getByLabel('Merchant or payee').fill(merchant);
+  if (description) await dialog.getByLabel('Description').fill(description);
   await dialog.getByRole('button', { name: 'Save transaction' }).click();
   await expect(dialog).toBeHidden();
 }

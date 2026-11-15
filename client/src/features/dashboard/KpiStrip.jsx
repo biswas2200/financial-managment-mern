@@ -2,6 +2,14 @@ import clsx from 'clsx';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { moneyWhole, percent } from '../../lib/format.js';
 import { Sparkline } from '../../components/charts/Sparkline.jsx';
+import { InfoTip } from '../../components/ui/InfoTip.jsx';
+
+const TIPS = {
+  income: 'Money you received in this period. The arrow compares it with the same days of last month, so a month that has only just started is compared fairly.',
+  expense: 'Everything you spent in this period. Here a rise is shown in red because it means more money went out.',
+  net: 'Income minus spending for the period. If spending is higher, this shows how much you overspent.',
+  rate: 'The share of your income you kept: (income − spending) ÷ income. Many people aim for 20% or more.',
+};
 
 function Delta({ id, value, goodWhenUp, windowLabel }) {
   if (value === null || value === undefined) return null;
@@ -52,7 +60,7 @@ export function KpiStrip({ summary, trend }) {
   return (
     <section
       aria-label="This period at a glance"
-      className="grid grid-cols-2 overflow-hidden rounded-2xl bg-surface ring-1 ring-line lg:grid-cols-4"
+      className="grid grid-cols-2 rounded-2xl bg-surface ring-1 ring-line lg:grid-cols-4"
     >
       {cells.map((cell, i) => (
         <div
@@ -66,7 +74,12 @@ export function KpiStrip({ summary, trend }) {
           )}
         >
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-medium text-ink-2">{cell.label}</h3>
+            <h3 className="flex items-center gap-1 text-sm font-medium text-ink-2">
+              {cell.label}
+              <InfoTip label={cell.label} align={i === 0 ? 'start' : i === cells.length - 1 ? 'end' : 'center'}>
+                {TIPS[cell.key]}
+              </InfoTip>
+            </h3>
             {cell.spark && <Sparkline values={cell.spark} color={cell.color} width={72} height={22} className="hidden sm:block" />}
           </div>
           <p className="font-condensed text-[1.75rem] leading-tight font-semibold text-ink sm:text-[2rem]">{cell.value}</p>

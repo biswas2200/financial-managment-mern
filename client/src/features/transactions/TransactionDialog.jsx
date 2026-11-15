@@ -6,7 +6,7 @@ import { money } from '../../lib/format.js';
 import { TransactionForm } from './TransactionForm.jsx';
 
 /** Add or edit a transaction in a modal. `editing` is a transaction object or null. */
-export function TransactionDialog({ open, editing, onClose }) {
+export function TransactionDialog({ open, editing, defaultType = 'expense', onClose }) {
   const { data: categories = [] } = useCategories();
   const save = useSaveTransaction();
   const toast = useToast();
@@ -37,14 +37,15 @@ export function TransactionDialog({ open, editing, onClose }) {
     <Dialog
       open={open}
       onClose={close}
-      title={editing ? 'Edit transaction' : 'Add a transaction'}
-      description={editing ? undefined : 'Log money in or out. It shows up on your dashboard right away.'}
+      title={editing ? 'Edit transaction' : defaultType === 'income' ? 'Add income' : 'Add an expense'}
+      description={editing ? undefined : 'Only the amount and category are required. It shows up on your dashboard right away.'}
       size="lg"
     >
       <TransactionForm
-        key={editing?.id ?? 'new'}
+        key={editing?.id ?? `new-${defaultType}`}
         categories={categories}
         initialValues={editing ?? undefined}
+        defaultType={defaultType}
         onSubmit={handleSubmit}
         onCancel={close}
         submitting={save.isPending}

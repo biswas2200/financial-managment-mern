@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
-import { Download, Plus, Search, Pencil, Trash2, ChevronLeft, ChevronRight, Receipt, X } from 'lucide-react';
+import { Download, Plus, Search, Pencil, Trash2, ChevronLeft, ChevronRight, Receipt, X, SlidersHorizontal } from 'lucide-react';
 import { PAYMENT_METHODS, toDayKey } from '@kosha/shared';
 import { useCategories, useTransactions, useDeleteTransaction, useSaveTransaction } from '../../api/hooks.js';
 import { downloadUrl } from '../../api/client.js';
-import { PageHeader, useQuickAdd } from '../../components/layout/AppShell.jsx';
+import { PageHeader, useQuickAdd, Kbd } from '../../components/layout/AppShell.jsx';
 import { Button, Input, Select, Segmented, Skeleton, EmptyState, ErrorNote } from '../../components/ui/primitives.jsx';
 import { CategoryIcon } from '../../components/ui/CategoryIcon.jsx';
 import { useToast } from '../../components/ui/toast.jsx';
@@ -16,7 +16,12 @@ import {
   filtersToSearchParams,
   filtersToQuery,
   activeFilterCount,
+  activeFilterChips,
+  datePresetRange,
+  presetFromRange,
+  DATE_PRESETS,
 } from './filters.js';
+import { useHotkeys } from '../../hooks/useHotkeys.js';
 import { Amount } from './TransactionRow.jsx';
 
 const PAYMENT_LABELS = { UPI: 'UPI', Card: 'Card', Cash: 'Cash', Bank: 'Bank transfer', Wallet: 'Wallet' };
@@ -65,6 +70,36 @@ export default function TransactionsPage() {
   const restore = useSaveTransaction();
 
   const categoryOptions = categories.filter((c) => !filters.type || c.type === filters.type);
+  const searchRef = useRef(null);
+  useHotkeys({ '/': () => searchRef.current?.focus() });
+
+  // Quick date ranges ("This month"…) with a custom range tucked behind "More filters".
+  const matchedPreset = presetFromRange(filters);
+  const [customDates, setCustomDates] = useState(matchedPreset === 'custom');
+  const datePreset = customDates ? 'custom' : matchedPreset;
+  const advancedCount = [filters.category, filters.paymentMethod, filters.min || filters.max, customDates && (filters.from || filters.to)].filter(Boolean).length;
+  const [moreOpen, setMoreOpen] = useState(advancedCount > 0);
+  const chips = activeFilterChips(filters, categories);
+
+  const choosePreset = (value) => {
+    if (value === 'custom') {
+      setCustomDates(true);
+      setMoreOpen(true);
+      return;
+    }
+    setCustomDates(false);
+    dispatch({ type: 'setMany', values: datePresetRange(value) });
+  };
+  const removeChip = (key) => {
+    if (key === 'q') setSearch('');
+    if (key === 'date') setCustomDates(false);
+    dispatch({ type: 'clearChip', key });
+  };
+  const clearAll = () => {
+    setSearch('');
+    setCustomDates(false);
+    dispatch({ type: 'reset' });
+  };
   const set = (field) => (e) => dispatch({ type: 'set', field, value: e?.target ? e.target.value : e });
   const activeCount = activeFilterCount(filters);
   const { page: _page, limit: _limit, ...exportQuery } = query;
@@ -102,9 +137,9 @@ export default function TransactionsPage() {
               <Download size={17} aria-hidden />
               Export CSV
             </a>
-            <Button onClick={openAdd}>
+            <Button onClick={() => openAdd('expense')}>
               <Plus size={18} aria-hidden />
-              Add transaction
+              Add expense
             </Button>
           </>
         }
@@ -119,12 +154,14 @@ export default function TransactionsPage() {
             </label>
             <Input
               id="txn-search"
+              ref={searchRef}
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search description or merchant"
-              className="pl-9"
+              className="pr-10 pl-9"
             />
+            {!search && <Kbd className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2">/</Kbd>}
           </div>
           <Segmented
             label="Type"
@@ -136,48 +173,95 @@ export default function TransactionsPage() {
               { value: 'income', label: 'Income' },
             ]}
           />
+          <label className="flex items-center gap-2 text-sm text-ink-2">
+            When
+            <Select value={datePreset} onChange={(e) => choosePreset(e.target.value)} className="w-40">
+              {DATE_PRESETS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <Button variant="secondary" aria-expanded={moreOpen} aria-controls="more-filters" onClick={() => setMoreOpen((o) => !o)}>
+            <SlidersHorizontal size={16} aria-hidden />
+            More filters
+            {advancedCount > 0 && (
+              <span className="ml-0.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1.5 text-[0.75rem] text-brand-ink">
+                {advancedCount}
+              </span>
+            )}
+          </Button>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
-            Category
-            <Select value={filters.category} onChange={set('category')}>
-              <option value="">All categories</option>
-              {categoryOptions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
-            Payment method
-            <Select value={filters.paymentMethod} onChange={set('paymentMethod')}>
-              <option value="">Any method</option>
-              {PAYMENT_METHODS.map((m) => (
-                <option key={m} value={m}>
-                  {PAYMENT_LABELS[m]}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
-            From
-            <Input type="date" value={filters.from} max={filters.to || undefined} onChange={set('from')} />
-          </label>
-          <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
-            To
-            <Input type="date" value={filters.to} min={filters.from || undefined} onChange={set('to')} />
-          </label>
-          <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
-            Min amount (₹)
-            <Input inputMode="decimal" value={filters.min} onChange={set('min')} placeholder="0" />
-          </label>
-          <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
-            Max amount (₹)
-            <Input inputMode="decimal" value={filters.max} onChange={set('max')} placeholder="Any" />
-          </label>
-        </div>
+        {moreOpen && (
+          <div id="more-filters" className="mt-3 grid grid-cols-2 gap-3 border-t border-line pt-3 md:grid-cols-3 xl:grid-cols-6">
+            <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
+              Category
+              <Select value={filters.category} onChange={set('category')}>
+                <option value="">All categories</option>
+                {categoryOptions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
+              Payment method
+              <Select value={filters.paymentMethod} onChange={set('paymentMethod')}>
+                <option value="">Any method</option>
+                {PAYMENT_METHODS.map((m) => (
+                  <option key={m} value={m}>
+                    {PAYMENT_LABELS[m]}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            {datePreset === 'custom' && (
+              <>
+                <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
+                  From
+                  <Input type="date" value={filters.from} max={filters.to || undefined} onChange={set('from')} />
+                </label>
+                <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
+                  To
+                  <Input type="date" value={filters.to} min={filters.from || undefined} onChange={set('to')} />
+                </label>
+              </>
+            )}
+            <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
+              Min amount (₹)
+              <Input inputMode="decimal" value={filters.min} onChange={set('min')} placeholder="0" />
+            </label>
+            <label className="flex flex-col gap-1 text-[0.8125rem] text-ink-2">
+              Max amount (₹)
+              <Input inputMode="decimal" value={filters.max} onChange={set('max')} placeholder="Any" />
+            </label>
+          </div>
+        )}
+
+        {chips.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2" aria-label="Active filters">
+            {chips.map((chip) => (
+              <button
+                key={chip.key}
+                type="button"
+                onClick={() => removeChip(chip.key)}
+                aria-label={`Remove filter: ${chip.label}`}
+                className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft py-1 pr-2 pl-3 text-sm font-medium text-brand hover:brightness-95"
+              >
+                {chip.label}
+                <X size={14} aria-hidden />
+              </button>
+            ))}
+            {chips.length > 1 && (
+              <button type="button" onClick={clearAll} className="rounded-lg px-2 py-1 text-sm font-medium text-ink-2 hover:text-ink hover:underline">
+                Clear all
+              </button>
+            )}
+          </div>
+        )}
       </section>
 
       <div className="mt-4 mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -202,19 +286,6 @@ export default function TransactionsPage() {
           )}
         </p>
         <div className="flex items-center gap-2">
-          {activeCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSearch('');
-                dispatch({ type: 'reset' });
-              }}
-            >
-              <X size={15} aria-hidden />
-              Clear {activeCount} {activeCount === 1 ? 'filter' : 'filters'}
-            </Button>
-          )}
           <label className="flex items-center gap-2 text-sm text-ink-2">
             Sort
             <Select value={filters.sort} onChange={set('sort')} className="h-9 w-44">
@@ -241,7 +312,15 @@ export default function TransactionsPage() {
           <EmptyState
             icon={<Receipt size={20} />}
             title={activeCount ? 'No transactions match these filters' : 'No transactions yet'}
-            action={activeCount ? undefined : <Button onClick={openAdd}>Add a transaction</Button>}
+            action={
+              activeCount ? (
+                <Button variant="secondary" onClick={clearAll}>
+                  Clear all filters
+                </Button>
+              ) : (
+                <Button onClick={() => openAdd('expense')}>Add an expense</Button>
+              )
+            }
           >
             {activeCount ? 'Try widening the date range or clearing a filter.' : 'Log your first expense or income to get started.'}
           </EmptyState>

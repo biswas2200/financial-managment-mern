@@ -83,17 +83,18 @@ async function main() {
     if (want('add-transaction')) {
       await page.goto(`${BASE}/transactions`);
       await settle(page, 800);
-      await page.getByRole('button', { name: 'Add transaction' }).first().click();
+      await page.getByRole('button', { name: 'Add expense' }).first().click();
       const dlg = page.getByRole('dialog');
       await dlg.getByLabel('Amount (₹)').fill('450');
-      await dlg.getByLabel('Category').selectOption({ label: 'Groceries' });
-      await dlg.getByLabel('Description').fill('Weekly vegetables');
+      await dlg.getByRole('radiogroup', { name: 'Category' }).getByText('Groceries', { exact: true }).click();
       await dlg.getByLabel('Merchant or payee').fill('Blinkit');
       await page.waitForTimeout(300);
       await shot(page, 'add-transaction');
-      // Validation state
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+      // Validation state on a fresh form
+      await page.getByRole('button', { name: 'Add expense' }).first().click();
       await dlg.getByLabel('Amount (₹)').fill('12.345');
-      await dlg.getByLabel('Description').fill('');
       await dlg.getByRole('button', { name: 'Save transaction' }).click();
       await page.waitForTimeout(400);
       await shot(page, 'form-validation');
@@ -149,6 +150,19 @@ async function main() {
       await shot(page, 'analytics-dark');
     }
     await ctx?.close();
+
+    if (want('onboarding')) {
+      const octx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: 'en-IN', timezoneId: 'Asia/Kolkata', colorScheme: 'light' });
+      const email = `newuser-${Date.now()}@kosha.test`;
+      const res = await octx.request.post(`${BASE}/api/v1/auth/register`, { data: { name: 'Priya Nair', email, password: 'firstRun2026' } });
+      if (!res.ok()) throw new Error(`Could not create the onboarding account (${res.status()})`);
+      const o = await octx.newPage();
+      await o.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+      await o.goto(`${BASE}/`);
+      await settle(o, 2200);
+      await shot(o, 'onboarding');
+      await octx.close();
+    }
 
     if (want('database')) {
       const dctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });

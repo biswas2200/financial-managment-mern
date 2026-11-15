@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { currentMonthKey, formatMonthLabel } from '@kosha/shared';
-import { Receipt, PiggyBank } from 'lucide-react';
-import { useSummary, useTrend, useByCategory, useDaily, useBudgets, useTransactions } from '../../api/hooks.js';
+import { Receipt, PiggyBank, Plus, ArrowUpRight } from 'lucide-react';
+import { useSummary, useTrend, useByCategory, useDaily, useBudgets, useTransactions, useAssistantHistory } from '../../api/hooks.js';
 import { PageHeader, useQuickAdd } from '../../components/layout/AppShell.jsx';
 import { MonthPicker } from '../../components/ui/MonthPicker.jsx';
 import { Panel } from '../../components/ui/Panel.jsx';
@@ -18,6 +18,28 @@ import { BalanceNote } from './BalanceNote.jsx';
 import { KpiStrip } from './KpiStrip.jsx';
 import { Insights } from './Insights.jsx';
 import { TransactionRow } from '../transactions/TransactionRow.jsx';
+import { GettingStarted } from './GettingStarted.jsx';
+
+/** Remembers per user whether the getting-started card was hidden. */
+function useOnboardingHidden(userId) {
+  const key = `kosha-onboarding-hidden:${userId}`;
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem(key) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const hide = () => {
+    setHidden(true);
+    try {
+      localStorage.setItem(key, '1');
+    } catch {
+      /* private mode: hidden for this visit only */
+    }
+  };
+  return [hidden, hide];
+}
 
 export default function DashboardPage() {
   const user = useCurrentUser();
@@ -31,6 +53,14 @@ export default function DashboardPage() {
   const budgets = useBudgets(month);
   const recent = useTransactions({ limit: 6, sort: '-date', page: 1 });
 
+  // Data for the first-run checklist (tiny queries: one row each).
+  const anyIncome = useTransactions({ type: 'income', limit: 1, page: 1, sort: '-date' });
+  const anyExpense = useTransactions({ type: 'expense', limit: 1, page: 1, sort: '-date' });
+  const thisMonthBudgets = useBudgets(currentMonthKey());
+  const chat = useAssistantHistory();
+  const [onboardingHidden, hideOnboarding] = useOnboardingHidden(user?.id);
+  const onboardingReady = anyIncome.data && anyExpense.data && thisMonthBudgets.data && chat.data;
+
   const label = formatMonthLabel(month);
   const firstName = user?.name?.split(' ')[0] ?? '';
 
@@ -39,8 +69,34 @@ export default function DashboardPage() {
       <PageHeader
         title={`${greeting()}, ${firstName}`}
         description={`Here's how ${label} is going.`}
-        actions={<MonthPicker value={month} onChange={setMonth} />}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => openAdd('income')} className="hidden sm:inline-flex">
+              <ArrowUpRight size={17} aria-hidden />
+              Add income
+            </Button>
+            <Button onClick={() => openAdd('expense')} className="hidden sm:inline-flex">
+              <Plus size={17} aria-hidden />
+              Add expense
+            </Button>
+            <MonthPicker value={month} onChange={setMonth} />
+          </>
+        }
       />
+
+      {onboardingReady && !onboardingHidden && (
+        <GettingStarted
+          counts={{
+            incomeCount: anyIncome.data.total,
+            expenseCount: anyExpense.data.total,
+            budgetCount: thisMonthBudgets.data.items.length,
+            chatCount: chat.data.length,
+          }}
+          onAddIncome={() => openAdd('income')}
+          onAddExpense={() => openAdd('expense')}
+          onDismiss={hideOnboarding}
+        />
+      )}
 
       {summary.isError && <ErrorNote error={summary.error} onRetry={summary.refetch} />}
 
@@ -105,7 +161,7 @@ export default function DashboardPage() {
           ) : byCategory.data.items.length ? (
             <CategoryBars items={byCategory.data.items} />
           ) : (
-            <EmptyState icon={<Receipt size={20} />} title="No spending yet" action={<Button onClick={openAdd}>Add a transaction</Button>}>
+            <EmptyState icon={<Receipt size={20} />} title="No spending yet" action={<Button onClick={() => openAdd('expense')}>Add an expense</Button>}>
               Expenses you log for {label} will be ranked here.
             </EmptyState>
           )}
@@ -177,7 +233,7 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <EmptyState icon={<Receipt size={20} />} title="Nothing logged yet" action={<Button onClick={openAdd}>Add your first transaction</Button>}>
+            <EmptyState icon={<Receipt size={20} />} title="Nothing logged yet" action={<Button onClick={() => openAdd('expense')}>Add your first expense</Button>}>
               Your latest income and expenses will appear here.
             </EmptyState>
           )}

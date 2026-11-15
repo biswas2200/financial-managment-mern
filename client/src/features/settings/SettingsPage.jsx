@@ -79,10 +79,10 @@ function PasswordForm() {
       )}
     >
       <Field label="Current password" error={formState.errors.currentPassword?.message}>
-        {(a11y) => <Input {...a11y} type="password" autoComplete="current-password" {...register('currentPassword')} />}
+        {(a11y) => <PasswordInput {...a11y} autoComplete="current-password" {...register('currentPassword')} />}
       </Field>
       <Field label="New password" error={formState.errors.newPassword?.message} hint="At least 8 characters with a letter and a number.">
-        {(a11y) => <Input {...a11y} type="password" autoComplete="new-password" {...register('newPassword')} />}
+        {(a11y) => <PasswordInput {...a11y} autoComplete="new-password" {...register('newPassword')} />}
       </Field>
       <Button type="submit" variant="secondary" className="self-start" loading={change.isPending}>
         Change password

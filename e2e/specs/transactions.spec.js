@@ -39,7 +39,7 @@ test.describe('Transactions end to end', () => {
     await expect(page).toHaveURL(/q=uber/);
     await expect(page.getByText('1 transaction', { exact: false })).toBeVisible();
     await expect(page.getByRole('row', { name: /Vegetables/ })).toHaveCount(0);
-    await page.getByRole('button', { name: /Clear 1 filter/ }).click();
+    await page.getByRole('button', { name: 'Remove filter: Search: uber' }).click();
 
     // Delete with undo
     await page.getByRole('button', { name: 'Delete Auto ride' }).click();
@@ -50,12 +50,13 @@ test.describe('Transactions end to end', () => {
 
   test('form validation blocks bad input', async ({ page }) => {
     await registerNewUser(page);
-    await page.getByRole('button', { name: 'Add transaction' }).first().click();
+    await page.getByRole('button', { name: 'Add expense' }).first().click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Amount (₹)').fill('12.345');
     await dialog.getByRole('button', { name: 'Save transaction' }).click();
     await expect(dialog.getByText('Enter a valid amount with at most 2 decimal places')).toBeVisible();
     await expect(dialog.getByText('Choose a category')).toBeVisible();
-    await expect(dialog.getByText('Add a short description')).toBeVisible();
+    // The description is optional: no error for it.
+    await expect(dialog.getByText('Add a short description')).toHaveCount(0);
   });
 });
