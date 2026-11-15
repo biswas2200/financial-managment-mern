@@ -79,6 +79,40 @@ test.describe('Phone layout (360 px)', () => {
   });
 });
 
+test.describe('Phone layout (390 px)', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('the balance note never leaves "far" alone on its own line', async ({ page }) => {
+    await registerNewUser(page);
+    await addTransaction(page, { type: 'income', amount: '49302', category: 'Salary', description: 'November salary' });
+    const note = page.getByLabel('Balance').getByText(/saved in/);
+    await expect(note).toBeVisible();
+
+    await expect
+      .poll(
+        async () => {
+          const words = await note.evaluate((el) => {
+            const out = [];
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+            for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+              for (const m of n.textContent.matchAll(/\S+/g)) {
+                const r = document.createRange();
+                r.setStart(n, m.index);
+                r.setEnd(n, m.index + m[0].length);
+                out.push(Math.round(r.getBoundingClientRect().top));
+              }
+            }
+            return out;
+          });
+          const lastTop = words[words.length - 1];
+          return words.filter((top) => top === lastTop).length; // words on the final line
+        },
+        { message: 'words on the last line of the savings note' },
+      )
+      .toBeGreaterThanOrEqual(2);
+  });
+});
+
 test.describe('Desktop layout', () => {
   test.use({ viewport: { width: 1366, height: 860 }, hasTouch: false });
 
