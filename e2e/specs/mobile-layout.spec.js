@@ -34,6 +34,16 @@ test.describe('Phone layout (360 px)', () => {
     expect(overflow, 'page does not scroll sideways').toBeLessThanOrEqual(0);
   });
 
+  test('two transactions show above the tab bar without scrolling', async ({ page }) => {
+    await registerNewUser(page);
+    await addTransaction(page, { amount: '250', category: 'Transport', description: 'Auto ride', merchant: 'Uber' });
+    await addTransaction(page, { amount: '90', category: 'Dining Out', description: 'Filter coffee', merchant: 'Third Wave' });
+    await page.goto('/transactions');
+    const second = await page.getByRole('row', { name: /Auto ride/ }).boundingBox(); // the older of the two sorts last
+    const tabBar = await page.getByRole('navigation', { name: 'Main' }).boundingBox();
+    expect(second.y + second.height, 'filters and sorting leave room for the list').toBeLessThanOrEqual(tabBar.y);
+  });
+
   test('the month picker spans the full width so its arrows sit at the edges', async ({ page }) => {
     await registerNewUser(page);
     const picker = page.getByRole('group', { name: 'Choose month' });
