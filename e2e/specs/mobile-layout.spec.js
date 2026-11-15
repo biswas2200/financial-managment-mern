@@ -116,8 +116,26 @@ test.describe('Phone layout (390 px)', () => {
 test.describe('Desktop layout', () => {
   test.use({ viewport: { width: 1366, height: 860 }, hasTouch: false });
 
-  test('keeps the floating Copilot button', async ({ page }) => {
+  test('keeps the floating Copilot button, and it opens Copilot', async ({ page }) => {
     await registerNewUser(page);
-    await expect(page.locator('[data-copilot-launcher]')).toBeVisible();
+    const launcher = page.getByRole('button', { name: 'Ask Copilot' });
+    await expect(launcher).toBeVisible();
+    await launcher.click();
+    await expect(page.getByRole('dialog', { name: 'Copilot' })).toBeVisible();
+  });
+
+  test('the floating Copilot button stays clear of the Amount column', async ({ page }) => {
+    await registerNewUser(page);
+    await addTransaction(page, { amount: '5000', category: 'Groceries', description: 'Monthly stock-up', merchant: 'DMart' });
+    await page.goto('/transactions');
+    const amountColumn = page.getByRole('columnheader', { name: 'Amount' });
+    const launcher = page.locator('[data-copilot-launcher]');
+    await expect(launcher).toBeVisible();
+    // Poll: the layout is only final once the page header and font settle.
+    await expect
+      .poll(async () => (await launcher.boundingBox()).x - ((await amountColumn.boundingBox()).x + (await amountColumn.boundingBox()).width), {
+        message: 'gap between the Amount column and the button (negative means they overlap)',
+      })
+      .toBeGreaterThanOrEqual(0);
   });
 });
