@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useId, useRef } from 'react';
 import clsx from 'clsx';
-import { Loader, X } from 'lucide-react';
+import { Check, Loader, X } from 'lucide-react';
 
 // ---------- Button ----------
 
@@ -59,6 +59,37 @@ export const Select = forwardRef(function Select({ className, children, ...props
 
 export const Textarea = forwardRef(function Textarea({ className, ...props }, ref) {
   return <textarea ref={ref} className={clsx(controlBase, 'min-h-20 py-2', className)} {...props} />;
+});
+
+/**
+ * A checkbox with a drawn tick that pops in. The input itself is the box (so it is a real click target),
+ * and the label text, with any links in it, is its accessible name.
+ */
+export const Checkbox = forwardRef(function Checkbox({ children, className, error, ...props }, ref) {
+  return (
+    <label className={clsx('flex cursor-pointer items-start gap-3 text-sm text-ink-2', className)}>
+      <span className="relative mt-0.5 h-5 w-5 shrink-0">
+        <input
+          ref={ref}
+          type="checkbox"
+          aria-invalid={Boolean(error)}
+          className={clsx(
+            'peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-md bg-surface shadow-inset transition-[background-color,box-shadow,transform] duration-200',
+            'checked:bg-brand checked:shadow-none active:scale-90 focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+            error && 'ring-2 ring-bad',
+          )}
+          {...props}
+        />
+        <Check
+          size={14}
+          strokeWidth={3}
+          aria-hidden
+          className="pointer-events-none absolute inset-0 m-auto scale-0 text-brand-ink transition-transform duration-200 peer-checked:scale-100"
+        />
+      </span>
+      <span className="min-w-0 leading-snug">{children}</span>
+    </label>
+  );
 });
 
 /** Label + control + hint/error, wired with ids for screen readers. */

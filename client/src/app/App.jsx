@@ -10,6 +10,7 @@ import { Skeleton } from '../components/ui/primitives.jsx';
 import { OfflineBanner } from '../pwa/OfflineBanner.jsx';
 import { LoginPage, RegisterPage } from '../features/auth/AuthPages.jsx';
 import DashboardPage from '../features/dashboard/DashboardPage.jsx';
+import { PrivacyPage, TermsPage } from '../features/legal/LegalPages.jsx';
 
 const TransactionsPage = lazy(() => import('../features/transactions/TransactionsPage.jsx'));
 const AnalyticsPage = lazy(() => import('../features/analytics/AnalyticsPage.jsx'));
@@ -51,6 +52,9 @@ function NotFound() {
 }
 
 const router = createBrowserRouter([
+  // Readable by anyone, signed in or not: people are asked to agree to these before they have an account.
+  { path: '/privacy', element: <PrivacyPage /> },
+  { path: '/terms', element: <TermsPage /> },
   {
     element: <GuestOnly />,
     children: [

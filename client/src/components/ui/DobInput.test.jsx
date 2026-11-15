@@ -30,7 +30,7 @@ describe('DobInput', () => {
     await user.keyboard('0904');
     expect(day()).toHaveValue('09');
     expect(month()).toHaveValue('04');
-    expect(month()).toHaveFocus();
+    expect(year()).toHaveFocus();
     await user.keyboard('2001');
     expect(year()).toHaveValue('2001');
   });

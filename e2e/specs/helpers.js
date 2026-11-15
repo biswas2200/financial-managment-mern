@@ -9,6 +9,7 @@ export async function registerNewUser(page, name = 'Neha Kulkarni') {
   await page.getByLabel('Name').fill(name);
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('checkbox', { name: /I agree/ }).check();
   await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText(name.split(' ')[0]);
   return { email, password: PASSWORD, name };

@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, registerSchema } from '@kosha/shared';
 import { useLogin, useRegister } from '../../api/hooks.js';
 import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
-import { Button, Field, Input } from '../../components/ui/primitives.jsx';
+import { Button, Checkbox, Field, Input } from '../../components/ui/primitives.jsx';
+import { DobInput } from '../../components/ui/DobInput.jsx';
 import { Logo } from '../../components/brand/Logo.jsx';
 import { wavePaths, rosettePath } from '../../components/brand/guilloche.js';
 
@@ -126,7 +127,10 @@ export function LoginPage() {
 export function RegisterPage() {
   const registerUser = useRegister();
   const navigate = useNavigate();
-  const { register, handleSubmit, formState, setError } = useForm({ resolver: zodResolver(registerSchema) });
+  const { register, handleSubmit, control, formState, setError } = useForm({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { phone: '', dateOfBirth: '', acceptedTerms: false },
+  });
 
   const onSubmit = (values) =>
     registerUser.mutate(values, {
@@ -164,6 +168,30 @@ export function RegisterPage() {
         <Field label="Password" error={formState.errors.password?.message} hint="At least 8 characters with a letter and a number.">
           {(a11y) => <PasswordInput {...a11y} autoComplete="new-password" {...register('password')} />}
         </Field>
+        <Field label="Phone number" optional error={formState.errors.phone?.message} hint="Only to reach you about your account. No marketing.">
+          {(a11y) => <Input {...a11y} type="tel" inputMode="tel" autoComplete="tel" placeholder="98765 43210" {...register('phone')} />}
+        </Field>
+        <Field label="Date of birth" optional error={formState.errors.dateOfBirth?.message} hint="So we can check you're old enough to use Kosha (13+).">
+          {(a11y) => <Controller control={control} name="dateOfBirth" render={({ field }) => <DobInput {...a11y} value={field.value} onChange={field.onChange} />} />}
+        </Field>
+        <div>
+          <Checkbox error={formState.errors.acceptedTerms} {...register('acceptedTerms')}>
+            I agree to the{' '}
+            <Link to="/terms" target="_blank" rel="noreferrer" className="font-semibold text-brand hover:underline">
+              Terms of Use
+            </Link>{' '}
+            and the{' '}
+            <Link to="/privacy" target="_blank" rel="noreferrer" className="font-semibold text-brand hover:underline">
+              Privacy Policy
+            </Link>
+            , and I consent to Kosha storing the details I enter.
+          </Checkbox>
+          {formState.errors.acceptedTerms && (
+            <p role="alert" className="mt-1.5 text-[0.8125rem] text-bad-text">
+              {formState.errors.acceptedTerms.message}
+            </p>
+          )}
+        </div>
         <Button type="submit" size="lg" loading={registerUser.isPending} className="mt-2">
           Create account
         </Button>
