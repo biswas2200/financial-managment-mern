@@ -16,7 +16,25 @@ are saved only after you confirm them.
 - **Budgets:** a monthly limit per category with spent, remaining and status (a heads-up at 75%, over budget past 100%), plus copying last month's budgets.
 - **Kosha Copilot:** plain-language questions ("Where is my money going?", "Compare this month with last month") answered from your data, with inline charts. Say "Spent 450 on groceries yesterday" and it drafts the entry for you to confirm.
 - **Settings:** profile, password, light/dark/system theme, custom categories, and which Copilot engine is active.
-- Responsive from 360 px phones (bottom tab bar) to wide desktops, with keyboard support and a table view for every chart.
+- Responsive from 360 px phones (bottom tab bar and account menu) to wide desktops, with keyboard support and a table view for every chart.
+
+### Designed to be easy to use
+
+- **Getting started checklist:** new accounts see four steps (add income, log an expense, set a budget, ask Copilot) that tick themselves off from real data.
+- **Fast entry:** "Add expense" and "Add income" buttons everywhere. Only the amount and a category are required; categories and payment methods are one-tap chips, the date has Today/Yesterday shortcuts, and the description fills itself from the merchant or category.
+- **Calmer filters:** search, type and a "When" menu (This month, Last month, Last 30 days) up front; everything else under "More filters", with every active filter shown as a removable chip.
+- **Plain-language help:** a "?" next to terms like Savings rate explains what they mean.
+- **Accessible:** WCAG AA text contrast in both themes, labelled controls, visible focus, a show/hide toggle on password fields.
+
+### Keyboard shortcuts
+
+| Key | Action |
+|---|---|
+| `N` | Add an expense |
+| `I` | Add income |
+| `/` | Search transactions |
+| `?` | Show all shortcuts |
+| `Esc` | Close a dialog or menu |
 
 ## Tech stack
 

@@ -71,14 +71,17 @@ export default function DashboardPage() {
         description={`Here's how ${label} is going.`}
         actions={
           <>
-            <Button variant="secondary" onClick={() => openAdd('income')} className="hidden sm:inline-flex">
-              <ArrowUpRight size={17} aria-hidden />
-              Add income
-            </Button>
-            <Button onClick={() => openAdd('expense')} className="hidden sm:inline-flex">
-              <Plus size={17} aria-hidden />
-              Add expense
-            </Button>
+            {/* On phones the header bar already has "Add expense"; keep this row uncluttered. */}
+            <div className="hidden gap-2 sm:flex">
+              <Button variant="secondary" onClick={() => openAdd('income')}>
+                <ArrowUpRight size={17} aria-hidden />
+                Add income
+              </Button>
+              <Button onClick={() => openAdd('expense')}>
+                <Plus size={17} aria-hidden />
+                Add expense
+              </Button>
+            </div>
             <MonthPicker value={month} onChange={setMonth} />
           </>
         }

@@ -202,6 +202,10 @@ async function main() {
       await m.goto(`${BASE}/`);
       await settle(m, 2600);
       await shot(m, 'mobile-dashboard');
+      await m.getByRole('button', { name: 'Account menu' }).click();
+      await m.waitForTimeout(300);
+      await shot(m, 'mobile-menu');
+      await m.keyboard.press('Escape');
       await m.goto(`${BASE}/transactions`);
       await settle(m);
       await shot(m, 'mobile-transactions');

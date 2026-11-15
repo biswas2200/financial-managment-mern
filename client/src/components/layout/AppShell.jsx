@@ -44,10 +44,11 @@ const SHORTCUTS = [
 const QuickAddContext = createContext({ openAdd: () => {}, openEdit: () => {} });
 export const useQuickAdd = () => useContext(QuickAddContext);
 
-export const Kbd = ({ children, className }) => (
+export const Kbd = ({ children, className, inverse = false }) => (
   <kbd
     className={clsx(
-      'inline-flex min-w-6 items-center justify-center rounded-md bg-surface-2 px-1.5 py-0.5 font-sans text-[0.75rem] font-semibold text-ink-2 ring-1 ring-line-strong',
+      'inline-flex min-w-6 items-center justify-center rounded-md px-1.5 py-0.5 font-sans text-[0.75rem] font-semibold ring-1',
+      inverse ? 'bg-white/20 text-brand-ink ring-white/30' : 'bg-surface-2 text-ink-2 ring-line-strong',
       className,
     )}
   >
@@ -98,7 +99,7 @@ function Sidebar({ onAdd, onShortcuts }) {
               <Plus size={18} aria-hidden />
               Add expense
             </span>
-            <Kbd className="bg-white/15 text-brand-ink ring-white/25">N</Kbd>
+            <Kbd inverse>N</Kbd>
           </Button>
           <Button variant="secondary" className="w-full justify-between" onClick={() => onAdd('income')} title="Shortcut: I">
             <span className="inline-flex items-center gap-2">
