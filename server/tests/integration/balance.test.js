@@ -54,6 +54,14 @@ describe('Balance: starting figure, negative balances and the demo bank', () => 
     expect((await summary(ctx)).balance).toBe(-125000);
   });
 
+  it('the summary also says how much of the balance is the starting figure', async () => {
+    const ctx = await signUp(app);
+    await add(ctx, 'income', 100000, 'Salary');
+    expect((await summary(ctx)).openingBalance).toBe(0);
+    await ctx.agent.put(base).send({ balance: 700000 }).expect(200);
+    expect((await summary(ctx)).openingBalance).toBe(600000);
+  });
+
   it('does not touch the income and spending figures', async () => {
     const ctx = await signUp(app);
     await add(ctx, 'income', 100000, 'Salary');
