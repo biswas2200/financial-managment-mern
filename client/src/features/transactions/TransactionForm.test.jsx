@@ -112,4 +112,15 @@ describe('TransactionForm', () => {
     expect(screen.getByLabelText(/pick a date/i)).toHaveValue('2026-10-28');
     expect(save()).toHaveTextContent(/save changes/i);
   });
+
+  it('starts on the day it is told to, so a past day can be filled in', async () => {
+    const { user, onSubmit } = setup({ defaultDate: '2026-11-03' });
+    expect(screen.getByLabelText('Pick a date')).toHaveValue('2026-11-03');
+    expect(screen.getByRole('radio', { name: 'Today' })).not.toBeChecked();
+    await user.type(screen.getByLabelText(/amount/i), '90');
+    await user.click(screen.getByRole('radio', { name: /Groceries/ }));
+    await user.click(save());
+    await vi.waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(toDayKey(onSubmit.mock.calls[0][0].date)).toBe('2026-11-03');
+  });
 });
