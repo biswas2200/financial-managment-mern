@@ -6,6 +6,7 @@ import { CopilotChat } from './CopilotChat.jsx';
 /**
  * Floating button that opens Copilot in a side panel from any page.
  * Hidden on phones: the bottom tab bar already has a Copilot tab, and the button covered amounts and actions.
+ * Elsewhere it is a round icon rather than a labelled pill, so it stays clear of the Amount column in tables.
  */
 export function CopilotLauncher() {
   const [open, setOpen] = useState(false);
@@ -25,10 +26,10 @@ export function CopilotLauncher() {
           data-copilot-launcher
           onClick={() => setOpen(true)}
           aria-label="Ask Copilot"
-          className="fixed right-4 bottom-20 z-40 hidden h-12 items-center justify-center gap-2 rounded-full bg-ink pr-5 pl-4 text-[0.9375rem] font-semibold text-paper shadow-[var(--shadow-pop)] hover:opacity-90 sm:inline-flex lg:right-8 lg:bottom-8"
+          title="Ask Copilot"
+          className="fixed right-4 bottom-20 z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-ink text-paper shadow-[var(--shadow-pop)] hover:opacity-90 sm:inline-flex lg:right-8 lg:bottom-8"
         >
-          <MessageCircle size={19} aria-hidden />
-          <span>Ask Copilot</span>
+          <MessageCircle size={20} aria-hidden />
         </button>
       )}
       {open && (
