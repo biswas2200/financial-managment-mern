@@ -205,7 +205,9 @@ function CategoryManager() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{c.name}</p>
                       <p className="text-[0.8125rem] text-ink-3">
-                        {c.transactionCount ? `${c.transactionCount} transactions, ${moneyWhole(c.totalAmount)}` : 'Not used yet'}
+                        {c.transactionCount
+                          ? `${c.transactionCount} ${c.transactionCount === 1 ? 'transaction' : 'transactions'}, ${moneyWhole(c.totalAmount)}`
+                          : 'Not used yet'}
                       </p>
                     </div>
                     <Button variant="ghost" size="icon" aria-label={`Edit ${c.name}`} onClick={() => setDialog({ editing: c })}>
