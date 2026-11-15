@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { currentMonthKey, formatMonthLabel } from '@kosha/shared';
-import { Receipt, PiggyBank, Plus, ArrowUpRight } from 'lucide-react';
+import { currentMonthKey, firstTrackedMonth, formatMonthLabel, shiftMonth } from '@kosha/shared';
+import { Receipt, PiggyBank, Plus, ArrowUpRight, CalendarClock } from 'lucide-react';
 import { useSummary, useTrend, useByCategory, useDaily, useBudgets, useTransactions, useAssistantHistory } from '../../api/hooks.js';
 import { PageHeader, useQuickAdd } from '../../components/layout/AppShell.jsx';
 import { MonthPicker } from '../../components/ui/MonthPicker.jsx';
@@ -19,6 +19,7 @@ import { KpiStrip } from './KpiStrip.jsx';
 import { Insights } from './Insights.jsx';
 import { TransactionRow } from '../transactions/TransactionRow.jsx';
 import { GettingStarted } from './GettingStarted.jsx';
+import { DayDetail } from './DayDetail.jsx';
 
 /** Remembers per user whether the getting-started card was hidden. */
 function useOnboardingHidden(userId) {
@@ -43,8 +44,13 @@ function useOnboardingHidden(userId) {
 
 export default function DashboardPage() {
   const user = useCurrentUser();
-  const [month, setMonth] = useState(currentMonthKey());
+  const [month, setMonthKey] = useState(currentMonthKey());
+  const [selectedDay, setSelectedDay] = useState(null); // 'YYYY-MM-DD' picked on the calendar
   const { openAdd, openEdit } = useQuickAdd();
+  const setMonth = (key) => {
+    setMonthKey(key);
+    setSelectedDay(null);
+  };
 
   const summary = useSummary({ month });
   const trend = useTrend({ months: 12, end: month });
@@ -52,6 +58,11 @@ export default function DashboardPage() {
   const daily = useDaily({ month });
   const budgets = useBudgets(month);
   const recent = useTransactions({ limit: 6, sort: '-date', page: 1 });
+  const oldest = useTransactions({ limit: 1, sort: 'date', page: 1 });
+
+  // Months before the user's first record (or sign-up) have nothing to analyse: show the calendar only.
+  const trackingStart = user && oldest.data ? firstTrackedMonth({ accountCreatedAt: user.createdAt, oldestTransactionDate: oldest.data.items[0]?.date }) : null;
+  const beforeStart = Boolean(trackingStart) && month < trackingStart;
 
   // Data for the first-run checklist (tiny queries: one row each).
   const anyIncome = useTransactions({ type: 'income', limit: 1, page: 1, sort: '-date' });
@@ -63,6 +74,13 @@ export default function DashboardPage() {
 
   const label = formatMonthLabel(month);
   const firstName = user?.name?.split(' ')[0] ?? '';
+
+  const dailyPanel = (
+    <Panel title="Daily spending" subtitle={beforeStart ? 'Pick a day to add what you spent' : 'Darker days cost more. Click a day to see it.'}>
+      {daily.data ? <SpendingCalendar days={daily.data} selected={selectedDay} onSelect={setSelectedDay} /> : <Skeleton className="h-64" />}
+      {selectedDay && <DayDetail key={selectedDay} day={selectedDay} onAdd={(date) => openAdd('expense', { date })} onEdit={openEdit} />}
+    </Panel>
+  );
 
   return (
     <div className="rise">
@@ -82,11 +100,29 @@ export default function DashboardPage() {
                 Add expense
               </Button>
             </div>
-            <MonthPicker value={month} onChange={setMonth} />
+            <MonthPicker value={month} onChange={setMonth} min={shiftMonth(currentMonthKey(), -60)} />
           </>
         }
       />
 
+      {beforeStart ? (
+        <>
+          <section className="raised mb-5 flex items-start gap-4 rounded-2xl bg-surface p-5 shadow-raise-1">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand">
+              <CalendarClock size={20} aria-hidden />
+            </span>
+            <div>
+              <h2 className="font-wide text-[1.0625rem] font-semibold">{label} is before you started using Kosha</h2>
+              <p className="mt-1 max-w-2xl text-sm text-ink-2">
+                Your first record is in {formatMonthLabel(trackingStart)}, so there is nothing to analyse for this month. If you remember spending from then,
+                pick a day below and add it. Once you do, this month gets its own figures and charts.
+              </p>
+            </div>
+          </section>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">{dailyPanel}</div>
+        </>
+      ) : (
+        <>
       {onboardingReady && !onboardingHidden && (
         <GettingStarted
           counts={{
@@ -119,7 +155,7 @@ export default function DashboardPage() {
       <Panel
         className="mt-5"
         title="Income and spending"
-        subtitle="Last 12 months"
+        subtitle="Last 12 months. Click a month to open it."
         table={
           trend.data && {
             caption: 'Monthly income and spending',
@@ -139,7 +175,7 @@ export default function DashboardPage() {
           }
         }
       >
-        {trend.data ? <CashFlowChart data={trend.data} selectedMonth={month} /> : <Skeleton className="h-64" />}
+        {trend.data ? <CashFlowChart data={trend.data} selectedMonth={month} onSelectMonth={setMonth} /> : <Skeleton className="h-64" />}
       </Panel>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
@@ -170,9 +206,7 @@ export default function DashboardPage() {
           )}
         </Panel>
 
-        <Panel title="Daily spending" subtitle="Darker days cost more">
-          {daily.data ? <SpendingCalendar days={daily.data} /> : <Skeleton className="h-64" />}
-        </Panel>
+        {dailyPanel}
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
@@ -242,6 +276,8 @@ export default function DashboardPage() {
           )}
         </Panel>
       </div>
+        </>
+      )}
     </div>
   );
 }

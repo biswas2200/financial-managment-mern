@@ -15,8 +15,11 @@ function levelFor(value, max) {
 const cellColor = (level) =>
   level === 0 ? 'var(--surface-2)' : `color-mix(in oklch, var(--expense) ${LEVELS[level]}%, var(--surface))`;
 
-/** Calendar heatmap of daily spending for one month. */
-export function SpendingCalendar({ days = [] }) {
+/**
+ * Calendar heatmap of daily spending for one month. Pointing at a day previews its total;
+ * clicking it selects the day (`selected` / `onSelect`) so the page can list that day's spending.
+ */
+export function SpendingCalendar({ days = [], selected = null, onSelect }) {
   const today = toDayKey(new Date());
   const max = Math.max(...days.map((d) => d.expense), 1);
   const peak = useMemo(() => days.reduce((a, b) => (b.expense > (a?.expense ?? 0) ? b : a), null), [days]);
@@ -40,21 +43,26 @@ export function SpendingCalendar({ days = [] }) {
         {days.map((d) => {
           const level = levelFor(d.expense, max);
           const future = d.date > today;
+          const isSelected = selected === d.date;
           return (
             <button
               key={d.date}
               type="button"
               role="gridcell"
+              data-date={d.date}
               disabled={future}
+              aria-pressed={isSelected}
+              onClick={() => onSelect?.(isSelected ? null : d.date)}
               onMouseEnter={() => setFocus(d)}
               onFocus={() => setFocus(d)}
               onMouseLeave={() => setFocus(null)}
               onBlur={() => setFocus(null)}
               aria-label={`${dayHeader(d.date)}: ${d.expense ? money(d.expense) : 'no spending'}`}
               className={clsx(
-                'relative h-10 rounded-md text-[0.75rem] font-medium transition-[box-shadow] sm:h-11',
-                future ? 'cursor-default opacity-35' : 'hover:ring-2 hover:ring-ink/30',
-                d.date === today && 'ring-2 ring-brand',
+                'relative h-10 rounded-md text-[0.75rem] font-medium transition-[box-shadow,transform] duration-200 sm:h-11',
+                future ? 'cursor-default opacity-35' : 'cursor-pointer hover:-translate-y-px hover:ring-2 hover:ring-ink/30 active:scale-95',
+                d.date === today && !isSelected && 'ring-2 ring-brand',
+                isSelected && 'scale-105 ring-2 ring-ink ring-offset-2 ring-offset-surface',
                 level >= 3 ? 'text-white' : 'text-ink-2',
               )}
               style={{ background: future ? 'transparent' : cellColor(level) }}

@@ -246,12 +246,13 @@ function ShortcutsDialog({ open, onClose }) {
 }
 
 export function AppShell() {
-  const [dialog, setDialog] = useState({ open: false, editing: null, type: 'expense' });
+  const [dialog, setDialog] = useState({ open: false, editing: null, type: 'expense', date: undefined });
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const location = useLocation();
   const [params, setParams] = useSearchParams();
 
-  const openAdd = useCallback((type = 'expense') => setDialog({ open: true, editing: null, type }), []);
+  // `date` ('YYYY-MM-DD') starts the form on a past day, e.g. from the spending calendar.
+  const openAdd = useCallback((type = 'expense', { date } = {}) => setDialog({ open: true, editing: null, type, date }), []);
   const openEdit = useCallback((txn) => setDialog({ open: true, editing: txn, type: txn.type }), []);
   const quickAdd = useMemo(() => ({ openAdd, openEdit }), [openAdd, openEdit]);
 
@@ -299,6 +300,7 @@ export function AppShell() {
         open={dialog.open}
         editing={dialog.editing}
         defaultType={dialog.type}
+        defaultDate={dialog.date}
         onClose={() => setDialog((d) => ({ ...d, open: false }))}
       />
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />

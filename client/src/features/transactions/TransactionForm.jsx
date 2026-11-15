@@ -11,9 +11,9 @@ const PAYMENT_LABELS = { UPI: 'UPI', Card: 'Card', Cash: 'Cash', Bank: 'Bank tra
 const today = () => toDayKey(new Date());
 const yesterday = () => toDayKey(new Date(Date.now() - 86400000));
 
-function toDefaults(initial, defaultType) {
+function toDefaults(initial, defaultType, defaultDate) {
   if (!initial) {
-    return { type: defaultType, amount: '', category: '', description: '', merchant: '', date: today(), paymentMethod: 'UPI', notes: '' };
+    return { type: defaultType, amount: '', category: '', description: '', merchant: '', date: defaultDate ?? today(), paymentMethod: 'UPI', notes: '' };
   }
   return {
     type: initial.type,
@@ -61,9 +61,9 @@ function GroupError({ message, id }) {
  * Add / edit a transaction with as few decisions as possible:
  * amount, a category chip, and one tap for the day. Everything else is optional.
  */
-export function TransactionForm({ categories = [], initialValues, defaultType = 'expense', onSubmit, onCancel, submitting = false, serverErrors }) {
+export function TransactionForm({ categories = [], initialValues, defaultType = 'expense', defaultDate, onSubmit, onCancel, submitting = false, serverErrors }) {
   const editing = Boolean(initialValues);
-  const defaults = useMemo(() => toDefaults(initialValues, defaultType), [initialValues, defaultType]);
+  const defaults = useMemo(() => toDefaults(initialValues, defaultType, defaultDate), [initialValues, defaultType, defaultDate]);
   const [showNotes, setShowNotes] = useState(Boolean(defaults.notes));
   const {
     register,

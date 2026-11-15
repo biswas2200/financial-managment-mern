@@ -22,6 +22,7 @@ test.describe('Going back through the months', () => {
   test('click a month on the Income and spending chart to jump to it', async ({ page }) => {
     await registerNewUser(page);
     const chart = page.getByRole('img', { name: 'Bar chart of monthly income and spending' });
+    await chart.scrollIntoViewIfNeeded(); // mouse clicks use viewport coordinates
     await expect(chart).toBeVisible();
     const box = await chart.boundingBox();
     // Twelve slots to the right of the 58 px value axis; the last is this month, the one before it last month.
@@ -75,7 +76,7 @@ test.describe('Clicking a day', () => {
     const panel = page.getByRole('region', { name: /Spending on/ });
     await expect(panel).toBeVisible();
     await expect(panel.getByText('Weekly groceries')).toBeVisible();
-    await expect(panel.getByText(/1,816\.00/)).toBeVisible();
+    await expect(panel.getByText('−₹1,816.00', { exact: true })).toBeVisible();
 
     // Clicking it again puts the panel away.
     await todayCell.click();
