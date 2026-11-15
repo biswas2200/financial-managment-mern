@@ -44,6 +44,16 @@ test.describe('Phone layout (360 px)', () => {
     expect(next.x + next.width, 'next arrow hugs the right edge').toBeGreaterThanOrEqual(box.x + box.width - 8);
   });
 
+  test('the Copilot message box sits above the tab bar without scrolling', async ({ page }) => {
+    await registerNewUser(page);
+    await page.goto('/copilot');
+    const composer = page.locator('form', { has: page.getByLabel('Message Copilot') });
+    await expect(composer).toBeVisible();
+    const box = await composer.boundingBox();
+    const tabBar = await page.getByRole('navigation', { name: 'Main' }).boundingBox();
+    expect(box.y + box.height, 'bottom of the composer is clear of the tab bar').toBeLessThanOrEqual(tabBar.y);
+  });
+
   test('the floating Copilot button gives way to the tab bar on phones', async ({ page }) => {
     await registerNewUser(page);
     await page.goto('/transactions');
