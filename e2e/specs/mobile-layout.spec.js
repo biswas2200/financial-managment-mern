@@ -33,6 +33,15 @@ test.describe('Phone layout (360 px)', () => {
     expect(overflow, 'page does not scroll sideways').toBeLessThanOrEqual(0);
   });
 
+  test('the month picker spans the full width so its arrows sit at the edges', async ({ page }) => {
+    await registerNewUser(page);
+    const picker = page.getByRole('group', { name: 'Choose month' });
+    const box = await picker.boundingBox();
+    const next = await picker.getByRole('button', { name: 'Next month' }).boundingBox();
+    expect(box.width, 'as wide as the content column (360 px minus 16 px gutters)').toBeGreaterThanOrEqual(360 - 32 - 1);
+    expect(next.x + next.width, 'next arrow hugs the right edge').toBeGreaterThanOrEqual(box.x + box.width - 8);
+  });
+
   test('the floating Copilot button gives way to the tab bar on phones', async ({ page }) => {
     await registerNewUser(page);
     await page.goto('/transactions');
