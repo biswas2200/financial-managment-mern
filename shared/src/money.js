@@ -47,6 +47,28 @@ export function toMinor(input) {
   return minor;
 }
 
+/** Largest balance we accept, positive or negative: ₹100 crore. */
+export const MAX_BALANCE_MINOR = 100_000_000_000;
+
+/**
+ * Like toMinor, but for a balance: a leading minus is allowed (an overdrawn account)
+ * and zero is fine.
+ */
+export function toSignedMinor(input) {
+  const raw = typeof input === 'number' ? String(input) : input;
+  if (typeof raw !== 'string') throw new MoneyError('Amount is required');
+  const text = raw.trim().replace(/^[-−]\s*/, '-');
+  const negative = text.startsWith('-');
+  const body = negative ? text.slice(1) : text;
+  const cleaned = body.replace(/,/g, '');
+  if (cleaned === '') throw new MoneyError('Amount is required');
+  if (!AMOUNT_PATTERN.test(cleaned)) throw new MoneyError('Enter a valid amount with at most 2 decimal places');
+  const [rupees, paise = ''] = cleaned.split('.');
+  const minor = Number(rupees) * 100 + Number(paise.padEnd(2, '0'));
+  if (!Number.isSafeInteger(minor) || minor > MAX_BALANCE_MINOR) throw new MoneyError('Amount is too large');
+  return negative && minor !== 0 ? -minor : minor;
+}
+
 /**
  * Integer paise → plain decimal string with exactly two places ("1234.50").
  * Used to pre-fill form inputs.

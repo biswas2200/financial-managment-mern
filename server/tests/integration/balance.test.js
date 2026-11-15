@@ -14,7 +14,8 @@ async function add(ctx, type, amount, category) {
     .send({ type, amount, category: ctx.categories[category].id, description: category, date: today })
     .expect(201);
 }
-const summary = async (ctx) => (await ctx.agent.get('/api/v1/analytics/summary').expect(200)).body;
+// A whole-day range: "today" is dated noon IST, which is still ahead of the clock early in the morning.
+const summary = async (ctx) => (await ctx.agent.get(`/api/v1/analytics/summary?from=2020-01-01&to=${today}`).expect(200)).body;
 
 describe('Balance: starting figure, negative balances and the demo bank', () => {
   useTestDatabase();

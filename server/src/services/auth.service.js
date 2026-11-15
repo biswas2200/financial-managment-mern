@@ -1,13 +1,22 @@
+import { POLICY_VERSION } from '@kosha/shared';
 import { User } from '../models/User.js';
 import { ApiError } from '../utils/ApiError.js';
 import { seedDefaultCategories } from './category.service.js';
 
-export async function register({ name, email, password }) {
+export async function register({ name, email, password, phone, dateOfBirth }) {
   if (await User.exists({ email })) {
     throw ApiError.conflict('This email is already registered. Try signing in instead.');
   }
   const passwordHash = await User.hashPassword(password);
-  const user = await User.create({ name, email, passwordHash });
+  const user = await User.create({
+    name,
+    email,
+    passwordHash,
+    ...(phone ? { phone } : {}),
+    ...(dateOfBirth ? { dateOfBirth } : {}),
+    // The schema only lets registration through once the Terms and Privacy Policy are accepted.
+    consent: { termsVersion: POLICY_VERSION, acceptedAt: new Date() },
+  });
   await seedDefaultCategories(user._id);
   return user;
 }
@@ -20,8 +29,17 @@ export async function login({ email, password }) {
   return user;
 }
 
-export async function updateProfile(userId, { name }) {
-  return User.findByIdAndUpdate(userId, { name }, { new: true, runValidators: true });
+/** `null` clears an optional field; `undefined` leaves it alone. */
+export async function updateProfile(userId, { name, phone, dateOfBirth, avatar }) {
+  const $set = { name };
+  const $unset = {};
+  for (const [field, value] of Object.entries({ phone, dateOfBirth, avatar })) {
+    if (value === undefined) continue;
+    if (value === null) $unset[field] = 1;
+    else $set[field] = value;
+  }
+  const update = Object.keys($unset).length ? { $set, $unset } : { $set };
+  return User.findByIdAndUpdate(userId, update, { new: true, runValidators: true });
 }
 
 export async function changePassword(userId, { currentPassword, newPassword }) {

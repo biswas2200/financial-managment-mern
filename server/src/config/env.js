@@ -3,6 +3,8 @@
  * (server/.env in development) with safe local defaults.
  */
 
+import { resolveGeminiAuth } from './gemini-auth.js';
+
 const num = (value, fallback) => (value === undefined || value === '' ? fallback : Number(value));
 
 const nodeEnv = process.env.NODE_ENV ?? 'development';
@@ -26,6 +28,7 @@ export const env = Object.freeze({
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
   bcryptRounds: num(process.env.BCRYPT_ROUNDS, 10),
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
-  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  // How Copilot reaches Gemini: { mode: 'api-key' | 'adc', ... } or null for the offline engine.
+  gemini: isTest ? resolveGeminiAuth({ GEMINI_API_KEY: process.env.GEMINI_API_KEY }) : resolveGeminiAuth(process.env),
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
 });

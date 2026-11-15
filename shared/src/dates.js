@@ -93,3 +93,15 @@ export function startOfDayIST(date = new Date()) {
   const { year, month, day } = istParts(date);
   return new Date(Date.UTC(year, month - 1, day) - IST_OFFSET_MS);
 }
+
+/**
+ * The first month Kosha has anything for a user: the earlier of the month they signed up
+ * and the month of their oldest transaction (people back-fill older spending).
+ * Months before this show a calendar but no insights.
+ */
+export function firstTrackedMonth({ accountCreatedAt, oldestTransactionDate } = {}) {
+  const keys = [accountCreatedAt, oldestTransactionDate]
+    .filter(Boolean)
+    .map((v) => toMonthKey(v instanceof Date ? v : new Date(v)));
+  return keys.length ? keys.sort()[0] : currentMonthKey();
+}

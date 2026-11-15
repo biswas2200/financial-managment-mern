@@ -85,6 +85,20 @@ describe('Analytics API (MongoDB aggregation pipelines)', () => {
       expect(s.previous).toMatchObject({ income: 10000000, expense: 2800000 });
     });
 
+    it("counts everything dated today, even when it is early morning and the entry is dated noon", async () => {
+      // 01:30 IST on 10 Nov. An expense added "today" is stored as 12:00 IST, still ahead of the clock.
+      const now = new Date('2026-11-10T01:30:00+05:30');
+      await ctx.agent
+        .post('/api/v1/transactions')
+        .send({ type: 'expense', amount: 78000000, category: ctx.categories.Shopping.id, description: 'Laptop', date: '2026-11-10' })
+        .expect(201);
+      const s = await getSummary(ctx.user.id, {}, now);
+      expect(s.period.partial).toBe(true);
+      expect(s.expense).toBe(2250000 + 78000000);
+      // The comparison covers the same whole days of the previous month: 1 Oct → 10 Oct.
+      expect(s.previous).toMatchObject({ income: 10000000, expense: 2800000 });
+    });
+
     it('supports a custom date range', async () => {
       const res = await ctx.agent.get(`${base}/summary?from=2026-10-10&to=2026-10-20`).expect(200);
       expect(res.body.expense).toBe(1400000);

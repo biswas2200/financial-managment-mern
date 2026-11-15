@@ -3,9 +3,10 @@
  * One source of truth means the browser and the server reject exactly the same input.
  */
 import { z } from 'zod';
-import { toMinor, MAX_AMOUNT_MINOR } from './money.js';
+import { toMinor, toSignedMinor, MAX_AMOUNT_MINOR, MAX_BALANCE_MINOR } from './money.js';
 import { parseDateInput } from './dates.js';
 import { TRANSACTION_TYPES, PAYMENT_METHODS } from './categories.js';
+import { normalizePhone, ageFromDob, AVATAR_PRESETS, MAX_AVATAR_CHARS, MIN_AGE } from './profile.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -57,10 +58,66 @@ const optionalQuery = (schema) =>
 
 // ---------- Auth ----------
 
+/** Empty text clears an optional profile field. */
+const clearable = (schema) => z.union([z.literal('').transform(() => null), z.null(), schema]);
+
+const phoneField = z.string().trim().transform((value, ctx) => {
+  const phone = normalizePhone(value);
+  if (!phone) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid phone number, like 98765 43210' });
+    return z.NEVER;
+  }
+  return phone;
+});
+
+const dobField = z.string().trim().transform((value, ctx) => {
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? parseDateInput(value) : null;
+  if (!date) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid date of birth' });
+    return z.NEVER;
+  }
+  if (date.getTime() > Date.now()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Date of birth can't be in the future" });
+    return z.NEVER;
+  }
+  const age = ageFromDob(value);
+  if (age < MIN_AGE) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `You need to be at least ${MIN_AGE} to use Kosha` });
+    return z.NEVER;
+  }
+  if (age > 120) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid date of birth' });
+    return z.NEVER;
+  }
+  return value;
+});
+
+export const avatarSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('preset'),
+    preset: z.enum(AVATAR_PRESETS, { errorMap: () => ({ message: 'Choose one of the icons' }) }),
+    color: z.string().regex(/^#[0-9a-f]{6}$/i, 'Use a hex colour like #1baf7a'),
+  }),
+  z.object({
+    type: z.literal('image'),
+    image: z
+      .string()
+      .max(MAX_AVATAR_CHARS, 'That photo is too large. Try a smaller one.')
+      .regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/, 'Use a PNG, JPEG or WebP image'),
+  }),
+]);
+
+const contactFields = {
+  phone: clearable(phoneField).optional(),
+  dateOfBirth: clearable(dobField).optional(),
+};
+
 export const registerSchema = z.object({
   name: z.string().trim().min(2, 'Name is too short').max(60, 'Name is too long'),
   email,
   password: passwordRule,
+  ...contactFields,
+  acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Please accept the Terms and the Privacy Policy to continue' }) }),
 });
 
 export const loginSchema = z.object({
@@ -70,6 +127,31 @@ export const loginSchema = z.object({
 
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(2, 'Name is too short').max(60, 'Name is too long'),
+  ...contactFields,
+  avatar: avatarSchema.nullable().optional(),
+});
+
+// ---------- Balance ----------
+
+/** Used by the API: the balance the user really has, in whole paise (may be negative). */
+export const setBalanceApiSchema = z.object({
+  balance: z
+    .number({ invalid_type_error: 'Balance must be a number of paise', required_error: 'Balance is required' })
+    .int('Balance must be whole paise')
+    .min(-MAX_BALANCE_MINOR, 'Balance is out of range')
+    .max(MAX_BALANCE_MINOR, 'Balance is out of range'),
+});
+
+/** Used by the React form: typed in rupees, a leading minus allowed. */
+export const setBalanceFormSchema = z.object({
+  balance: z.union([z.string(), z.number()]).transform((value, ctx) => {
+    try {
+      return toSignedMinor(value);
+    } catch (err) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: err.message });
+      return z.NEVER;
+    }
+  }),
 });
 
 export const changePasswordSchema = z.object({

@@ -10,12 +10,24 @@ import { GoogleGenAI } from '@google/genai';
 
 const TOO_MANY_STEPS = 'That took more steps than expected. Please try rephrasing your question.';
 
-export function createGeminiProvider({ apiKey, model, client, maxRounds = 5, temperature = 0.3 } = {}) {
-  const ai = client ?? new GoogleGenAI({ apiKey });
+/**
+ * Builds the SDK client for the chosen sign-in. With ADC there is no key: `vertexai: true`
+ * makes the SDK authenticate through google-auth-library's Application Default Credentials.
+ * @param {{mode:'api-key', apiKey:string}|{mode:'adc', project:string, location:string}} auth
+ */
+export function createGeminiClient(auth, Sdk = GoogleGenAI) {
+  if (auth.mode === 'adc') return new Sdk({ vertexai: true, project: auth.project, location: auth.location });
+  return new Sdk({ apiKey: auth.apiKey });
+}
+
+export function createGeminiProvider({ auth, apiKey, model, client, maxRounds = 5, temperature = 0.3 } = {}) {
+  const sign = auth ?? { mode: 'api-key', apiKey };
+  const ai = client ?? createGeminiClient(sign);
 
   return {
     name: 'gemini',
     model,
+    auth: sign.mode,
 
     async respond({ text, history = [], executor, systemInstruction, toolDeclarations = [] }) {
       const contents = [

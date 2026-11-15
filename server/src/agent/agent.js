@@ -28,8 +28,8 @@ export function createAgent({ gemini } = {}) {
   const geminiProvider =
     gemini !== undefined
       ? gemini
-      : env.geminiApiKey
-        ? createGeminiProvider({ apiKey: env.geminiApiKey, model: env.geminiModel })
+      : env.gemini
+        ? createGeminiProvider({ auth: env.gemini, model: env.geminiModel })
         : null;
   const local = createLocalProvider();
   let cooldownUntil = 0;
@@ -41,6 +41,8 @@ export function createAgent({ gemini } = {}) {
       provider: geminiAvailable() ? 'gemini' : 'offline',
       geminiConfigured: Boolean(geminiProvider),
       model: geminiProvider?.model ?? null,
+      // 'api-key' or 'adc' (Google Application Default Credentials); null when Gemini is not configured.
+      auth: geminiProvider?.auth ?? null,
     };
   }
 

@@ -13,6 +13,7 @@ import {
 } from '@kosha/shared';
 import { Transaction } from '../models/Transaction.js';
 import { toObjectId } from '../utils/ids.js';
+import { getOpeningBalance } from './balance.service.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -43,9 +44,12 @@ export function resolvePeriod({ month, from, to } = {}, now = new Date()) {
   const prev = monthRange(shiftMonth(key, -1));
 
   if (now >= start && now < end) {
-    const elapsed = now.getTime() - start.getTime();
+    // Run to the end of today, not to this minute: entries made "today" are dated noon IST,
+    // which is still ahead of the clock early in the morning. Last month is compared over the same whole days.
+    const through = new Date(startOfDayIST(now).getTime() + DAY_MS);
+    const elapsed = through.getTime() - start.getTime();
     const prevEnd = new Date(Math.min(prev.start.getTime() + elapsed, prev.end.getTime()));
-    return { label: key, start, end: now, prevStart: prev.start, prevEnd, partial: true };
+    return { label: key, start, end: through, prevStart: prev.start, prevEnd, partial: true };
   }
   return { label: key, start, end, prevStart: prev.start, prevEnd: prev.end, partial: false };
 }
@@ -63,7 +67,7 @@ const groupByType = [{ $group: { _id: '$type', total: { $sum: '$amount' }, count
 /** Income, expense, net, savings rate and change vs. the previous period, plus all-time balance. */
 export async function getSummary(userId, query = {}, now = new Date()) {
   const period = resolvePeriod(query, now);
-  const [facets] = await Transaction.aggregate([
+  const [openingBalance, [facets]] = await Promise.all([getOpeningBalance(userId), Transaction.aggregate([
     { $match: { user: toObjectId(userId) } },
     {
       $facet: {
@@ -72,7 +76,7 @@ export async function getSummary(userId, query = {}, now = new Date()) {
         allTime: groupByType,
       },
     },
-  ]);
+  ])]);
 
   const current = byType(facets.current);
   const previous = byType(facets.previous);
@@ -95,7 +99,8 @@ export async function getSummary(userId, query = {}, now = new Date()) {
       expense: percentChange(current.expense, previous.expense),
       net: percentChange(current.net, previous.net),
     },
-    balance: allTime.net,
+    // What the user has: their opening balance plus everything recorded since.
+    balance: openingBalance + allTime.net,
   };
 }
 
