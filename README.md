@@ -151,7 +151,7 @@ Development followed test-driven development: each feature started with a failin
 |---|---|---|
 | shared | 79 | money parsing and formatting, IST dates, validation schemas, phone, date of birth, avatar and balance rules |
 | server | 184 | unit (parser, intents, Gemini loop and sign-in, seed) and API integration against MongoDB: profile, consent, balance, account deletion |
-| client | 170 | API client, filters, forms, dropdown, month picker, calendar, balance dialog, avatar and date-of-birth inputs, policy pages, menus, hotkeys, 3D tilt and count-up, PWA |
+| client | 171 | API client, filters, forms, dropdown, month picker, calendar, balance dialog, avatar and date-of-birth inputs, policy pages, menus, hotkeys, 3D tilt and count-up, PWA |
 | e2e | 43 | sign-up and consent, CRUD and dashboard totals, filters, undo, Copilot confirm, budgets and custom categories, months and days, balance, profile, phone layout |
 
 ## Project structure
