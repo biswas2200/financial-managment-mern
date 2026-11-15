@@ -33,7 +33,9 @@ function setup(props = {}) {
 }
 
 describe('BalanceDialog: type it yourself', () => {
-  beforeEach(() => setBalance.mockReset());
+  beforeEach(() => {
+    setBalance.mockReset(); // not returned: vitest would call a returned function as cleanup
+  });
 
   it('saves what you type as paise, and a minus sign means overdrawn', async () => {
     const { user, dialog } = setup();

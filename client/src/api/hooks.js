@@ -184,6 +184,21 @@ export function useCopyBudgets() {
   return useMutation({ mutationFn: (body) => api('/budgets/copy', { method: 'POST', body }), onSuccess: invalidate });
 }
 
+// ---------- Balance ----------
+
+/** Tell Kosha what the user really has; every figure that includes the balance refreshes. */
+export function useSetBalance() {
+  const invalidate = useInvalidateMoney();
+  return useMutation({ mutationFn: (body) => api('/balance', { method: 'PUT', body }), onSuccess: invalidate });
+}
+
+export const useDemoBanks = () =>
+  useQuery({ queryKey: ['balance', 'banks'], queryFn: () => api('/balance/banks'), staleTime: Infinity });
+
+/** Sample figure for a demo bank. Nothing is saved until the user chooses to use it. */
+export const useFetchDemoBank = () =>
+  useMutation({ mutationFn: (bank) => api('/balance/bank-demo', { method: 'POST', body: { bank } }) });
+
 // ---------- Copilot ----------
 
 export const useInsights = () =>

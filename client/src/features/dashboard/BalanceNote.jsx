@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react';
 import clsx from 'clsx';
-import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Landmark, Pencil } from 'lucide-react';
 import { wavePaths, rosettePath } from '../../components/brand/guilloche.js';
 import { money, moneyWhole } from '../../lib/format.js';
 import { tiltFromPointer, prefersReducedMotion } from '../../lib/motion.js';
@@ -27,7 +27,7 @@ function splitAmount(minor) {
  * The balance, presented as a banknote: celadon tint, guilloché linework that draws
  * itself once on load, and a windowed marigold security thread.
  */
-export function BalanceNote({ balance = 0, net = 0, monthLabel, partial, className }) {
+export function BalanceNote({ balance = 0, net = 0, openingBalance = 0, monthLabel, partial, onUpdate, className }) {
   const art = useMemo(
     () => ({
       waves: wavePaths({ width: W, height: H, count: 15 }),
@@ -55,6 +55,7 @@ export function BalanceNote({ balance = 0, net = 0, monthLabel, partial, classNa
     delete el.dataset.tilting;
   };
   const saved = net >= 0;
+  const below = balance < 0;
 
   return (
     <section
@@ -99,15 +100,63 @@ export function BalanceNote({ balance = 0, net = 0, monthLabel, partial, classNa
 
       <div className="flex h-full flex-col justify-between gap-8 p-6 pr-14 sm:p-7">
         <div>
-          <p className="text-[0.9375rem] font-medium text-ink-2">Balance</p>
-          <p className="mt-1 flex items-baseline font-condensed leading-none font-semibold tracking-[-0.01em]">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p className="text-[0.9375rem] font-medium text-ink-2">Balance</p>
+            {below ? (
+              <span className="pop-in inline-flex items-center rounded-full bg-bad/12 px-2.5 py-0.5 text-[0.75rem] font-semibold text-bad-text">Below zero</span>
+            ) : (
+              onUpdate && (
+                <button
+                  type="button"
+                  onClick={() => onUpdate('manual')}
+                  className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.8125rem] font-medium text-ink-2 transition-colors hover:bg-ink/6 hover:text-ink"
+                >
+                  <Pencil size={12} aria-hidden />
+                  Update balance
+                </button>
+              )
+            )}
+          </div>
+          <p className={clsx('mt-1 flex items-baseline font-condensed leading-none font-semibold tracking-[-0.01em]', below && 'text-bad-text')}>
             <span className="text-[3.25rem] sm:text-[4rem]">
               {shown < 0 && '-'}
               {rupees}
             </span>
-            <span className="text-[1.75rem] text-ink-2 sm:text-[2rem]">{paise}</span>
+            <span className={clsx('text-[1.75rem] sm:text-[2rem]', below ? 'text-bad-text/70' : 'text-ink-2')}>{paise}</span>
           </p>
-          <p className="mt-2 max-w-[22rem] text-sm text-ink-2">Everything you&apos;ve earned minus everything you&apos;ve spent in Kosha.</p>
+          {below ? (
+            <>
+              <p className="mt-2 max-w-[24rem] text-sm text-ink-2">
+                The spending you have recorded is more than the income, so Kosha shows a minus. Tell it what you actually have.
+              </p>
+              {onUpdate && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onUpdate('manual')}
+                    className="btn-3d inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand px-3 text-sm font-semibold text-brand-ink hover:bg-brand-hover"
+                  >
+                    <Pencil size={14} aria-hidden />
+                    Set my balance
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onUpdate('bank')}
+                    className="btn-3d-soft inline-flex h-9 items-center gap-1.5 rounded-lg bg-surface px-3 text-sm font-semibold text-ink hover:bg-surface-2"
+                  >
+                    <Landmark size={14} aria-hidden />
+                    Fetch from bank (demo)
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="mt-2 max-w-[22rem] text-sm text-ink-2">
+              {openingBalance
+                ? "Includes the starting balance you set, plus everything you've earned minus everything you've spent since."
+                : "Everything you've earned minus everything you've spent in Kosha."}
+            </p>
+          )}
         </div>
 
         <p className="flex items-center gap-2 text-[0.9375rem]">

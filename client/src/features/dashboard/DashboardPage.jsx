@@ -20,6 +20,7 @@ import { Insights } from './Insights.jsx';
 import { TransactionRow } from '../transactions/TransactionRow.jsx';
 import { GettingStarted } from './GettingStarted.jsx';
 import { DayDetail } from './DayDetail.jsx';
+import { BalanceDialog } from './BalanceDialog.jsx';
 
 /** Remembers per user whether the getting-started card was hidden. */
 function useOnboardingHidden(userId) {
@@ -46,6 +47,7 @@ export default function DashboardPage() {
   const user = useCurrentUser();
   const [month, setMonthKey] = useState(currentMonthKey());
   const [selectedDay, setSelectedDay] = useState(null); // 'YYYY-MM-DD' picked on the calendar
+  const [balanceDialog, setBalanceDialog] = useState(null); // null | 'manual' | 'bank'
   const { openAdd, openEdit } = useQuickAdd();
   const setMonth = (key) => {
     setMonthKey(key);
@@ -141,7 +143,14 @@ export default function DashboardPage() {
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
         {summary.data ? (
-          <BalanceNote balance={summary.data.balance} net={summary.data.net} monthLabel={label} partial={summary.data.period.partial} />
+          <BalanceNote
+            balance={summary.data.balance}
+            net={summary.data.net}
+            openingBalance={summary.data.openingBalance}
+            monthLabel={label}
+            partial={summary.data.period.partial}
+            onUpdate={setBalanceDialog}
+          />
         ) : (
           <Skeleton className="h-60 rounded-[22px]" />
         )}
@@ -278,6 +287,8 @@ export default function DashboardPage() {
       </div>
         </>
       )}
+
+      <BalanceDialog open={Boolean(balanceDialog)} initialTab={balanceDialog ?? 'manual'} current={summary.data?.balance ?? 0} onClose={() => setBalanceDialog(null)} />
     </div>
   );
 }

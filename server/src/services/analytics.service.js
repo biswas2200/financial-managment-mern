@@ -101,6 +101,7 @@ export async function getSummary(userId, query = {}, now = new Date()) {
     },
     // What the user has: their opening balance plus everything recorded since.
     balance: openingBalance + allTime.net,
+    openingBalance,
   };
 }
 
