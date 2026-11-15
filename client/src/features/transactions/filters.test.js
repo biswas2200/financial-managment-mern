@@ -6,6 +6,9 @@ import {
   filtersFromSearchParams,
   filtersToQuery,
   activeFilterCount,
+  datePresetRange,
+  presetFromRange,
+  activeFilterChips,
 } from './filters.js';
 
 describe('transaction filters reducer', () => {
@@ -64,5 +67,53 @@ describe('API query', () => {
 
   it('drops invalid amounts rather than sending garbage', () => {
     expect(filtersToQuery({ ...initialFilters, min: 'abc' }).min).toBeUndefined();
+  });
+});
+
+describe('quick date ranges', () => {
+  const NOW = new Date('2026-11-15T15:00:00+05:30');
+
+  it('turns presets into from/to days in IST', () => {
+    expect(datePresetRange('this-month', NOW)).toEqual({ from: '2026-11-01', to: '2026-11-15' });
+    expect(datePresetRange('last-month', NOW)).toEqual({ from: '2026-10-01', to: '2026-10-31' });
+    expect(datePresetRange('last-30', NOW)).toEqual({ from: '2026-10-17', to: '2026-11-15' });
+    expect(datePresetRange('all', NOW)).toEqual({ from: '', to: '' });
+  });
+
+  it('recognises which preset a range matches', () => {
+    expect(presetFromRange({ from: '2026-11-01', to: '2026-11-15' }, NOW)).toBe('this-month');
+    expect(presetFromRange({ from: '', to: '' }, NOW)).toBe('all');
+    expect(presetFromRange({ from: '2026-09-03', to: '2026-09-09' }, NOW)).toBe('custom');
+  });
+});
+
+describe('active filter chips', () => {
+  const categories = [{ id: 'c1', name: 'Groceries' }];
+
+  it('describes each active filter in plain words', () => {
+    const chips = activeFilterChips(
+      { ...initialFilters, type: 'expense', category: 'c1', paymentMethod: 'Card', q: 'dmart', from: '2026-11-01', to: '2026-11-15', min: '500' },
+      categories,
+    );
+    expect(chips.map((c) => [c.key, c.label])).toEqual([
+      ['q', 'Search: dmart'],
+      ['type', 'Expenses'],
+      ['category', 'Groceries'],
+      ['paymentMethod', 'Card'],
+      ['date', '1 Nov to 15 Nov'],
+      ['amount', 'From ₹500'],
+    ]);
+  });
+
+  it('removing a chip clears every field behind it', () => {
+    const state = { ...initialFilters, from: '2026-11-01', to: '2026-11-15', min: '1', max: '9', page: 3 };
+    const next = filtersReducer(state, { type: 'clearChip', key: 'date' });
+    expect(next).toMatchObject({ from: '', to: '', min: '1', max: '9', page: 1 });
+    expect(filtersReducer(next, { type: 'clearChip', key: 'amount' })).toMatchObject({ min: '', max: '' });
+  });
+
+  it('sets several fields at once (used by date presets)', () => {
+    const next = filtersReducer({ ...initialFilters, page: 4 }, { type: 'setMany', values: { from: '2026-10-01', to: '2026-10-31' } });
+    expect(next).toMatchObject({ from: '2026-10-01', to: '2026-10-31', page: 1 });
   });
 });

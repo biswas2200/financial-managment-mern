@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { toDayKey } from '@kosha/shared';
 import { TransactionForm } from './TransactionForm.jsx';
 
 const categories = [
@@ -16,30 +17,31 @@ function setup(props = {}) {
   return { onSubmit, user };
 }
 
+const save = () => screen.getByRole('button', { name: /save (transaction|changes)/i });
+
 describe('TransactionForm', () => {
-  it('shows validation messages instead of submitting an empty form', async () => {
+  it('asks only for what is missing: amount and category', async () => {
     const { onSubmit, user } = setup();
-    await user.click(screen.getByRole('button', { name: /save transaction/i }));
+    await user.click(save());
 
     expect(await screen.findByText(/amount is required/i)).toBeInTheDocument();
     expect(screen.getByText(/choose a category/i)).toBeInTheDocument();
-    expect(screen.getByText(/add a short description/i)).toBeInTheDocument();
+    expect(screen.queryByText(/add a short description/i)).not.toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
   it('rejects amounts with more than two decimals', async () => {
     const { user } = setup();
     await user.type(screen.getByLabelText(/amount/i), '12.345');
-    await user.click(screen.getByRole('button', { name: /save transaction/i }));
+    await user.click(save());
     expect(await screen.findByText(/at most 2 decimal places/i)).toBeInTheDocument();
   });
 
-  it('submits integer paise and the chosen category', async () => {
+  it('picks the category from visible chips and fills in the description', async () => {
     const { onSubmit, user } = setup();
     await user.type(screen.getByLabelText(/amount/i), '450.50');
-    await user.selectOptions(screen.getByLabelText(/category/i), 'Groceries');
-    await user.type(screen.getByLabelText(/description/i), 'Weekly groceries');
-    await user.click(screen.getByRole('button', { name: /save transaction/i }));
+    await user.click(screen.getByRole('radio', { name: 'Groceries' }));
+    await user.click(save());
 
     expect(onSubmit).toHaveBeenCalledTimes(1);
     const payload = onSubmit.mock.calls[0][0];
@@ -47,20 +49,49 @@ describe('TransactionForm', () => {
       type: 'expense',
       amount: 45050,
       category: '665f1f77bcf86cd799439011',
-      description: 'Weekly groceries',
+      description: 'Groceries',
       paymentMethod: 'UPI',
     });
     expect(payload.date).toBeInstanceOf(Date);
+    expect(toDayKey(payload.date)).toBe(toDayKey(new Date()));
+  });
+
+  it('uses the merchant as the description when one is given', async () => {
+    const { onSubmit, user } = setup();
+    await user.type(screen.getByLabelText(/amount/i), '380');
+    await user.click(screen.getByRole('radio', { name: 'Dining Out' }));
+    await user.type(screen.getByLabelText(/merchant/i), 'Swiggy');
+    await user.click(save());
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ description: 'Swiggy', merchant: 'Swiggy' });
+  });
+
+  it('has one-tap date and payment shortcuts', async () => {
+    const { onSubmit, user } = setup();
+    await user.type(screen.getByLabelText(/amount/i), '99');
+    await user.click(screen.getByRole('radio', { name: 'Groceries' }));
+    await user.click(screen.getByRole('radio', { name: 'Yesterday' }));
+    await user.click(screen.getByRole('radio', { name: 'Card' }));
+    await user.click(save());
+
+    const payload = onSubmit.mock.calls[0][0];
+    const yesterday = toDayKey(new Date(Date.now() - 86400000));
+    expect(toDayKey(payload.date)).toBe(yesterday);
+    expect(payload.paymentMethod).toBe('Card');
   });
 
   it('only offers categories matching the selected type', async () => {
     const { user } = setup();
-    const select = screen.getByLabelText(/category/i);
-    expect(within(select).getByRole('option', { name: 'Groceries' })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Groceries' })).toBeInTheDocument();
 
-    await user.click(screen.getByRole('radio', { name: /income/i }));
-    expect(within(select).queryByRole('option', { name: 'Groceries' })).not.toBeInTheDocument();
-    expect(within(select).getByRole('option', { name: 'Salary' })).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /^income$/i }));
+    expect(screen.queryByRole('radio', { name: 'Groceries' })).not.toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Salary' })).toBeInTheDocument();
+  });
+
+  it('can open preset to income', () => {
+    setup({ defaultType: 'income' });
+    expect(screen.getByRole('radio', { name: /^income$/i })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Salary' })).toBeInTheDocument();
   });
 
   it('pre-fills values when editing', () => {
@@ -76,8 +107,9 @@ describe('TransactionForm', () => {
     });
     expect(screen.getByLabelText(/amount/i)).toHaveValue('380.00');
     expect(screen.getByLabelText(/description/i)).toHaveValue('Biryani night');
-    expect(screen.getByLabelText(/category/i)).toHaveValue('665f1f77bcf86cd799439012');
-    expect(screen.getByLabelText(/date/i)).toHaveValue('2026-10-28');
-    expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Dining Out' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Card' })).toBeChecked();
+    expect(screen.getByLabelText(/pick a date/i)).toHaveValue('2026-10-28');
+    expect(save()).toHaveTextContent(/save changes/i);
   });
 });

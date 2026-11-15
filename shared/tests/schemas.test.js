@@ -52,9 +52,17 @@ describe('transactionFormSchema (client form → API payload)', () => {
     expect(r.error.issues[0].message).toMatch(/2 decimal/i);
   });
 
-  it('requires a description and a category', () => {
-    expect(transactionFormSchema.safeParse({ ...valid, description: '  ' }).success).toBe(false);
+  it('requires a category but treats the description as optional', () => {
     expect(transactionFormSchema.safeParse({ ...valid, category: '' }).success).toBe(false);
+    const { description, ...withoutDescription } = valid;
+    expect(transactionFormSchema.safeParse(withoutDescription).success).toBe(true);
+    expect(transactionFormSchema.parse({ ...valid, description: '   ' }).description).toBe('');
+  });
+
+  it('the API still requires a description (the form fills one in)', () => {
+    const r = transactionApiSchema.safeParse({ type: 'expense', amount: 100, category: OID, date: '2026-11-08' });
+    expect(r.success).toBe(false);
+    expect(r.error.issues.map((i) => i.path[0])).toContain('description');
   });
 
   it('rejects dates far in the future', () => {
