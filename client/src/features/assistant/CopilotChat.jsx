@@ -190,7 +190,7 @@ export function CopilotChat({ compact = false, className }) {
           submit(text);
         }}
       >
-        <div className="flex items-end gap-2 rounded-xl bg-surface p-1.5 shadow-inset focus-within:ring-2 focus-within:ring-brand">
+        <div className="control-wrap flex items-end gap-2 rounded-xl bg-surface p-1.5">
           <label htmlFor={compact ? 'copilot-input-drawer' : 'copilot-input'} className="sr-only">
             Message Copilot
           </label>

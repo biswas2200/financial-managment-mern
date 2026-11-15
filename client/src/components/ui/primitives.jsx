@@ -42,8 +42,8 @@ export const Button = forwardRef(function Button(
 
 // ---------- Form controls ----------
 
-const controlBase =
-  'w-full rounded-[10px] bg-surface px-3 text-[0.9375rem] text-ink shadow-inset placeholder:text-ink-3 transition-shadow focus:outline-none focus:ring-2 focus:ring-brand aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-bad';
+// `control` (styles/index.css) draws the inset well and animates the focus ring and halo.
+const controlBase = 'control w-full rounded-[10px] bg-surface px-3 text-[0.9375rem] text-ink placeholder:text-ink-3';
 
 export const Input = forwardRef(function Input({ className, ...props }, ref) {
   return <input ref={ref} className={clsx(controlBase, 'h-10', className)} {...props} />;
@@ -66,8 +66,8 @@ export function Field({ label, error, hint, children, className, optional }) {
   const id = useId();
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
-    <div className={clsx('flex flex-col gap-1.5', className)}>
-      <label htmlFor={id} className="text-sm font-medium text-ink-2">
+    <div className={clsx('group flex flex-col gap-1.5', className)}>
+      <label htmlFor={id} className="text-sm font-medium text-ink-2 transition-colors duration-300 group-focus-within:text-brand">
         {label}
         {optional && <span className="font-normal text-ink-3"> (optional)</span>}
       </label>

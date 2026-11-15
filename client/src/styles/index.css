@@ -176,10 +176,28 @@
     background: var(--brand-soft);
     color: var(--ink);
   }
+  /* The ring eases in from a little further out instead of snapping on. */
   :focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
     border-radius: 6px;
+    animation: focus-ring-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  /* Charts take focus so arrow keys can walk the data, but a hard box around the plot looks like a bug.
+     The tooltip that follows the keys is the indicator; the figure only warms up slightly. */
+  svg.recharts-surface:focus,
+  svg.recharts-surface:focus-visible,
+  .recharts-wrapper:focus,
+  .recharts-wrapper:focus-visible {
+    outline: none;
+    animation: none;
+  }
+  .recharts-wrapper {
+    border-radius: 12px;
+    transition: background-color 0.3s ease;
+  }
+  .recharts-wrapper:has(svg.recharts-surface:focus-visible) {
+    background-color: color-mix(in oklab, var(--brand) 7%, transparent);
   }
   input,
   select,
@@ -226,6 +244,35 @@
   }
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+  /* Text fields: an inset well whose ring and halo bloom on focus. The shadow lists always have the
+     same four layers so the browser can animate between them. */
+  .control {
+    box-shadow: var(--inset), 0 0 0 0 transparent, 0 0 0 0 transparent;
+    transition: box-shadow 0.32s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.2s ease;
+  }
+  .control:focus,
+  .control:focus-visible {
+    outline: none;
+    animation: none;
+    box-shadow: var(--inset), 0 0 0 2px var(--brand), 0 0 0 7px color-mix(in oklab, var(--brand) 20%, transparent);
+  }
+  .control[aria-invalid='true'] {
+    box-shadow: var(--inset), 0 0 0 2px var(--bad), 0 0 0 0 transparent;
+  }
+  .control[aria-invalid='true']:focus {
+    box-shadow: var(--inset), 0 0 0 2px var(--bad), 0 0 0 7px color-mix(in oklab, var(--bad) 20%, transparent);
+  }
+  .control:disabled {
+    opacity: 0.6;
+  }
+  /* The same bloom for a wrapper that holds a bare input (the Copilot composer). */
+  .control-wrap {
+    box-shadow: var(--inset), 0 0 0 0 transparent, 0 0 0 0 transparent;
+    transition: box-shadow 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .control-wrap:focus-within {
+    box-shadow: var(--inset), 0 0 0 2px var(--brand), 0 0 0 7px color-mix(in oklab, var(--brand) 20%, transparent);
   }
   /* Raised paper: a highlight along the top edge and a tinted two-stage shadow */
   .raised {
@@ -290,6 +337,12 @@
 @keyframes fade-in {
   from {
     opacity: 0;
+  }
+}
+@keyframes focus-ring-in {
+  from {
+    outline-color: transparent;
+    outline-offset: 9px;
   }
 }
 @keyframes dialog-in {
