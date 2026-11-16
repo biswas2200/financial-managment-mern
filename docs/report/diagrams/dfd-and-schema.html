@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kosha: data flow and schema</title>
+  <meta name="description" content="Data-flow diagrams and the database schema of Kosha, drawn from the same model the code is checked against.">
+  <link rel="stylesheet" href="dfd-and-schema.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Kosha: data flow and schema</h1>
+      <p class="lede">How data moves through Kosha, and what the database holds. Hover or focus anything to follow its flows, select it for details.</p>
+    </div>
+    <div class="tools">
+      <button type="button" id="theme" class="btn" aria-label="Change theme">Theme: auto</button>
+      <button type="button" id="print" class="btn">Print or save as PDF</button>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Diagrams" id="tabs"></div>
+
+  <main>
+    <section id="panel-diagram" role="tabpanel" aria-labelledby="tab-context">
+      <div class="bar">
+        <p id="lead" class="lead"></p>
+        <div class="bar-tools">
+          <button type="button" class="btn" id="zoom-out" aria-label="Zoom out">-</button>
+          <output id="zoom-level" aria-live="polite">100%</output>
+          <button type="button" class="btn" id="zoom-in" aria-label="Zoom in">+</button>
+          <button type="button" class="btn" id="download">Download SVG</button>
+        </div>
+      </div>
+      <div class="stage">
+        <div class="figure-wrap" id="figure-wrap"><div id="figure"></div></div>
+        <aside id="details" class="details" aria-live="polite"></aside>
+      </div>
+      <ul class="legend" aria-label="How to read the diagram">
+        <li><span class="key key-ext"></span> External entity: someone or something outside Kosha</li>
+        <li><span class="key key-proc"></span> Process: something Kosha does</li>
+        <li><span class="key key-store"></span> Data store: where data rests</li>
+        <li><span class="key key-flow"></span> Data flow: the arrow shows which way, the label says what</li>
+      </ul>
+    </section>
+
+    <section id="panel-schema" role="tabpanel" aria-labelledby="tab-schema" hidden>
+      <div class="bar">
+        <p class="lead">Nine MongoDB collections. An arrow runs from a reference to what it points at (many to one). Money is stored as whole paise.</p>
+        <label class="search"><span>Find a collection or field</span><input type="search" id="search" placeholder="e.g. amount, budget, user"></label>
+      </div>
+      <div class="schema" id="schema">
+        <svg class="relations" id="relations" aria-hidden="true"></svg>
+        <div class="cards" id="cards"></div>
+      </div>
+      <ul class="legend" aria-label="Field flags">
+        <li><span class="badge">required</span> must be present</li>
+        <li><span class="badge">unique</span> no two documents share it</li>
+        <li><span class="badge">ref</span> points at another collection</li>
+        <li><span class="badge">enum</span> one of a fixed list</li>
+        <li><span class="badge">private</span> never sent to the browser</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Drawn from <code>kosha-model.js</code>. A test in the server suite compares it with the real Mongoose models, indexes and API routes, so it cannot drift from the code.</p>
+  </footer>
+
+  <script src="kosha-model.js"></script>
+  <script src="dfd-and-schema.js"></script>
+</body>
+</html>
