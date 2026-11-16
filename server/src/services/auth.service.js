@@ -1,4 +1,4 @@
-import { POLICY_VERSION } from '@kosha/shared';
+import { COOKIE_CONSENT_VERSION, POLICY_VERSION } from '@kosha/shared';
 import { User } from '../models/User.js';
 import { Transaction } from '../models/Transaction.js';
 import { Category } from '../models/Category.js';
@@ -46,6 +46,22 @@ export async function updateProfile(userId, { name, phone, dateOfBirth, avatar }
   }
   const update = Object.keys($unset).length ? { $set, $unset } : { $set };
   return User.findByIdAndUpdate(userId, update, { new: true, runValidators: true });
+}
+
+/**
+ * Keeps the answer to the cookie banner with the account. The newest answer wins: a choice older than the one on
+ * record (from a device that was offline, say) is ignored, and the one on record is returned so the device can follow it.
+ */
+export async function saveCookieChoice(userId, { preferences, decidedAt }) {
+  const now = new Date();
+  let at = decidedAt ? new Date(decidedAt) : now;
+  if (at > now) at = now; // a clock that runs ahead cannot win every future disagreement
+  const user = await User.findById(userId);
+  const current = user.cookieConsent;
+  if (current?.decidedAt && at < current.decidedAt) return current.toObject();
+  user.cookieConsent = { preferences, version: COOKIE_CONSENT_VERSION, decidedAt: at };
+  await user.save();
+  return user.cookieConsent.toObject();
 }
 
 export async function changePassword(userId, { currentPassword, newPassword }) {

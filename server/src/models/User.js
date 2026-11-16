@@ -17,6 +17,9 @@ const avatarSchema = new mongoose.Schema(
 // Which version of the Terms and Privacy Policy the user accepted, and when.
 const consentSchema = new mongoose.Schema({ termsVersion: String, acceptedAt: Date }, { _id: false });
 
+// The answer to the cookie banner, kept with the account so it follows the person to every device.
+const cookieConsentSchema = new mongoose.Schema({ preferences: Boolean, version: String, decidedAt: Date }, { _id: false });
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true, maxlength: 60 },
@@ -27,6 +30,7 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: { type: String, match: /^\d{4}-\d{2}-\d{2}$/ }, // YYYY-MM-DD, optional
     avatar: avatarSchema,
     consent: consentSchema,
+    cookieConsent: cookieConsentSchema,
     // Money the user already had before Kosha. Balance = openingBalance + income - expenses (paise, may be negative).
     openingBalance: { type: Number, default: 0 },
   },

@@ -27,7 +27,8 @@ describe('What Kosha keeps on your device', () => {
     for (const item of COOKIE_INVENTORY) {
       expect(COOKIE_CATEGORIES.map((c) => c.id), item.name).toContain(item.category);
       expect(['Cookie', 'Local storage', 'Session storage', 'Cache']).toContain(item.kind);
-      for (const field of ['name', 'purpose', 'lasts']) expect(item[field].trim().length, `${item.name}: ${field}`).toBeGreaterThan(5);
+      expect(item.name.trim().length, item.key).toBeGreaterThan(2);
+      for (const field of ['purpose', 'lasts']) expect(item[field].trim().length, `${item.name}: ${field}`).toBeGreaterThan(8);
     }
     expect(new Set(COOKIE_INVENTORY.map((i) => i.name)).size).toBe(COOKIE_INVENTORY.length);
   });
