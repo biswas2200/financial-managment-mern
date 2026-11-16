@@ -25,14 +25,18 @@ vi.mock('./client.js', () => ({
   }),
 }));
 
-// Something that was already on the screen before sign-in, the way the cookie banner's provider is.
-function Watcher() {
+// Something that was already on the screen before sign-in and has nothing else to make it draw again,
+// the way the cookie banner's provider is. It shares nothing with the buttons that sign in and out.
+function Who() {
   const { data } = useMe();
+  return <p data-testid="who">{data ? data.name : 'nobody'}</p>;
+}
+
+function Buttons() {
   const login = useLogin();
   const logout = useLogout();
   return (
     <>
-      <p data-testid="who">{data ? data.name : 'nobody'}</p>
       <button onClick={() => login.mutate({ email: 'a@b.c', password: 'x' })}>log in</button>
       <button onClick={() => logout.mutate()}>log out</button>
     </>
@@ -43,7 +47,8 @@ const renderWatcher = () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
-      <Watcher />
+      <Who />
+      <Buttons />
     </QueryClientProvider>,
   );
   return client;
