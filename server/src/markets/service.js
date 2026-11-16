@@ -208,6 +208,17 @@ export function createMarketService({ fetchBuffer = httpBuffer, fetchJson = http
     };
   }
 
+  /** Every Nifty 50 company with its latest quote, by symbol. */
+  async function nifty50List() {
+    const [{ day, file }, members, industryOf] = await Promise.all([latestStocks(), nifty50(), industries().catch(() => new Map())]);
+    const items = [...members]
+      .map((symbol) => file.get(symbol))
+      .filter(Boolean)
+      .map((row) => quote(row, industryOf.get(row.symbol)))
+      .sort((a, b) => a.symbol.localeCompare(b.symbol));
+    return { asOf: day, items };
+  }
+
   async function searchStocks(query) {
     const q = String(query ?? '').trim().toLowerCase();
     if (!q) return [];
@@ -419,5 +430,5 @@ export function createMarketService({ fetchBuffer = httpBuffer, fetchJson = http
     throw ApiError.badRequest('You can watch a stock, an index or a fund');
   }
 
-  return { overview, indexDetail, searchStocks, stockDetail, searchFunds, fundCategories, topFunds, fundDetail, describe };
+  return { overview, indexDetail, nifty50: nifty50List, searchStocks, stockDetail, searchFunds, fundCategories, topFunds, fundDetail, describe };
 }

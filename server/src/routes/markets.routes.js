@@ -16,6 +16,7 @@ export function marketsRoutes(markets) {
   router.get('/overview', async (_req, res) => res.json(await markets.overview()));
   router.get('/indices/:name', validate({ params: nameParams }), async (req, res) => res.json(await markets.indexDetail(req.valid.params.name)));
 
+  router.get('/stocks/nifty50', async (_req, res) => res.json(await markets.nifty50()));
   router.get('/stocks/search', validate({ query: searchQuery }), async (req, res) => res.json(await markets.searchStocks(req.valid.query.q)));
   router.get('/stocks/:symbol', validate({ params: symbolParams }), async (req, res) => res.json(await markets.stockDetail(req.valid.params.symbol)));
 
