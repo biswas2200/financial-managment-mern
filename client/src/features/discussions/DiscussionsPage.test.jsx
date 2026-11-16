@@ -154,6 +154,7 @@ describe('New post', () => {
   beforeEach(() => {
     [usePosts, createPost].forEach((m) => m.mockReset());
     setPosts([]);
+    singleState = { data: post({ id: 'new', mine: true }), isLoading: false, error: null };
   });
 
   it('explains what is wrong instead of sending a short post', async () => {

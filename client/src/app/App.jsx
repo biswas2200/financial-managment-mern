@@ -16,6 +16,10 @@ const TransactionsPage = lazy(() => import('../features/transactions/Transaction
 const AnalyticsPage = lazy(() => import('../features/analytics/AnalyticsPage.jsx'));
 const BudgetsPage = lazy(() => import('../features/budgets/BudgetsPage.jsx'));
 const AssistantPage = lazy(() => import('../features/assistant/AssistantPage.jsx'));
+const LearnPage = lazy(() => import('../features/learn/LearnPage.jsx'));
+const ArticleReader = lazy(() => import('../features/learn/ArticleReader.jsx'));
+const DiscussionsPage = lazy(() => import('../features/discussions/DiscussionsPage.jsx'));
+const PostReader = lazy(() => import('../features/discussions/PostReader.jsx'));
 const SettingsLayout = lazy(() => import('../features/settings/SettingsLayout.jsx'));
 const ProfileSettings = lazy(() => import('../features/settings/ProfileSettings.jsx'));
 const PreferencesSettings = lazy(() => import('../features/settings/PreferencesSettings.jsx'));
@@ -77,6 +81,8 @@ const router = createBrowserRouter([
           { path: 'analytics', element: page(AnalyticsPage) },
           { path: 'budgets', element: page(BudgetsPage) },
           { path: 'copilot', element: page(AssistantPage) },
+          { path: 'learn', element: page(LearnPage), children: [{ path: ':slug', element: page(ArticleReader) }] },
+          { path: 'discussions', element: page(DiscussionsPage), children: [{ path: ':id', element: page(PostReader) }] },
           {
             path: 'settings',
             element: page(SettingsLayout),
