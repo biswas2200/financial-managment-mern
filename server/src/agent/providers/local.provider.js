@@ -17,6 +17,24 @@ import {
 
 const fm = (m) => formatMoney(m);
 
+/** "2026-11-13" → "13 Nov 2026". */
+const dayLong = (key) => new Date(`${key}T12:00:00+05:30`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
+
+const FILLER = new Set([
+  'tell', 'me', 'about', 'what', 'whats', "what's", 'is', 'are', 'the', 'a', 'an', 'price', 'of', 'how', 'doing', 'did', 'do', 'stock', 'stocks', 'share', 'shares',
+  'today', 'now', 'current', 'latest', 'please', 'show', 'give', 'mutual', 'fund', 'funds', 'nav', 'on', 'it', 'my', 'its', 'for',
+]);
+/** What is left of a question once the filler words are gone: a company or fund name. */
+const subjectOf = (text) =>
+  text
+    .toLowerCase()
+    .replace(/[?!.,]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w && !FILLER.has(w))
+    .join(' ');
+
+const MARKET_DOWN = "I can't reach the market data right now, so I won't guess. Please try again in a few minutes.";
+
 /** "2026-11-09" → "today", "yesterday" or "9 Nov". */
 function friendlyDay(dayKey, now) {
   if (dayKey === toDayKey(now)) return 'today';
@@ -246,6 +264,66 @@ export function createLocalProvider() {
           `Drafted a **${fm(amount)}** budget for ${category.name} in ${formatMonthLabel(target)}. Tap Confirm to save it.`,
           { pendingAction: r.pendingAction },
         );
+      }
+
+      case 'invest_advice': {
+        const r = await call('find_learning_articles', { query: 'asset allocation' });
+        return done(
+          "I can't tell you whether to buy or sell anything, and Kosha is not a SEBI-registered investment adviser. What I can do is show the latest official numbers for a stock, index or fund and explain what they mean, so you can judge for yourself. Try \"tell me about Reliance stock\" or \"how is the UTI Nifty 50 index fund doing\". For advice about your own situation, speak to a SEBI-registered adviser. This guide is a good place to start:",
+          { data: r.data },
+        );
+      }
+
+      case 'learn': {
+        const r = await call('find_learning_articles', { query: text });
+        const top = r.result.articles[0];
+        if (!top) return done("I don't have a guide on that yet. Try asking about saving, SIPs, mutual funds, insurance or UPI safety.");
+        return done(`The Learn section has a guide on this: **${top.title}**. ${top.summary} Open it from the card below.`, { data: r.data });
+      }
+
+      case 'market_overview': {
+        const r = await call('get_market_overview', {});
+        if (r.result.error) return done(r.result.error === 'Market data is not available here.' ? r.result.error : MARKET_DOWN);
+        const m = r.result;
+        const idx = (name) => m.indices.find((i) => i.name === name);
+        const parts = ['Nifty 50', 'Nifty Bank', 'Nifty IT'].map(idx).filter(Boolean).map((i) => `the ${i.name} at ${i.close} (${i.change_pct})`);
+        let reply = `On ${dayLong(m.as_of)}, ${parts.join(', ')}. ${m.breadth.advancing.toLocaleString('en-IN')} stocks advanced and ${m.breadth.declining.toLocaleString('en-IN')} declined.`;
+        if (m.top_gainers[0]) reply += ` Biggest Nifty 50 gainer: ${m.top_gainers[0].symbol} (${m.top_gainers[0].change_pct}).`;
+        if (m.top_losers[0]) reply += ` Biggest loser: ${m.top_losers[0].symbol} (${m.top_losers[0].change_pct}).`;
+        reply += ' These are end-of-day figures from the NSE, not live, and not advice.';
+        return done(reply, { data: r.data });
+      }
+
+      case 'stock_info': {
+        const query = subjectOf(text);
+        if (!query) return done('Which company? For example: "tell me about Reliance stock".');
+        const r = await call('get_stock', { query });
+        if (r.result.error) return done(r.result.error.startsWith('Market data') ? MARKET_DOWN : r.result.error);
+        const s = r.result;
+        return done(
+          `**${s.name}** (${s.symbol}) closed at **${s.close}** on ${dayLong(s.as_of)}, ${s.change_pct} on the day. Its price moved ${s.returns['1 month']} over 1 month and ${s.returns['1 year']} over 1 year. These are end-of-day prices, not adjusted for splits or dividends, and not advice.`,
+          { data: r.data },
+        );
+      }
+
+      case 'fund_info': {
+        const query = subjectOf(text);
+        if (!query) return done('Which fund? For example: "how is the UTI Nifty 50 index fund doing".');
+        const r = await call('get_fund', { query });
+        if (r.result.error) return done(r.result.error.startsWith('Market data') ? MARKET_DOWN : r.result.error);
+        const f = r.result;
+        return done(
+          `**${f.name}** has a NAV of ${f.nav} (${dayLong(f.nav_date)}). Returns: 1 year ${f.returns['1 year']}, 3 years ${f.returns['3 years']}, 5 years ${f.returns['5 years']}. It has fallen as much as ${f.worst_fall}. Past performance does not predict future returns, and this is not advice.`,
+          { data: r.data },
+        );
+      }
+
+      case 'watchlist': {
+        const r = await call('get_watchlist', {});
+        if (r.result.error) return done(MARKET_DOWN);
+        if (!r.result.count) return done('Your watchlist is empty. Open a stock, index or fund in Markets and choose Add to watchlist.');
+        const list = r.result.items.slice(0, 6).map((i) => `${i.name} ${i.latest} (${i.change_pct})`).join('; ');
+        return done(`You are watching ${r.result.count}: ${list}. End-of-day figures, not live.`);
       }
 
       default:

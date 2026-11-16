@@ -29,6 +29,30 @@ export function classifyIntent(raw) {
     return 'add_transaction';
   }
 
+  // Investing, markets and learning. These come after logging a payment, so "paid 5000 for my SIP" is still an expense.
+  const notInvesting = /\b(laptop|phone|mobile|car|bike|scooter|house|flat|home|tv|ac|fridge|shoes|watch|gift|ticket|trip|insurance|loan|card|saree|dress|bag)\b/;
+  if (
+    !has(notInvesting) &&
+    (has(/\b(should i|shall i|can i|is it (a )?(good|safe|wise|worth)( time)?( to)?)\s+(buy|sell|hold|invest|put money)/) ||
+      has(/\b(best|top|good)\s+(stocks?|shares?|funds?|mutual funds?|sips?)\s+(to|for)\s+(buy|invest|sip|me)/) ||
+      has(/\bwhich\s+(stocks?|shares?|funds?|mutual funds?|sips?|etfs?)\b.*\b(buy|invest|best|good|choose|pick)/) ||
+      has(/\bwhat should i (buy|invest in|sell)\b/))
+  ) {
+    return 'invest_advice';
+  }
+  const explain = /\b(what is|what are|what's|explain|meaning of|how does|how do i (start|begin)|how to (start|begin)|teach me)\b/;
+  const terms = /\b(sip|emergency fund|inflation|compound\w*|mutual funds?|index funds?|expense ratio|nav|p\/?e( ratio)?|credit scores?|term (insurance|plan)|health insurance|upi|scams?|asset allocation|investing|invest|elss|demat|nifty|sensex)\b/;
+  if (has(explain) && has(terms)) return 'learn';
+  if (has(/\bwatch ?list\b/)) return 'watchlist';
+  if (
+    has(/\b(mutual funds?|index funds?|nav|elss|flexi ?cap|small ?cap|mid ?cap|large ?cap|liquid fund|\w+ fund)\b/) &&
+    !has(/\b(emergency|sinking|provident|retirement|savings?) fund\b/)
+  ) {
+    return 'fund_info';
+  }
+  if (has(/\b(nifty|sensex|stock market|share market|the market|markets?|gainers|losers|movers|bse|nse)\b/)) return 'market_overview';
+  if (has(/\b(stocks?|shares?|price of|stock price)\b/)) return 'stock_info';
+
   if (has(/\bbudgets?\b/)) return 'budget_status';
   if (has(/\b(compare|comparison|vs\.?|versus|difference between)\b/)) return 'compare';
   if (has(/\b(unusual|weird|strange|spikes?|anomal\w*|abnormal|odd|suspicious|overspend\w*)\b/)) return 'unusual';

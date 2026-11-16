@@ -32,7 +32,7 @@ export function createApiRouter(options = {}) {
   router.use('/community', requireAuth, communityRoutes);
   router.use('/markets', requireAuth, marketsRoutes(markets));
   router.use('/watchlist', requireAuth, watchlistRoutes(markets));
-  router.use('/assistant', requireAuth, assistantRoutes(createAgent(options.assistant)));
+  router.use('/assistant', requireAuth, assistantRoutes(createAgent({ ...options.assistant, markets })));
 
   return router;
 }

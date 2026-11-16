@@ -20,7 +20,10 @@ import {
   transactionApiSchema,
   budgetApiSchema,
 } from '@kosha/shared';
+import { formatPct } from '@kosha/shared';
 import * as analytics from '../services/analytics.service.js';
+import { listWatchlist } from '../services/watchlist.service.js';
+import { ARTICLES, summarise } from '../content/articles.js';
 import { listBudgets } from '../services/budget.service.js';
 import { listTransactions } from '../services/transaction.service.js';
 import { matchCategory, parseMonthPhrase } from './parser.js';
@@ -91,6 +94,48 @@ export const toolDeclarations = [
     parametersJsonSchema: { type: 'object', properties: { month: monthParam } },
   },
   {
+    name: 'get_market_overview',
+    description:
+      'How the Indian stock market did on its latest trading day: Nifty 50, Nifty Bank, Nifty IT and other indices, how many stocks rose and fell, the best and worst Nifty 50 stocks and sectors. End-of-day data from the NSE, never live.',
+    parametersJsonSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'get_stock',
+    description:
+      'Latest end-of-day price, move and 1 week to 1 year price returns for one NSE-listed company. Give the NSE symbol (RELIANCE, TCS) or the company name.',
+    parametersJsonSchema: {
+      type: 'object',
+      properties: { query: { type: 'string', description: 'NSE symbol or company name, e.g. "TCS" or "HDFC Bank"' } },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'get_index',
+    description: 'Latest end-of-day level, move, P/E, P/B, dividend yield and 1 month to 5 year returns of an NSE index such as "Nifty 50" or "Nifty Bank".',
+    parametersJsonSchema: { type: 'object', properties: { name: { type: 'string', description: 'Index name, e.g. "Nifty 50"' } }, required: ['name'] },
+  },
+  {
+    name: 'get_fund',
+    description:
+      'A mutual fund: latest NAV, 1 month to 5 year returns, how far it has fallen at worst, and how often a year ended higher. Give the scheme code or the fund name.',
+    parametersJsonSchema: {
+      type: 'object',
+      properties: { query: { type: 'string', description: 'AMFI scheme code or fund name, e.g. "Parag Parikh Flexi Cap"' } },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'get_watchlist',
+    description: "The stocks, indices and funds the user has saved to their watchlist, with their latest end-of-day figures.",
+    parametersJsonSchema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'find_learning_articles',
+    description:
+      "Find Kosha's own guides in Learn that explain a topic such as an emergency fund, SIPs, inflation, mutual funds, P/E ratios, insurance, credit scores or UPI safety. Returns titles and links to open.",
+    parametersJsonSchema: { type: 'object', properties: { query: { type: 'string', description: 'The topic, e.g. "emergency fund"' } }, required: ['query'] },
+  },
+  {
     name: 'propose_transaction',
     description:
       'Draft a new income or expense entry. This does NOT save anything: the user reviews the draft and taps Confirm in the app.',
@@ -124,7 +169,7 @@ export const toolDeclarations = [
   },
 ];
 
-export function createToolExecutor({ userId, categories, now = new Date() }) {
+export function createToolExecutor({ userId, categories, now = new Date(), markets = null }) {
   const resolveMonth = (value) => {
     if (!value) return undefined;
     if (MONTH_KEY.test(value)) return value;
@@ -399,6 +444,197 @@ export function createToolExecutor({ userId, categories, now = new Date() }) {
         },
       };
     },
+  };
+
+
+  // ---------- Markets and learning ----------
+
+  const NO_MARKETS = { result: { error: 'Market data is not available here.' } };
+  const unreachable = 'Market data is not reachable right now. Please try again in a few minutes.';
+  /** Market failures become a plain error the model or the offline engine can repeat, never an exception. */
+  const guard = async (work) => {
+    if (!markets) return NO_MARKETS;
+    try {
+      return await work();
+    } catch (err) {
+      if (err?.code === 'MARKET_DATA_UNAVAILABLE') return { result: { error: unreachable } };
+      if (err?.status === 404) return { result: { error: err.message } };
+      throw err;
+    }
+  };
+  const level = (n) => (typeof n === 'number' ? n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'n/a');
+  const rupees = (n, d = 2) => (typeof n === 'number' ? `₹${n.toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d })}` : 'n/a');
+  const pctText = (n) => (n === null || n === undefined ? 'not enough history' : formatPct(n));
+  const returnsMap = (returns) =>
+    Object.fromEntries(returns.map((r) => [r.label, r.annualised && r.pct !== null ? `${pctText(r.pct)} a year` : pctText(r.pct)]));
+  const looksLikeSymbol = (q) => /^[A-Za-z0-9&-]{1,20}$/.test(q);
+  const STOCK_NOTE = 'End-of-day closing prices. Returns are price only: not adjusted for splits, bonus issues or dividends. Not live and not advice.';
+
+  tools.get_market_overview = () =>
+    guard(async () => {
+      const o = await markets.overview();
+      const move = (i) => ({ name: i.name, close: level(i.close), change_pct: pctText(i.changePct), ...(i.pe != null ? { pe: i.pe } : {}) });
+      const mover = (s) => ({ symbol: s.symbol, name: s.name, close: rupees(s.close), change_pct: pctText(s.changePct) });
+      return {
+        result: {
+          as_of: o.asOf,
+          note: 'End-of-day figures from the NSE, not live and not investment advice.',
+          indices: o.indices.map(move),
+          breadth: { advancing: o.breadth.advancers, declining: o.breadth.decliners, unchanged: o.breadth.unchanged },
+          top_gainers: o.gainers.slice(0, 3).map(mover),
+          top_losers: o.losers.slice(0, 3).map(mover),
+          best_sectors: o.sectors.slice(0, 2).map((s) => ({ name: s.name, change_pct: pctText(s.changePct) })),
+          worst_sectors: o.sectors.slice(-2).map((s) => ({ name: s.name, change_pct: pctText(s.changePct) })),
+        },
+        data: {
+          kind: 'market',
+          asOf: o.asOf,
+          indices: o.indices.slice(0, 4).map((i) => ({ name: i.name, close: i.close, changePct: i.changePct })),
+          breadth: o.breadth,
+          gainers: o.gainers.slice(0, 3).map((s) => ({ symbol: s.symbol, changePct: s.changePct })),
+          losers: o.losers.slice(0, 3).map((s) => ({ symbol: s.symbol, changePct: s.changePct })),
+        },
+      };
+    });
+
+  tools.get_stock = ({ query }) =>
+    guard(async () => {
+      const q = String(query ?? '').trim();
+      if (!q) return { result: { error: 'Tell me which company, by name or NSE symbol.' } };
+      let detail = null;
+      if (looksLikeSymbol(q)) {
+        try {
+          detail = await markets.stockDetail(q);
+        } catch (err) {
+          if (err?.status !== 404) throw err;
+        }
+      }
+      if (!detail) {
+        const found = await markets.searchStocks(q);
+        if (!found.length) return { result: { error: `I could not find a stock matching "${q}" on the NSE.` } };
+        detail = await markets.stockDetail(found[0].symbol);
+      }
+      return {
+        result: {
+          symbol: detail.symbol,
+          name: detail.name,
+          industry: detail.industry,
+          as_of: detail.asOf,
+          close: rupees(detail.close),
+          change_pct: pctText(detail.changePct),
+          day_range: `${rupees(detail.low)} to ${rupees(detail.high)}`,
+          returns: returnsMap(detail.returns),
+          note: STOCK_NOTE,
+        },
+        data: {
+          kind: 'quote', type: 'stock', symbol: detail.symbol, name: detail.name, price: detail.close, changePct: detail.changePct, asOf: detail.asOf,
+          returns: detail.returns.map(({ period, label, pct }) => ({ period, label, pct })),
+        },
+      };
+    });
+
+  tools.get_index = ({ name }) =>
+    guard(async () => {
+      const i = await markets.indexDetail(String(name ?? '').trim());
+      return {
+        result: {
+          name: i.name,
+          as_of: i.asOf,
+          level: level(i.close),
+          change_pct: pctText(i.changePct),
+          pe: i.pe,
+          pb: i.pb,
+          dividend_yield: i.dividendYield === null ? null : `${i.dividendYield}%`,
+          returns: returnsMap(i.returns),
+          note: 'End-of-day index levels. Returns are price returns and leave out dividends. Not live and not advice.',
+        },
+        data: {
+          kind: 'quote', type: 'index', name: i.name, price: i.close, changePct: i.changePct, asOf: i.asOf,
+          returns: i.returns.map(({ period, label, pct }) => ({ period, label, pct })),
+        },
+      };
+    });
+
+  tools.get_fund = ({ query }) =>
+    guard(async () => {
+      const q = String(query ?? '').trim();
+      if (!q) return { result: { error: 'Tell me which fund, by name or scheme code.' } };
+      let detail = null;
+      if (/^\d+$/.test(q)) {
+        try {
+          detail = await markets.fundDetail(Number(q));
+        } catch (err) {
+          if (err?.status !== 404) throw err;
+        }
+      }
+      if (!detail) {
+        const found = await markets.searchFunds(q);
+        if (!found.length) return { result: { error: `I could not find a mutual fund matching "${q}".` } };
+        detail = await markets.fundDetail(found[0].code);
+      }
+      return {
+        result: {
+          name: detail.name,
+          fund_house: detail.house,
+          category: detail.category,
+          nav: rupees(detail.nav, 4),
+          nav_date: detail.navDate,
+          returns: returnsMap(detail.returns),
+          worst_fall: `${detail.risk.maxDrawdownPct}% from a peak`,
+          ...(detail.risk.positiveYearShare !== null ? { years_ended_higher: `${detail.risk.positiveYearShare}% of one-year periods since launch` } : {}),
+          note: 'NAV data from AMFI. Past performance does not predict future returns. Returns above one year are yearly rates. Not advice.',
+        },
+        data: {
+          kind: 'quote', type: 'fund', name: detail.name, price: detail.nav, changePct: null, asOf: detail.navDate,
+          returns: detail.returns.map(({ period, label, pct }) => ({ period, label, pct })),
+        },
+      };
+    });
+
+  tools.get_watchlist = () =>
+    guard(async () => {
+      const { items } = await listWatchlist(userId, markets);
+      return {
+        result: {
+          count: items.length,
+          items: items.map((i) => ({
+            type: i.kind,
+            name: i.label,
+            latest: i.price === null ? 'figures unavailable' : i.kind === 'fund' ? rupees(i.price, 4) : i.kind === 'index' ? level(i.price) : rupees(i.price),
+            change_pct: pctText(i.changePct),
+            as_of: i.asOf,
+          })),
+          note: items.length ? 'End-of-day figures. Not live and not advice.' : 'The watchlist is empty.',
+        },
+      };
+    });
+
+  const STOP = new Set(['what', 'is', 'an', 'a', 'the', 'explain', 'me', 'to', 'how', 'do', 'does', 'i', 'my', 'about', 'of', 'and', 'in', 'for', 'tell', 'start', 'begin', 'meaning']);
+  const stem = (w) => w.replace(/(ing|ed|es|s)$/i, '');
+  tools.find_learning_articles = async ({ query }) => {
+    const words = String(query ?? '')
+      .toLowerCase()
+      .split(/[^a-z0-9/]+/)
+      .filter((w) => w.length > 1 && !STOP.has(w))
+      .map(stem);
+    const score = (a) => {
+      const title = a.title.toLowerCase();
+      const summary = a.summary.toLowerCase();
+      const rest = `${a.takeaways.join(' ')} ${a.slug}`.toLowerCase();
+      return words.reduce((n, w) => n + (title.includes(w) ? 3 : 0) + (summary.includes(w) ? 2 : 0) + (rest.includes(w) ? 1 : 0), 0);
+    };
+    const top = ARTICLES.map((a) => ({ a, s: score(a) }))
+      .filter((x) => x.s > 0)
+      .sort((x, y) => y.s - x.s)
+      .slice(0, 3)
+      .map((x) => summarise(x.a));
+    return {
+      result: {
+        articles: top.map((a) => ({ title: a.title, slug: a.slug, link: `/learn/${a.slug}`, summary: a.summary, read_minutes: a.readMinutes })),
+        note: top.length ? undefined : 'No guide matches that topic yet.',
+      },
+      ...(top.length ? { data: { kind: 'articles', items: top.map(({ slug, title, summary, domain, readMinutes }) => ({ slug, title, summary, domain, readMinutes })) } } : {}),
+    };
   };
 
   return {

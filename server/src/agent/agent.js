@@ -24,7 +24,7 @@ import { generateInsights } from './insights.js';
 const HISTORY_FOR_MODEL = 10;
 const RATE_LIMIT_COOLDOWN_MS = 60_000;
 
-export function createAgent({ gemini } = {}) {
+export function createAgent({ gemini, markets = null } = {}) {
   const geminiProvider =
     gemini !== undefined
       ? gemini
@@ -63,7 +63,7 @@ export function createAgent({ gemini } = {}) {
     const now = new Date();
     const [categories, history] = await Promise.all([loadCategories(user._id), recentHistory(user._id)]);
     const userMessage = await AssistantMessage.create({ user: user._id, role: 'user', content: text });
-    const executor = createToolExecutor({ userId: user._id, categories, now });
+    const executor = createToolExecutor({ userId: user._id, categories, now, markets });
 
     let outcome = null;
     if (geminiAvailable()) {
