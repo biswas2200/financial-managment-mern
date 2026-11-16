@@ -1,4 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, registerSchema } from '@kosha/shared';
@@ -6,55 +7,22 @@ import { useLogin, useRegister } from '../../api/hooks.js';
 import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
 import { Button, Checkbox, Field, Input } from '../../components/ui/primitives.jsx';
 import { DobInput } from '../../components/ui/DobInput.jsx';
-import { Logo } from '../../components/brand/Logo.jsx';
-import { CityScene } from '../../components/brand/sketch/CityScene.jsx';
 
 // Seed-dataset demo account (local development only; see server/scripts/seed.js)
 const DEMO = { email: 'demo@kosha.app', password: 'Demo@1234' };
 
-function BrandPanel() {
+/** The heading, the form and the way to the other page. The frame around it is `AuthLayout`. */
+function AuthCard({ title, subtitle, children, footer }) {
   return (
-    <div className="relative isolate hidden overflow-hidden lg:block" style={{ '--sk-h': 'clamp(220px, 36vh, 320px)' }}>
-      <CityScene variant="tall" />
-      <div className="relative z-10 flex h-full flex-col p-12">
-        <Logo size={32} />
-        <div className="mt-14 max-w-md">
-          <p className="font-extrawide text-[2.5rem] leading-[1.08] font-bold tracking-[-0.015em] text-ink">Know where every rupee goes.</p>
-          <p className="mt-4 text-[1.0625rem] text-ink-2">
-            Log income and expenses in seconds, see your month at a glance, and ask Copilot anything about your spending.
-          </p>
-        </div>
-        <p className="mt-auto pb-[calc(var(--sk-h)+1.5rem)] text-sm text-ink-2">Your data stays in your own Kosha database.</p>
-      </div>
-    </div>
-  );
-}
-
-/** A short strip of the skyline above the form on phones, where the side panel is hidden. */
-function MobileBanner() {
-  return (
-    <div className="relative isolate h-[170px] overflow-hidden lg:hidden" style={{ '--sk-h': '128px' }}>
-      <CityScene labels={false} decorative />
-      <div className="relative z-10 p-4">
-        <Logo size={26} />
-      </div>
-    </div>
-  );
-}
-
-function AuthLayout({ title, subtitle, children, footer }) {
-  return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-      <BrandPanel />
-      <MobileBanner />
-      <main className="flex items-center justify-center px-4 py-8 sm:px-8 lg:py-10">
-        <div className="w-full max-w-sm">
-          <h1 className="font-wide text-[1.875rem] leading-tight font-semibold">{title}</h1>
-          <p className="mt-1.5 text-ink-2">{subtitle}</p>
-          <div className="mt-8">{children}</div>
-          <p className="mt-6 text-sm text-ink-2">{footer}</p>
-        </div>
-      </main>
+    <div className="w-full max-w-sm">
+      <h1 className="font-wide text-[1.875rem] leading-tight font-semibold">{title}</h1>
+      <p className="mt-1.5 text-ink-2">{subtitle}</p>
+      <div className="mt-8">{children}</div>
+      <p className="mt-6 text-sm text-ink-2">{footer}</p>
+      <p className="mt-8 flex items-center gap-1.5 text-[0.8125rem] text-ink-3">
+        <Lock size={14} aria-hidden />
+        Your data stays in your own Kosha database.
+      </p>
     </div>
   );
 }
@@ -69,7 +37,7 @@ export function LoginPage() {
     login.mutate(values, { onSuccess: () => navigate(location.state?.from?.pathname ?? '/', { replace: true }) });
 
   return (
-    <AuthLayout
+    <AuthCard
       title="Welcome back"
       subtitle="Sign in to see your money."
       footer={
@@ -116,7 +84,7 @@ export function LoginPage() {
         </Button>
       </div>
       )}
-    </AuthLayout>
+    </AuthCard>
   );
 }
 
@@ -137,7 +105,7 @@ export function RegisterPage() {
     });
 
   return (
-    <AuthLayout
+    <AuthCard
       title="Create your account"
       subtitle="It takes less than a minute. Default categories are set up for you."
       footer={
@@ -192,6 +160,6 @@ export function RegisterPage() {
           Create account
         </Button>
       </form>
-    </AuthLayout>
+    </AuthCard>
   );
 }

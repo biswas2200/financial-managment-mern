@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '../../app/theme.jsx';
 import { AuthLayout } from './AuthLayout.jsx';
 import { LoginPage, RegisterPage } from './AuthPages.jsx';
@@ -11,18 +11,19 @@ vi.mock('../../api/hooks.js', () => ({
   useLogin: () => ({ mutate: vi.fn(), isPending: false, error: null }),
 }));
 
-const renderAt = (path) => {
-  const router = createMemoryRouter(
-    [{ element: <AuthLayout />, children: [{ path: '/login', element: <LoginPage /> }, { path: '/register', element: <RegisterPage /> }] }],
-    { initialEntries: [path] },
-  );
+const renderAt = (path) =>
   render(
-    <ThemeProvider>
-      <RouterProvider router={router} />
-    </ThemeProvider>,
+    <MemoryRouter initialEntries={[path]}>
+      <ThemeProvider>
+        <Routes>
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+        </Routes>
+      </ThemeProvider>
+    </MemoryRouter>,
   );
-  return router;
-};
 
 const scenes = () => [...document.querySelectorAll('.sketch-scene')];
 

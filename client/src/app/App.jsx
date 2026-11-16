@@ -9,6 +9,7 @@ import { AppShell } from '../components/layout/AppShell.jsx';
 import { Skeleton } from '../components/ui/primitives.jsx';
 import { OfflineBanner } from '../pwa/OfflineBanner.jsx';
 import { RouteError } from './RouteError.jsx';
+import { AuthLayout } from '../features/auth/AuthLayout.jsx';
 import { LoginPage, RegisterPage } from '../features/auth/AuthPages.jsx';
 import DashboardPage from '../features/dashboard/DashboardPage.jsx';
 import { PrivacyPage, TermsPage } from '../features/legal/LegalPages.jsx';
@@ -79,8 +80,14 @@ const router = createBrowserRouter([
   {
     element: <GuestOnly />,
     children: [
-      { path: '/login', element: <LoginPage /> },
-      { path: '/register', element: <RegisterPage /> },
+      // One frame for both pages, so the skyline is not redrawn when you switch between them.
+      {
+        element: <AuthLayout />,
+        children: [
+          { path: '/login', element: <LoginPage /> },
+          { path: '/register', element: <RegisterPage /> },
+        ],
+      },
     ],
   },
   {
