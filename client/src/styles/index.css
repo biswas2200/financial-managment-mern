@@ -533,8 +533,20 @@
 
 /* ---- Sidebar scroll and the phone "More" sheet ---- */
 .rail-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+  scrollbar-width: none;
+}
+.rail-scroll::-webkit-scrollbar {
+  display: none;
+}
+/* A coloured icon on a chip tinted with the same colour (the phone's More sheet). */
+.icon-chip {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 20%, transparent);
+}
+/* The phone tab bar's current page: a pill tinted with that page's own colour. */
+.tab-pill-on {
+  background: color-mix(in srgb, var(--chip) 16%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--chip) 22%, transparent);
 }
 @keyframes sheet-in {
   from {
@@ -826,9 +838,9 @@
   }
 }
 
-/* Sidebar: a fade at the bottom says there are more links below; the sketch rests while it is off screen. */
+/* Sidebar: a fade at the bottom says there is more below; the sketch rests while it is off screen. */
 .rail-scroll[data-more='true'] {
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 48px), transparent);
 }
 .sketch-scene[data-paused='true'],
 .sketch-scene[data-paused='true'] * {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useId } from 'react';
 import { NavLink } from 'react-router-dom';
 import clsx from 'clsx';
 import { NAV_SECTIONS } from './nav.js';
@@ -35,29 +35,10 @@ function Group({ section }) {
   );
 }
 
-/** The desktop sidebar's links, one group per domain. It scrolls by itself if the window is short. */
+/** The desktop sidebar's links, one group per domain. The sidebar around it scrolls, not this list. */
 export function SidebarNav() {
-  const ref = useRef(null);
-  const [more, setMore] = useState(false);
-  // A short window hides the links at the bottom. Say so with a fade, until you have scrolled to the end.
-  const measure = useCallback(() => {
-    const el = ref.current;
-    if (el) setMore(el.scrollHeight - el.clientHeight - el.scrollTop > 4);
-  }, []);
-  useEffect(() => {
-    measure();
-    const el = ref.current;
-    const observer = typeof ResizeObserver === 'function' && el ? new ResizeObserver(measure) : null;
-    if (observer) observer.observe(el);
-    window.addEventListener('resize', measure);
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, [measure]);
-
   return (
-    <nav ref={ref} onScroll={measure} data-more={String(more)} aria-label="Main" className="rail-scroll mt-4 -mr-2 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-2 pb-2">
+    <nav aria-label="Main" className="mt-4 flex flex-1 flex-col gap-3 pb-2">
       {NAV_SECTIONS.map((section) => (
         <Group key={section.id} section={section} />
       ))}
