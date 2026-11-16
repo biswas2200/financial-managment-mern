@@ -42,12 +42,21 @@ export function useMe() {
   });
 }
 
+/**
+ * When the person changes, forget everything the last one had loaded (money, messages, posts) but keep the
+ * "who is signed in" query alive. Clearing the whole cache would detach anything already watching it, such as the
+ * cookie choice, which would then never learn who signed in.
+ */
+function forgetPrivateData(qc) {
+  qc.removeQueries({ predicate: (query) => query.queryKey[0] !== 'auth' });
+}
+
 function useAuthMutation(path) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (body) => api(path, { method: 'POST', body }).then((r) => r.user),
     onSuccess: (user) => {
-      qc.clear();
+      forgetPrivateData(qc);
       qc.setQueryData(keys.me, user);
     },
   });
@@ -60,7 +69,7 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => api('/auth/logout', { method: 'POST' }),
     onSettled: () => {
-      qc.clear();
+      forgetPrivateData(qc);
       qc.setQueryData(keys.me, null);
     },
   });
@@ -89,7 +98,7 @@ export function useDeleteAccount() {
   return useMutation({
     mutationFn: (body) => api('/auth/me', { method: 'DELETE', body }),
     onSuccess: () => {
-      qc.clear();
+      forgetPrivateData(qc);
       qc.setQueryData(keys.me, null);
     },
   });
