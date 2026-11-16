@@ -64,6 +64,11 @@ describe('Mutual funds page', () => {
     expect(within(rows[0]).getByRole('link', { name: /UTI Nifty 50/ })).toHaveAttribute('href', '/markets/funds/120716');
   });
 
+  it('lets the table scroll sideways on a phone instead of squeezing fund names to a word a line', () => {
+    renderPage();
+    expect(screen.getByRole('table', { name: 'Index funds' }).className).toMatch(/min-w-\[/);
+  });
+
   it('explains that the list is a sample and not a recommendation', () => {
     renderPage();
     expect(screen.getByText(/not a recommendation/i)).toBeInTheDocument();

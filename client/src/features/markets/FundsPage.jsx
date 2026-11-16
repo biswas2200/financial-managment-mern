@@ -91,7 +91,7 @@ export default function FundsPage() {
       ) : (
         <section className="raised rounded-2xl bg-surface shadow-raise-1">
           <div className="overflow-x-auto">
-            <table aria-label={current?.label ?? 'Funds'} className="w-full text-sm">
+            <table aria-label={current?.label ?? 'Funds'} className="w-full min-w-[34rem] text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-ink-2">
                   <th scope="col" className="px-5 py-2.5 font-medium">Fund</th>
