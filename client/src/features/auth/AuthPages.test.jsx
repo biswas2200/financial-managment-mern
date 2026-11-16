@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { ThemeProvider } from '../../app/theme.jsx';
-import { RegisterPage } from './AuthPages.jsx';
+import { LoginPage, RegisterPage } from './AuthPages.jsx';
 
 const mutate = vi.fn();
 vi.mock('../../api/hooks.js', () => ({
@@ -80,5 +80,24 @@ describe('Sign-up form: consent, phone and date of birth', () => {
     await user.click(screen.getByRole('button', { name: 'Create account' }));
     expect(await screen.findByText(/valid date of birth/i)).toBeInTheDocument();
     expect(mutate).not.toHaveBeenCalled();
+  });
+});
+
+describe('Sign-in page', () => {
+  it('has the form and nothing else to fill it in for you: no demo-account box, no button that types credentials', () => {
+    render(
+      <MemoryRouter>
+        <ThemeProvider>
+          <LoginPage />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeInTheDocument();
+    expect(screen.queryByText(/Fill in demo account/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Exploring the project/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/demo@kosha\.app/i)).not.toBeInTheDocument();
+    expect(document.querySelector('[data-demo-hint]')).toBeNull();
+    expect(screen.getByLabelText('Email')).toHaveValue('');
+    expect(screen.getByLabelText('Password', { exact: true })).toHaveValue('');
   });
 });
