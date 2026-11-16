@@ -183,6 +183,12 @@ function ShortcutsDialog({ open, onClose }) {
   );
 }
 
+/**
+ * Each page animates in when it first appears. An article, a post and the Settings tabs open inside their own page,
+ * so they share its key: the list behind an article stays put (and keeps focus and scroll) instead of being rebuilt.
+ */
+export const pageKey = (pathname) => /^\/(learn|discussions|settings)(\/|$)/.exec(pathname)?.[1] ?? pathname;
+
 export function AppShell() {
   const [dialog, setDialog] = useState({ open: false, editing: null, type: 'expense', date: undefined });
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
@@ -232,7 +238,7 @@ export function AppShell() {
         <div className="min-w-0">
           <MobileTopbar onAdd={openAdd} />
           <main id="main" className="mx-auto w-full max-w-[1320px] px-4 pt-5 pb-28 sm:px-6 lg:px-10 lg:pt-9 lg:pb-14">
-            <div key={location.pathname} className="page-in">
+            <div key={pageKey(location.pathname)} className="page-in">
               <Outlet />
             </div>
           </main>

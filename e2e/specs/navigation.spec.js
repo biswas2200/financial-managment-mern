@@ -18,6 +18,23 @@ test.describe('Sidebar on a laptop', () => {
     await expect(page).toHaveURL(/\/settings$/);
   });
 
+  for (const [width, height] of [[1440, 900], [1366, 768], [1280, 720]]) {
+    test(`at ${width}x${height} every sidebar link can be reached, and a fade says when some are below`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await registerNewUser(page);
+      const nav = page.getByRole('navigation', { name: 'Main' });
+      for (const name of ['Overview', 'Learn', 'Discussions', 'Copilot']) {
+        const link = nav.getByRole('link', { name, exact: true });
+        await link.scrollIntoViewIfNeeded();
+        const box = await link.boundingBox();
+        const top = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.closest('a')?.textContent?.trim(), { x: box.x + box.width / 2, y: box.y + box.height / 2 });
+        expect(top, `${name} is on top where it is drawn`).toBe(name);
+      }
+      const hidden = await nav.evaluate((el) => el.scrollHeight - el.clientHeight - el.scrollTop);
+      await expect(nav).toHaveAttribute('data-more', hidden > 4 ? 'true' : 'false');
+    });
+  }
+
   test('a short window scrolls the links instead of cutting them off', async ({ page }) => {
     await page.setViewportSize({ width: 1366, height: 560 });
     await registerNewUser(page);
@@ -36,11 +53,17 @@ test.describe('Phone: tab bar and the More sheet', () => {
     await registerNewUser(page);
     const bar = page.getByRole('navigation', { name: 'Main' });
     for (const name of ['Overview', 'Transactions', 'Markets', 'Copilot']) await expect(bar.getByRole('link', { name })).toBeVisible();
+    await bar.getByRole('link', { name: 'Transactions' }).click(); // so there is a page to go Back to
+    await expect(page).toHaveURL(/\/transactions$/);
     await bar.getByRole('button', { name: 'More' }).click();
     const sheet = page.getByRole('dialog', { name: 'More' });
     for (const name of ['Analytics', 'Budgets', 'Stocks', 'Mutual funds', 'Watchlist', 'Learn', 'Discussions', 'Settings']) {
       await expect(sheet.getByRole('link', { name })).toBeVisible();
     }
+    await expect(bar.getByRole('button', { name: 'More' })).toHaveAttribute('aria-expanded', 'true');
+    await page.goBack(); // the browser's Back button also closes the sheet
+    await expect(page.getByRole('dialog', { name: 'More' })).toHaveCount(0);
+    await bar.getByRole('button', { name: 'More' }).click();
     await sheet.getByRole('link', { name: 'Learn' }).click();
     await expect(page).toHaveURL(/\/learn$/);
     await expect(page.getByRole('dialog', { name: 'More' })).toHaveCount(0);

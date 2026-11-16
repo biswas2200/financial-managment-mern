@@ -77,6 +77,35 @@ test.describe('Discussions', () => {
     await expect(page.getByRole('link', { name: `SIP or lump sum for ten years? ${stamp}` })).toHaveCount(0);
   });
 
+  test('a title with one very long word does not stretch the page or the reader on a phone', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 740 });
+    await registerNewUser(page);
+    await page.goto('/discussions');
+    await newPost(page, { title: `Verylongword${'x'.repeat(90)}${stamp}`, body: 'A body long enough to be accepted by the form.' });
+    const reader = page.getByRole('dialog');
+    await expect(reader.getByRole('heading', { level: 2 })).toBeVisible();
+    const inside = await reader.getByRole('heading', { level: 2 }).evaluate((h) => h.getBoundingClientRect().right <= window.innerWidth + 1);
+    expect(inside, 'the title stays inside the screen').toBe(true);
+    await page.keyboard.press('Escape');
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+  });
+
+  test('closing a post puts focus back on the card you opened it from, and letters typed in it are not shortcuts', async ({ page }) => {
+    await registerNewUser(page);
+    await page.goto('/discussions');
+    await newPost(page, { title: `Focus check ${stamp}`, body: 'A body long enough to be accepted by the form.' });
+    await page.keyboard.press('n'); // inside the post: must not open "Add expense" on top of it
+    await expect(page.getByRole('dialog', { name: /Add expense/ })).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    const link = page.getByRole('link', { name: `Focus check ${stamp}` });
+    await link.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('dialog', { name: `Focus check ${stamp}` })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(link).toBeFocused();
+  });
+
   test('"Most liked" puts the post with more likes ahead of the one with fewer', async ({ page }) => {
     await registerNewUser(page);
     await page.goto('/discussions');

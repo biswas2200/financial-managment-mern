@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { NAV_SECTIONS, SETTINGS_ITEM, MOBILE_TABS, MORE_SECTIONS } from './nav.js';
+import { pageKey } from './AppShell.jsx';
 
 const flat = NAV_SECTIONS.flatMap((s) => s.items);
 
@@ -36,5 +37,22 @@ describe('navigation', () => {
   it('puts everything that is not on the tab bar behind More, and loses nothing', () => {
     const behindMore = MORE_SECTIONS.flatMap((s) => s.items).map((i) => i.to);
     for (const item of [...flat, SETTINGS_ITEM]) expect(behindMore, item.label).toContain(item.to);
+  });
+});
+
+
+describe('pageKey', () => {
+  it('keeps one key for a list and the article, post or settings tab opened inside it', () => {
+    expect(pageKey('/learn')).toBe('learn');
+    expect(pageKey('/learn/emergency-fund')).toBe('learn');
+    expect(pageKey('/discussions/64b0c0c0c0c0c0c0c0c0c0c0')).toBe('discussions');
+    expect(pageKey('/settings/categories')).toBe('settings');
+  });
+
+  it('gives every other page its own key, so it animates in when you arrive', () => {
+    expect(pageKey('/')).toBe('/');
+    expect(pageKey('/markets')).toBe('/markets');
+    expect(pageKey('/markets/stocks/TCS')).toBe('/markets/stocks/TCS');
+    expect(pageKey('/learning-notes')).toBe('/learning-notes');
   });
 });

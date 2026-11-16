@@ -42,3 +42,58 @@ describe('classifyIntent: markets, funds, learning and investing questions', () 
     expect(classifyIntent(text)).toBe(intent);
   });
 });
+
+describe('classifyIntent: questions about your own money are not hijacked by market words', () => {
+  it.each([
+    ['how much did I spend on mutual funds this month', 'summary'],
+    ['how much did I spend on stock market courses', 'summary'],
+    ['what share of my income goes to rent', 'summary'],
+    ['how much did I pay in sip last month', 'summary'],
+  ])('%s → %s', (text, intent) => {
+    expect(classifyIntent(text)).toBe(intent);
+  });
+
+  it.each([
+    'my share of the rent',
+    'should I buy more groceries this week',
+    'what should I buy for dinner',
+    'can I buy a coffee every day',
+    'should I buy a house',
+    'is it worth it to buy a new phone',
+    'shall I buy tickets for the trip',
+  ])('does not treat "%s" as stock, fund or investing advice', (text) => {
+    expect(['stock_info', 'fund_info', 'market_overview', 'invest_advice', 'learn']).not.toContain(classifyIntent(text));
+  });
+});
+
+describe('classifyIntent: asking for the figure is not asking for an explanation', () => {
+  it.each([
+    ['what is the NAV of Parag Parikh Flexi Cap', 'fund_info'],
+    ['what is the nifty today', 'market_overview'],
+    ['what is the sensex now', 'market_overview'],
+    ['what is the price of tcs share', 'stock_info'],
+    ['what is nav', 'learn'],
+    ['what is a mutual fund', 'learn'],
+    ['explain sip to me', 'learn'],
+    ['what is a p/e ratio', 'learn'],
+  ])('%s → %s', (text, intent) => {
+    expect(classifyIntent(text)).toBe(intent);
+  });
+});
+
+describe('classifyIntent: "how is X doing"', () => {
+  it.each([
+    ['how is reliance doing', 'stock_info'],
+    ["how's infosys", 'stock_info'],
+    ['how did hdfc bank do today', 'stock_info'],
+    ['how is my budget doing', 'budget_status'],
+    ['how is this month going', 'summary'],
+    ['how am I doing', 'summary'],
+  ])('%s → %s', (text, intent) => {
+    expect(classifyIntent(text)).toBe(intent);
+  });
+
+  it('does not take a greeting for a company', () => {
+    expect(classifyIntent('how are you')).not.toBe('stock_info');
+  });
+});

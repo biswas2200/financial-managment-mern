@@ -95,6 +95,28 @@ describe('Copilot answers market and learning questions (offline engine)', () =>
   });
 });
 
+describe('Copilot with little price history', () => {
+  useTestDatabase();
+
+  it('says there is not enough history instead of printing a gap into a sentence', async () => {
+    const app = build({ nse: fakeNse({ publishedFrom: '2026-11-09' }) });
+    const ctx = await signUp(app);
+    const m = await ask(ctx, 'tell me about aaa stock');
+    expect(m.content).toContain('AAA FINANCE LTD');
+    expect(m.content).toMatch(/not enough price history/i);
+    expect(m.content).not.toMatch(/moved not enough/i);
+  });
+
+  it('names the other matches when it is not sure which company or fund you meant', async () => {
+    const extra = [{ symbol: 'AAB', name: 'AAB TRADING LTD', isin: 'INE000E01005', industry: 'Trading', nifty50: false, base: 80, slope: 0, jump: 0, volume: 10_000 }];
+    const app = build({ nse: fakeNse({ extra }) });
+    const ctx = await signUp(app);
+    const m = await ask(ctx, 'how is aa doing');
+    expect(m.content).toMatch(/closest match/i);
+    expect(m.content).toContain('AAB');
+  });
+});
+
 describe('Copilot when market data is unavailable', () => {
   useTestDatabase();
 

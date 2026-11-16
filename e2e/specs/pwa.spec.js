@@ -89,6 +89,37 @@ test.describe('Installed app (production build)', () => {
     await context.setOffline(false);
   });
 
+  test('moving around the app while offline still shows market figures the worker has kept, with their date', async ({ page, context }) => {
+    await registerNewUser(page);
+    await ready(page);
+    await page.goto('/markets/stocks/TCS'); // online: loads this page's code and lets the worker keep what it fetches
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(/TATA CONSULTANCY/i, { timeout: 15_000 }).catch(() => test.skip(true, 'The market data sources are not reachable from here'));
+    const kept = await page.evaluate(() => fetch('/api/v1/markets/stocks/INFY').then((r) => r.ok)); // a copy this tab has not asked for itself
+    test.skip(!kept, 'The market data sources are not reachable from here');
+    await context.setOffline(true);
+    // A move inside the app, as clicking a link would do, to a page whose figures only the worker holds.
+    await page.evaluate(() => {
+      window.history.pushState({}, '', '/markets/stocks/INFY');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(/INFOSYS/i);
+    await expect(page.getByText(/End-of-day data from NSE India as of/)).toBeVisible();
+    await context.setOffline(false);
+  });
+
+  test('searches are not kept on the device', async ({ page }) => {
+    await registerNewUser(page);
+    await page.evaluate(() => fetch('/api/v1/markets/stocks/search?q=zzsecretterm'));
+    await ready(page);
+    await page.evaluate(() => fetch('/api/v1/markets/stocks/search?q=zzsecretterm'));
+    const kept = await page.evaluate(async () => {
+      const urls = [];
+      for (const name of await caches.keys()) for (const r of await (await caches.open(name)).keys()) urls.push(r.url);
+      return urls;
+    });
+    expect(kept.some((u) => u.includes('zzsecretterm'))).toBe(false);
+  });
+
   test('the whole app works from the production build: sign in, Learn, Markets, Discussions, More sheet on a phone', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     const user = await registerNewUser(page);
