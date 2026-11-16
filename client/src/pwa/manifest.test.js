@@ -31,6 +31,13 @@ describe('web app manifest', () => {
     expect(urls).toContain('/?add=income');
   });
 
+  it('also offers Markets and Learn from the home screen', () => {
+    const urls = manifest.shortcuts.map((s) => s.url);
+    expect(urls).toContain('/markets');
+    expect(urls).toContain('/learn');
+    for (const s of manifest.shortcuts) expect(s.name.length).toBeGreaterThan(2);
+  });
+
   it('is linked from index.html with an Apple touch icon', () => {
     expect(html).toContain('<link rel="manifest" href="/manifest.webmanifest"');
     expect(html).toContain('rel="apple-touch-icon"');
