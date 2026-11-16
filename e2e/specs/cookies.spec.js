@@ -143,16 +143,19 @@ test.describe('The choice follows the account', () => {
     await expect(page.getByText(/no advertising, analytics or tracking cookies/i).first()).toBeVisible();
   });
 
-  test('is reachable on a phone above the tab bar', async ({ page }) => {
+  test('is reachable on a phone above the tab bar, for someone signed in who has not answered', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 780 });
-    await page.goto('/login');
-    await page.getByRole('button', { name: 'Essential only' }).click();
-    await registerNewUser(page);
-    await page.evaluate(() => localStorage.removeItem('kosha-cookies'));
-    await page.reload();
+    // A person who signed up elsewhere and has never answered here: sign them in without going through the banner.
+    const email = `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@kosha.test`;
+    await page.request.post('/api/v1/auth/register', { data: { name: 'Neha Kulkarni', email, password: PASSWORD, acceptedTerms: true } });
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('Neha');
     await expect(banner(page)).toBeVisible();
     const a = await banner(page).boundingBox();
     const bar = await page.getByRole('navigation', { name: 'Main' }).boundingBox();
     expect(a.y + a.height, 'above the tab bar').toBeLessThanOrEqual(bar.y);
+    await page.getByRole('button', { name: 'Accept all' }).click();
+    await expect(banner(page)).toHaveCount(0);
+    await expect.poll(async () => (await me(page)).cookieConsent?.preferences).toBe(true);
   });
 });
