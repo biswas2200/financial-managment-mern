@@ -99,7 +99,7 @@ function CategoryMultiples({ data }) {
                   <YAxis hide domain={[0, max]} />
                   <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: c.axis }} tick={{ fill: c.ink3, fontSize: 10 }} interval="preserveStartEnd" />
                   <Tooltip
-                    cursor={{ fill: c.surface2 }}
+                    cursor={false}
                     content={({ active, payload }) =>
                       active && payload?.length ? (
                         <ChartTooltip title={formatMonthLabel(payload[0].payload.month)} rows={[{ label: s.name, value: money(payload[0].payload.value), color: c.expense }]} />
@@ -138,7 +138,7 @@ function WeekdayChart({ days }) {
             <XAxis dataKey="day" tickLine={false} axisLine={{ stroke: c.axis }} tick={{ fill: c.ink3, fontSize: 12 }} />
             <YAxis tickFormatter={moneyCompact} width={56} tickLine={false} axisLine={false} tick={{ fill: c.ink3, fontSize: 12 }} />
             <Tooltip
-              cursor={{ fill: c.surface2 }}
+              cursor={false}
               content={({ active, payload }) =>
                 active && payload?.length ? (
                   <ChartTooltip

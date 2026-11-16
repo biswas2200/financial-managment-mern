@@ -12,6 +12,7 @@ import { TransactionDialog } from '../../features/transactions/TransactionDialog
 import { CopilotLauncher, CopilotProvider } from '../../features/assistant/CopilotDrawer.jsx';
 import { AccountMenu } from './AccountMenu.jsx';
 import { SidebarNav } from './SidebarNav.jsx';
+import { AppBackdrop } from '../brand/sketch/AppBackdrop.jsx';
 import { MoreSheet } from './MoreSheet.jsx';
 import { MOBILE_TABS, SETTINGS_ITEM } from './nav.js';
 import { InstallButton } from '../../pwa/InstallButton.jsx';
@@ -234,6 +235,7 @@ export function AppShell() {
         >
           Skip to content
         </a>
+        <AppBackdrop />
         <Sidebar onAdd={openAdd} onShortcuts={() => setShortcutsOpen(true)} />
         <div className="min-w-0">
           <MobileTopbar onAdd={openAdd} />

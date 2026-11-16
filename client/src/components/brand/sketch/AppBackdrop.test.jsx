@@ -25,7 +25,9 @@ describe('a still skyline', () => {
 
   it('keeps boats and details where they belong, without moving them', () => {
     const { container } = render(<CityStrip still />);
-    expect(container.querySelector('g[transform^="translate("] > path')).toBeInTheDocument();
+    const placed = [...container.querySelectorAll('g[transform]')].filter((g) => /^translate\(262,218\)$/.test(g.getAttribute('transform')));
+    expect(placed.length).toBeGreaterThan(0); // the Mumbai boat, at its place on the water
+    expect(placed.every((g) => g.firstElementChild?.tagName === 'path')).toBe(true);
   });
 
   it('can leave the captions out and be hidden from screen readers', () => {

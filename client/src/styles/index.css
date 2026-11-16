@@ -163,10 +163,7 @@
   }
   body {
     min-height: 100dvh;
-    background:
-      radial-gradient(1200px 600px at 70% -10%, color-mix(in oklch, var(--brand) 7%, transparent), transparent 70%),
-      var(--paper);
-    background-attachment: fixed;
+    background: var(--paper);
     line-height: 1.5;
   }
   ::selection {
@@ -836,4 +833,17 @@
 .sketch-scene[data-paused='true'],
 .sketch-scene[data-paused='true'] * {
   animation-play-state: paused !important;
+}
+
+/* The still skyline behind the app: ink on the page's own paper, faint enough to sit behind cards. */
+.sketch-backdrop {
+  --sk-ink: #17181c;
+  --sk-paper: var(--paper);
+  --sk-sun: #d8452f;
+  opacity: 0.1;
+}
+:root[data-theme='dark'] .sketch-backdrop {
+  --sk-ink: #e9e6dc;
+  --sk-sun: #e0583f;
+  opacity: 0.12;
 }

@@ -28,7 +28,7 @@ function MiniTrend({ items }) {
         <BarChart data={rows} barGap={2} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
           <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: c.axis }} tick={{ fill: c.ink3, fontSize: 11 }} />
           <Tooltip
-            cursor={{ fill: c.surface2 }}
+            cursor={false}
             content={({ active, payload }) =>
               active && payload?.length ? (
                 <ChartTooltip

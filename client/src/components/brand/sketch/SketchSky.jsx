@@ -10,7 +10,7 @@ const LAYOUTS = {
 const CLOUD = 'M0,24 q10,-18 26,-8 q8,-18 28,-6 q18,-10 30,6 q14,-2 14,10 h-98 q-8,0 0,-2 Z';
 
 /** The sky behind the skyline: a red sun with rings that swell and fade, clouds that drift, and birds on the wing. */
-export function SketchSky({ className = '', variant = 'wide' }) {
+export function SketchSky({ className = '', variant = 'wide', still = false }) {
   const layout = LAYOUTS[variant] ?? LAYOUTS.wide;
   const [sx, sy, sr] = layout.sun;
   const sunPath = useMemo(() => makeInk(5).circle(sx, sy, sr), [sx, sy, sr]);
@@ -27,10 +27,10 @@ export function SketchSky({ className = '', variant = 'wide' }) {
   return (
     <div aria-hidden="true" className={`pointer-events-none absolute inset-x-0 top-0 ${className}`} style={{ bottom: 'calc(var(--sk-h, 0px) * 0.7)' }}>
       <svg viewBox={layout.box} preserveAspectRatio="xMidYMin slice" className="h-full w-full">
-        <g data-sun className="sk-sun" style={{ transformOrigin: `${sx}px ${sy}px` }}>
+        <g data-sun className={still ? undefined : 'sk-sun'} style={still ? undefined : { transformOrigin: `${sx}px ${sy}px` }}>
           <path d={sunPath} fill="var(--sk-sun)" />
-          <circle cx={sx} cy={sy} r={sr + 10} fill="none" stroke="var(--sk-sun)" strokeWidth="1.4" className="sk-ring" style={{ transformOrigin: `${sx}px ${sy}px` }} />
-          <g className="sk-rays" stroke="var(--sk-sun)" strokeWidth="1.5" strokeLinecap="round" fill="none">
+          {!still && <circle cx={sx} cy={sy} r={sr + 10} fill="none" stroke="var(--sk-sun)" strokeWidth="1.4" className="sk-ring" style={{ transformOrigin: `${sx}px ${sy}px` }} />}
+          <g className={still ? undefined : 'sk-rays'} stroke="var(--sk-sun)" strokeWidth="1.5" strokeLinecap="round" fill="none">
             {rays.map((d, i) => (
               <path key={i} d={d} />
             ))}
@@ -38,13 +38,17 @@ export function SketchSky({ className = '', variant = 'wide' }) {
         </g>
         {layout.clouds.map(([x, y, s], i) => (
           <g key={i} transform={`translate(${x},${y}) scale(${s})`}>
-            <g data-cloud className="sk-cloud" style={{ animationDuration: `${70 + i * 25}s`, animationDelay: `${-i * 22}s`, '--rest': `${layout.rest[i % layout.rest.length]}px` }}>
+            <g
+              data-cloud
+              className={still ? undefined : 'sk-cloud'}
+              style={still ? { transform: `translateX(${layout.rest[i % layout.rest.length]}px)` } : { animationDuration: `${70 + i * 25}s`, animationDelay: `${-i * 22}s`, '--rest': `${layout.rest[i % layout.rest.length]}px` }}
+            >
               <path d={CLOUD} fill="none" stroke="var(--sk-ink)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M18,34 h40 M70,34 h26" fill="none" stroke="var(--sk-ink)" strokeWidth="1" strokeLinecap="round" opacity=".6" />
             </g>
           </g>
         ))}
-        {layout.birds.map(([x, y, s, dy], i) => (
+        {!still && layout.birds.map(([x, y, s, dy], i) => (
           <g key={i} transform={`translate(${x},${y})`}>
             <g data-bird className="sk-fly" style={{ animationDuration: `${26 + i * 5}s`, animationDelay: `${-i * 7}s`, '--dy': `${dy * 4}px` }}>
               <path d={`M0,0 q${s / 4},${-s / 3} ${s / 2},0 q${s / 4},${-s / 3} ${s / 2},0`} fill="none" stroke="var(--sk-ink)" strokeWidth="1.6" strokeLinecap="round" className="sk-flap" style={{ animationDelay: `${-i * 0.23}s` }} />

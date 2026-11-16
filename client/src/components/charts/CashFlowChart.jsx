@@ -68,7 +68,7 @@ export function CashFlowChart({ data = [], selectedMonth, onSelectMonth, height 
               axisLine={false}
               tick={{ fill: c.ink3, fontSize: 12 }}
             />
-            <Tooltip cursor={{ fill: c.surface2 }} content={<TooltipContent colors={c} />} />
+            <Tooltip cursor={false} content={<TooltipContent colors={c} />} />
             {['income', 'expense'].map((key) => (
               <Bar key={key} dataKey={key} name={key} fill={c[key]} radius={[4, 4, 0, 0]} maxBarSize={20} isAnimationActive={false}>
                 {rows.map((r) => (
