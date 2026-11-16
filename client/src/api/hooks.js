@@ -3,8 +3,9 @@
  * Mutations invalidate every query that could show stale numbers, so the dashboard,
  * charts, budgets and lists all update together after an add/edit/delete.
  */
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { api } from './client.js';
+import { applyReaction } from '../lib/reactions.js';
 
 export const keys = {
   me: ['auth', 'me'],
@@ -270,5 +271,152 @@ export function useClearHistory() {
   return useMutation({
     mutationFn: () => api('/assistant/history', { method: 'DELETE' }),
     onSuccess: () => qc.setQueryData(keys.assistantHistory, []),
+  });
+}
+
+// ---------- Learn and community ----------
+
+const FIVE_MINUTES = 5 * 60 * 1000;
+
+export const useArticles = (domain) =>
+  useQuery({ queryKey: ['learn', 'articles', domain ?? 'all'], queryFn: () => api('/learn/articles', { query: { domain } }), staleTime: FIVE_MINUTES });
+
+export const useArticle = (slug) =>
+  useQuery({ queryKey: ['learn', 'article', slug], queryFn: () => api(`/learn/articles/${slug}`), enabled: Boolean(slug), staleTime: 60 * 1000, retry: false });
+
+export const usePosts = ({ space, sort = 'new' } = {}) =>
+  useInfiniteQuery({
+    queryKey: ['community', 'posts', { space: space ?? 'all', sort }],
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) => api('/community/posts', { query: { space, sort, page: pageParam, limit: 10 } }),
+    getNextPageParam: (last) => (last.page < last.pages ? last.page + 1 : undefined),
+  });
+
+export const usePost = (id) =>
+  useQuery({ queryKey: ['community', 'post', id], queryFn: () => api(`/community/posts/${id}`), enabled: Boolean(id), retry: false });
+
+export const useComments = ({ kind, target, sort = 'top' }) =>
+  useInfiniteQuery({
+    queryKey: ['community', 'comments', kind, target, sort],
+    initialPageParam: 1,
+    enabled: Boolean(kind && target),
+    queryFn: ({ pageParam }) => api('/community/comments', { query: { kind, target, sort, page: pageParam, limit: 20 } }),
+    getNextPageParam: (last) => (last.page < last.pages ? last.page + 1 : undefined),
+  });
+
+export function useCreatePost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => api('/community/posts', { method: 'POST', body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['community', 'posts'] }),
+  });
+}
+
+export function useDeletePost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => api(`/community/posts/${id}`, { method: 'DELETE' }),
+    onSuccess: (_r, id) => {
+      qc.removeQueries({ queryKey: ['community', 'post', id] });
+      qc.invalidateQueries({ queryKey: ['community', 'posts'] });
+    },
+  });
+}
+
+export function useAddComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => api('/community/comments', { method: 'POST', body }),
+    onSuccess: (_r, { kind, target }) => {
+      qc.invalidateQueries({ queryKey: ['community', 'comments', kind, target] });
+      // The comment count on the article or post changes too.
+      qc.invalidateQueries({ queryKey: kind === 'article' ? ['learn'] : ['community', 'post'] });
+      if (kind === 'post') qc.invalidateQueries({ queryKey: ['community', 'posts'] });
+    },
+  });
+}
+
+export function useDeleteComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id }) => api(`/community/comments/${id}`, { method: 'DELETE' }),
+    onSuccess: (_r, { kind, target }) => {
+      qc.invalidateQueries({ queryKey: ['community', 'comments', kind, target] });
+      qc.invalidateQueries({ queryKey: kind === 'article' ? ['learn'] : ['community', 'post'] });
+      if (kind === 'post') qc.invalidateQueries({ queryKey: ['community', 'posts'] });
+    },
+  });
+}
+
+/** Applies `change` to every cached copy of one article, post or comment: lists, detail pages and comment threads. */
+function patchCached(qc, kind, target, change) {
+  const hit = (x) => (kind === 'article' ? x?.slug === target : x?.id === target);
+  const walk = (data) => {
+    if (!data) return data;
+    if (Array.isArray(data)) return data.map((x) => (hit(x) ? change(x) : x));
+    if (Array.isArray(data.pages)) return { ...data, pages: data.pages.map(walk) };
+    if (Array.isArray(data.items)) return { ...data, items: data.items.map((x) => (hit(x) ? change(x) : x)) };
+    return hit(data) ? change(data) : data;
+  };
+  const roots = { article: [['learn']], post: [['community', 'posts'], ['community', 'post']], comment: [['community', 'comments']] }[kind];
+  for (const queryKey of roots) qc.setQueriesData({ queryKey }, walk);
+}
+
+/**
+ * Like or dislike. The screen updates at once from the same rule the server uses, then takes the server's
+ * counts when they arrive (or refetches if the request failed).
+ */
+export function useReact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ kind, target, value }) => api('/community/reactions', { method: 'PUT', body: { kind, target, value } }),
+    onMutate: ({ kind, target, value }) => patchCached(qc, kind, target, (item) => ({ ...item, ...applyReaction(item, value) })),
+    onSuccess: (result, { kind, target }) => patchCached(qc, kind, target, (item) => ({ ...item, ...result })),
+    onError: (_e, { kind }) =>
+      qc.invalidateQueries({ queryKey: kind === 'article' ? ['learn'] : ['community'] }),
+  });
+}
+
+// ---------- Markets ----------
+
+const marketQuery = (key, path, { query, ...options } = {}) => ({
+  queryKey: ['markets', ...key],
+  queryFn: () => api(`/markets${path}`, { query }),
+  staleTime: 10 * 60 * 1000, // the data is end-of-day
+  retry: false,
+  ...options,
+});
+
+export const useMarketOverview = () => useQuery(marketQuery(['overview'], '/overview'));
+export const useNifty50 = () => useQuery(marketQuery(['nifty50'], '/stocks/nifty50'));
+export const useIndexDetail = (name) => useQuery(marketQuery(['index', name], `/indices/${encodeURIComponent(name ?? '')}`, { enabled: Boolean(name) }));
+export const useStock = (symbol) => useQuery(marketQuery(['stock', symbol], `/stocks/${encodeURIComponent(symbol ?? '')}`, { enabled: Boolean(symbol) }));
+export const useStockSearch = (q) => {
+  const text = (q ?? '').trim();
+  return useQuery(marketQuery(['stock-search', text], '/stocks/search', { query: { q: text }, enabled: text.length >= 2, placeholderData: keepPreviousData }));
+};
+export const useFundCategories = () => useQuery(marketQuery(['fund-categories'], '/funds/categories', { staleTime: Infinity }));
+export const useTopFunds = (category) => useQuery(marketQuery(['funds-top', category], '/funds/top', { query: { category }, enabled: Boolean(category), staleTime: 60 * 60 * 1000 }));
+export const useFund = (code) => useQuery(marketQuery(['fund', code], `/funds/${encodeURIComponent(code ?? '')}`, { enabled: Boolean(code), staleTime: 60 * 60 * 1000 }));
+export const useFundSearch = (q) => {
+  const text = (q ?? '').trim();
+  return useQuery(marketQuery(['fund-search', text], '/funds/search', { query: { q: text }, enabled: text.length >= 2, placeholderData: keepPreviousData }));
+};
+
+export const useWatchlist = () => useQuery({ queryKey: ['watchlist'], queryFn: () => api('/watchlist'), staleTime: 60 * 1000 });
+
+export function useAddWatch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => api('/watchlist', { method: 'POST', body }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['watchlist'] }),
+  });
+}
+
+export function useRemoveWatch() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => api(`/watchlist/${id}`, { method: 'DELETE' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['watchlist'] }),
   });
 }
