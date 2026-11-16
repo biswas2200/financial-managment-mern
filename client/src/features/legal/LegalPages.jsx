@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { POLICY_VERSION } from '@kosha/shared';
 import { Logo } from '../../components/brand/Logo.jsx';
+import { BackToTop } from '../../components/ui/BackToTop.jsx';
 import { PRIVACY, TERMS } from './legal.js';
 
 function Block({ block }) {
@@ -54,7 +55,7 @@ function LegalDocument({ doc, otherLink }) {
           Back to Kosha
         </Link>
       </header>
-      <main className="page-in mx-auto max-w-3xl px-4 pb-20 sm:px-6">
+      <main id="main" tabIndex={-1} className="page-in mx-auto max-w-3xl px-4 pb-20 outline-none sm:px-6">
         <h1 className="font-wide text-[2rem] leading-tight font-semibold sm:text-[2.5rem]">{doc.title}</h1>
         <p className="mt-2 text-sm text-ink-3">Version {POLICY_VERSION}</p>
         <div className="mt-6 flex flex-col gap-3">
@@ -95,6 +96,7 @@ function LegalDocument({ doc, otherLink }) {
           .
         </p>
       </main>
+      <BackToTop className="right-4 bottom-5 sm:right-8 sm:bottom-8" />
     </div>
   );
 }

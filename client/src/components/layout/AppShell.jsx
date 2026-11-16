@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import { Logo, LogoMark } from '../brand/Logo.jsx';
 import { Button, Dialog } from '../ui/primitives.jsx';
 import { Kbd } from '../ui/Kbd.jsx';
+import { BackToTop } from '../ui/BackToTop.jsx';
 import { useLogout, useMe } from '../../api/hooks.js';
 import { useHotkeys } from '../../hooks/useHotkeys.js';
 import { TransactionDialog } from '../../features/transactions/TransactionDialog.jsx';
@@ -113,7 +114,7 @@ export function AppShell() {
         <Sidebar onAdd={openAdd} onShortcuts={() => setShortcutsOpen(true)} />
         <div className="min-w-0">
           <MobileTopbar onAdd={openAdd} />
-          <main id="main" className="mx-auto w-full max-w-[1320px] px-4 pt-5 pb-28 sm:px-6 lg:px-10 lg:pt-9 lg:pb-14">
+          <main id="main" tabIndex={-1} className="mx-auto outline-none w-full max-w-[1320px] px-4 pt-5 pb-28 sm:px-6 lg:px-10 lg:pt-9 lg:pb-14">
             <div key={pageKey(location.pathname)} className="page-in">
               <Outlet />
             </div>
@@ -121,6 +122,8 @@ export function AppShell() {
         </div>
         <MobileTabBar onMore={() => setMoreOpen(true)} moreOpen={moreOpen} />
         {location.pathname !== '/copilot' && <CopilotLauncher />}
+        {/* Above the phone tab bar, and above the Copilot button on larger screens. */}
+        <BackToTop className="right-4 bottom-24 sm:bottom-36 lg:right-8 lg:bottom-24" />
       </div>
       <TransactionDialog
         open={dialog.open}

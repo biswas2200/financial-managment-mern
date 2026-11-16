@@ -3,6 +3,7 @@ import { BookOpen, Sparkles, TrendingUp, Wallet } from 'lucide-react';
 import { Logo } from '../../components/brand/Logo.jsx';
 import { CityScene } from '../../components/brand/sketch/CityScene.jsx';
 import { ThemeToggle } from '../../components/ui/ThemeToggle.jsx';
+import { BackToTop } from '../../components/ui/BackToTop.jsx';
 
 const DOMAINS = [
   {
@@ -56,7 +57,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main>
+      <main id="main" tabIndex={-1} className="outline-none">
         <section aria-label="Kosha" className="relative isolate overflow-hidden" style={{ '--sk-h': 'clamp(200px, 31vh, 280px)' }}>
           <CityScene />
           <div className="relative z-10 mx-auto max-w-6xl px-5 pt-28 pb-[calc(var(--sk-h)+2.5rem)] sm:px-8 lg:pt-36 lg:pb-[calc(var(--sk-h)+4.5rem)]">
@@ -131,6 +132,7 @@ export default function LandingPage() {
           </nav>
         </div>
       </footer>
+      <BackToTop className="right-4 bottom-5 sm:right-8 sm:bottom-8" />
     </div>
   );
 }

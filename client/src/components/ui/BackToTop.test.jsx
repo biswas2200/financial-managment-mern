@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { Profiler } from 'react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BackToTop } from './BackToTop.jsx';
 
@@ -95,16 +96,16 @@ describe('BackToTop', () => {
     remove.mockRestore();
   });
 
-  it('does nothing while the scroll position is unchanged, so scrolling does not redraw it over and over', () => {
-    let renders = 0;
-    function Probe() {
-      renders += 1;
-      return <BackToTop />;
-    }
-    render(<Probe />);
+  it('is not redrawn by every scroll event, only when it needs to appear or go away', () => {
+    let commits = 0;
+    render(
+      <Profiler id="top" onRender={() => { commits += 1; }}>
+        <BackToTop />
+      </Profiler>,
+    );
     scrollPageTo(900);
-    const after = renders;
-    for (let y = 910; y < 1000; y += 10) fireEvent.scroll(window, { target: { scrollY: y } });
-    expect(renders).toBe(after);
+    const settled = commits;
+    for (let y = 910; y < 1000; y += 10) scrollPageTo(y);
+    expect(commits).toBe(settled);
   });
 });
