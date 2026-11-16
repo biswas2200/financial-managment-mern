@@ -5,7 +5,8 @@ const TIMEOUT_MS = 20_000;
 
 async function get(url, accept) {
   const res = await fetch(url, { headers: { 'User-Agent': UA, Accept: accept }, signal: AbortSignal.timeout(TIMEOUT_MS) });
-  if (res.status === 404) return null; // no such file: a holiday, a weekend, or a scheme that does not exist
+  // No such file (a holiday or weekend) or a request the source rejects (a scheme code that cannot exist): missing, not an outage.
+  if ([400, 404, 422].includes(res.status)) return null;
   if (!res.ok) throw Object.assign(new Error(`${new URL(url).host} answered ${res.status}`), { status: res.status });
   return res;
 }

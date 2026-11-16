@@ -29,6 +29,7 @@ import {
   FUND_TOP_PERIODS,
 } from './returns.js';
 import { FUND_CATEGORIES, MF_UNIVERSE } from './universe.js';
+import { createMemo } from './memo.js';
 
 const NSE = 'https://nsearchives.nseindia.com/content';
 const MFAPI = 'https://api.mfapi.in/mf';
@@ -73,22 +74,8 @@ const round2 = (n) => Math.round(n * 100) / 100;
 /** The exchange writes "NIFTY Midcap 100"; show every index as "Nifty …". */
 const tidyName = (name) => name.replace(/^nifty(?=\s)/i, 'Nifty');
 
-function createMemo(now) {
-  const store = new Map();
-  /** One load per key; in-flight loads are shared; failures are never kept. */
-  return (key, ttlMs, load) => {
-    const t = now().getTime();
-    const hit = store.get(key);
-    if (hit && hit.expires > t) return hit.promise;
-    const entry = { promise: load(), expires: ttlMs === Infinity ? Infinity : t + ttlMs };
-    store.set(key, entry);
-    entry.promise.catch(() => store.get(key) === entry && store.delete(key));
-    return entry.promise;
-  };
-}
-
 export function createMarketService({ fetchBuffer = httpBuffer, fetchJson = httpJson, now = () => new Date() } = {}) {
-  const memo = createMemo(now);
+  const memo = createMemo(now, { 'bhav:': 14, 'index:': 40, 'fund:': 80, 'fundsearch:': 60 });
   const today = () => toDayKey(now());
 
   const download = async (loader) => {
@@ -102,8 +89,16 @@ export function createMarketService({ fetchBuffer = httpBuffer, fetchJson = http
 
   // ---------- NSE files, by trading day ----------
 
-  /** Past days never change, so they are kept for good; today's file may not be published yet, so only briefly. */
-  const dayTtl = (day) => (day < today() ? Infinity : 10 * MINUTE);
+  /**
+   * Past days never change, so a day that exists is kept for good; today's may not be published yet, so only briefly.
+   * A recent day with no file is looked for again after a while, because NSE can publish late.
+   */
+  const dayTtl = (day) => (value) => {
+    const age = Math.round((Date.parse(today()) - Date.parse(day)) / 86_400_000);
+    if (age <= 0) return 10 * MINUTE;
+    if (value === null && age <= 3) return 30 * MINUTE;
+    return Infinity;
+  };
 
   const indexFile = (day) =>
     isWeekend(day)
@@ -133,7 +128,8 @@ export function createMarketService({ fetchBuffer = httpBuffer, fetchJson = http
     memo('latest', 10 * MINUTE, async () => {
       let day = today();
       for (let i = 0; i < LOOK_BACK_DAYS; i += 1) {
-        if (await indexFile(day)) return day;
+        // A day counts only when both the index file and the stock file are out.
+        if ((await indexFile(day)) && (await stockFile(day))) return day;
         day = shiftDays(day, -1);
       }
       throw unavailable();
@@ -143,7 +139,12 @@ export function createMarketService({ fetchBuffer = httpBuffer, fetchJson = http
   async function fileOnOrBefore(getFile, target) {
     let day = target;
     for (let i = 0; i < FILE_SEARCH_DAYS; i += 1) {
-      const file = await getFile(day);
+      let file;
+      try {
+        file = await getFile(day);
+      } catch {
+        return null; // one comparison file that cannot be fetched leaves that period blank, not the whole page
+      }
       if (file) return { day, file };
       day = shiftDays(day, -1);
     }
@@ -389,7 +390,8 @@ export function createMarketService({ fetchBuffer = httpBuffer, fetchJson = http
   async function searchFunds(query) {
     const q = String(query ?? '').trim();
     if (!q) return [];
-    const rows = await download(() => fetchJson(`${MFAPI}/search?q=${encodeURIComponent(q)}`));
+    const key = q.toLowerCase().replace(/\s+/g, ' ');
+    const rows = await memo(`fundsearch:${key}`, 10 * MINUTE, () => download(() => fetchJson(`${MFAPI}/search?q=${encodeURIComponent(q)}`)));
     const list = (Array.isArray(rows) ? rows : []).map((r) => ({ code: Number(r.schemeCode), name: String(r.schemeName ?? '').trim() })).filter((r) => r.code && r.name);
     const growth = list.filter((r) => /direct/i.test(r.name) && /growth/i.test(r.name) && !/idcw|dividend|bonus/i.test(r.name));
     // A name that holds everything you typed, in order, comes before one that merely uses the same words; shorter names first.
