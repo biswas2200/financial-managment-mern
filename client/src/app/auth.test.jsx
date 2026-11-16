@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -60,6 +60,27 @@ describe('RequireAuth', () => {
 
 describe('RequireAuth when the server cannot be reached', () => {
   const networkError = Object.assign(new Error("Can't reach the Kosha server."), { status: 0, code: 'NETWORK_ERROR' });
+  // The app remembers that this browser has signed in before, so a lost connection is not read as being signed out.
+  beforeEach(() => localStorage.setItem('kosha-signed-in', '1'));
+  afterEach(() => localStorage.clear());
+
+  it('shows a first-time visitor the landing page even with no connection, since there is no sign-in to check', () => {
+    localStorage.clear();
+    me = { data: undefined, isLoading: false, error: networkError, refetch: vi.fn() };
+    renderAt('/', <p>Landing page</p>);
+    expect(screen.getByText('Landing page')).toBeInTheDocument();
+  });
+
+  it('remembers a sign-in, and forgets it when the person signs out or the session ends', () => {
+    localStorage.clear();
+    me = { data: { id: 'u1' }, isLoading: false, error: null };
+    const first = renderAt('/');
+    expect(localStorage.getItem('kosha-signed-in')).toBe('1');
+    first.unmount();
+    me = { data: null, isLoading: false, error: null };
+    renderAt('/budgets');
+    expect(localStorage.getItem('kosha-signed-in')).toBeNull();
+  });
 
   it('does not mistake being offline for being signed out: it says so and offers to try again', async () => {
     const refetch = vi.fn();
