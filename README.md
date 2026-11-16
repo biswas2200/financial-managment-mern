@@ -4,7 +4,9 @@ Kosha (Sanskrit for *treasury*) is a full-stack MERN application for logging dai
 It shows your balance and the month's totals on one dashboard, charts where the money goes, tracks
 monthly budgets, and includes **Kosha Copilot**, an assistant that answers questions about your own data
 using the Google Gemini API with function calling. Copilot can also draft transactions and budgets, which
-are saved only after you confirm them.
+are saved only after you confirm them. Beside the money tools sit **Markets** (official end-of-day NSE and
+AMFI data), **Learn** (original guides on saving and investing) and **Discussions** (a small community
+with likes and dislikes counted separately).
 
 ![Kosha dashboard](docs/report/screenshots/dashboard.png)
 
@@ -21,6 +23,13 @@ are saved only after you confirm them.
 - **Budgets with your own categories:** every expense category can be picked, and a new category with its own icon (55+ to choose from) can be made without leaving the budget form.
 - **Settings:** profile picture (an icon on a colour, or your own photo shrunk in the browser), phone number, date of birth, password, light/dark/system theme, custom categories, what you agreed to, deleting your account, and which Copilot engine is active.
 - **Privacy:** a plain-language Privacy Policy and Terms of Use, accepted at sign-up and recorded with the version and time. Phone number and date of birth are optional.
+- **A front door:** visitors see a landing page with a live, ink-on-paper sketch of six Indian cities (Gateway of India, India Gate, Howrah Bridge, Charminar, Vidhana Soudha, Kapaleeshwarar Temple) that draws itself in, then pans while water ripples, boats bob, flags sway and traffic crosses. The sign-in and sign-up pages carry the same sketch, and it inverts for the dark theme. Everything stops for reduced motion.
+- **Sidebar by domain:** Money (Overview, Transactions, Analytics, Budgets), Invest (Markets, Stocks, Mutual funds, Watchlist), Learn and talk (Learn, Discussions) and Assistant (Copilot). On a phone the tab bar keeps four everyday places and a **More** sheet lists the rest.
+- **Markets:** the Nifty 50, Nifty Bank, IT, mid and small cap indices, advancers and decliners, sector moves, and the biggest Nifty 50 gainers, losers and most traded. Every stock and index shows its close, P/E, P/B and returns; every mutual fund shows NAV, 1/3/5 year returns, a five-year NAV chart (with a table view), its worst fall and how often a year ended higher. Figures are **end-of-day**, carry their date, and are never invented: if a source is unreachable the page says so. A **watchlist** of stocks, indices and funds is saved in your account.
+- **Learn:** 14 original guides across eight domains (saving, investing, stocks, mutual funds, tax, insurance, credit and debt, scams and safety). An article opens in a large reader over a blurred page, with its own address so it can be shared, takeaways, sources and a button that asks Copilot about it.
+- **Discussions and comments:** posts in nine spaces, comments on posts and articles, and likes and dislikes on everything. Likes and dislikes are two separate counts that are always whole numbers of zero or more: each person holds at most one reaction per item (setting it again changes nothing), so a count can never go negative, and no screen shows a net score. Other members see only a first name and initial, and an icon, never a photo, email or phone.
+- **Copilot for markets and learning:** ask "How is the market today?", "Tell me about TCS stock", "How is the UTI Nifty 50 index fund doing?", "What is an emergency fund?" or "Show my watchlist". It answers from the same data as the screens, with cards, and **will not say what to buy or sell**.
+- **Settings in pages:** Profile, Preferences, Categories and Privacy and data, each on its own page.
 - Responsive from 360 px phones (bottom tab bar and account menu) to wide desktops, with keyboard support and a table view for every chart.
 - **Installable app (PWA):** add Kosha to a phone's home screen or a desktop dock. It opens full screen, starts offline, and has "Add expense" and "Add income" shortcuts on the app icon.
 
@@ -54,13 +63,36 @@ are saved only after you confirm them.
 |---|---|
 | Database | MongoDB 7 in Docker, Mongoose 8, aggregation pipelines |
 | API | Node.js 20+, Express 5, JWT in httpOnly cookies, Zod validation, helmet, rate limiting |
-| AI | Google Gemini API via `@google/genai` (function calling over nine Kosha tools) |
+| AI | Google Gemini API via `@google/genai` (function calling over fifteen Kosha tools) |
+| Market data | NSE India's official end-of-day files (index closes, bhavcopy, constituent lists) read with `fflate`, and AMFI NAVs through mfapi.in. No API key. |
 | Frontend | React 18, Vite 6, React Router, TanStack Query, React Hook Form, Recharts 3, Tailwind CSS 4 |
 | Tests | Vitest, Supertest, React Testing Library, Playwright (system Chrome) |
 
 Money is stored as **integer paise** everywhere (₹450.50 is `45050`), and all reports are bucketed in **Indian Standard Time**.
 
 ![Architecture](docs/report/images/diagram-architecture.png)
+
+## Market data: what was tried, and what was chosen
+
+The market pages needed Indian share and mutual fund data without asking anyone for an API key. Candidates were
+tested from the development machine in November 2026, not assumed:
+
+| Source | Result when tested | Used? |
+|---|---|---|
+| NSE India archive files (`nsearchives.nseindia.com`): index closes with P/E, P/B and dividend yield, the daily bhavcopy of every equity, Nifty 50 and Nifty 500 lists | Official, static, about 0.3 s a file, no key | **Yes**: indices, stocks, sectors, breadth, movers |
+| AMFI NAV data through mfapi.in: scheme search and full NAV history | Free, no key, 0.2 to 0.8 s | **Yes**: mutual funds |
+| Yahoo Finance chart endpoints | HTTP 429 from this machine, even with a cookie and crumb | No: unofficial and unreliable |
+| NSE live website API (`nseindia.com/api`) and the BSE API | HTTP 403 for programmatic clients | No |
+| Stooq, Google Finance | A JavaScript challenge and a consent page, not data | No |
+| Alpha Vantage, Twelve Data, Finnhub, TrueData, Zerodha and Dhan APIs | Need a key or a broker account | No: they could be added behind the same service |
+
+What that means for the app, and why it is built this way:
+
+- **Everything is end-of-day.** Each screen states the trading day it shows. The newest published day is found by looking back over weekends and holidays; past days never change and are kept in memory, today's is re-checked every ten minutes.
+- **Returns come from official closes on earlier days** (1 week to 1 year for stocks; 1 month to 5 years for indices and funds, annualised beyond a year). They are price returns: not adjusted for splits, bonus issues or dividends, and the page says so.
+- **Honest failure.** If a source cannot be reached the API answers `503 MARKET_DATA_UNAVAILABLE`, the page says it, Copilot says it, and no figure is made up. Tests never touch the network: the service is given fake NSE and AMFI files.
+- **Not advice.** Copilot is instructed never to recommend buying, selling or holding, the mutual fund "past performers" list is labelled a sample and not a recommendation, and every market page links the guide that explains its terms.
+- BSE indices such as the Sensex are not available without BSE's own feed, so they are not shown.
 
 ## Getting started
 
@@ -90,7 +122,7 @@ npm run pwa        # production build on http://localhost:4173 with the API, rea
 - **On a phone on the same Wi-Fi:** open `http://<your-laptop-ip>:4173` (Vite prints the Network address). Browsers only allow installing and offline mode over HTTPS or localhost, so on a plain LAN address Kosha works as a normal mobile website. To install it on the phone, serve it over HTTPS (for example with a tunnel such as `cloudflared tunnel --url http://localhost:4173`) and use **Add to Home Screen**.
 - `npm run dev:lan` is the same as `npm run dev` but reachable from other devices, for testing layouts on a real phone.
 
-The service worker caches only the app shell (HTML, scripts, styles, icons, fonts). Balances and transactions always come live from the API and are never cached on the device.
+The service worker caches the app shell (HTML, scripts, styles, icons, fonts) and, as the one exception, the last answers of the public `/api/v1/markets` endpoints, so end-of-day figures (which show their date) can still be read offline. Balances, transactions, the watchlist, Copilot and community content always come live from the API and are never cached on the device. If you reload while offline the app says "You're offline" instead of sending you to sign in. The demo-account helper on the sign-in page appears only in development, not in the production build.
 
 ### Enable the Gemini engine for Copilot
 
@@ -159,12 +191,14 @@ Development followed test-driven development: each feature started with a failin
 ```
 shared/      money utils, IST date helpers, category catalog, Zod schemas (used by server and client)
 server/      Express API
-  src/models        User, Category, Transaction, Budget, AssistantMessage
-  src/services      business rules and aggregation pipelines
+  src/models        User, Category, Transaction, Budget, AssistantMessage, Post, Comment, Reaction, WatchlistItem
+  src/services      business rules and aggregation pipelines (community, learn and watchlist services too)
+  src/markets       NSE and AMFI parsing, return maths, the market service with caching and honest failures
+  src/content       the Learn articles, as plain data
   src/agent         Copilot: tools, Gemini provider, offline engine, insights
   scripts/          seed.js, dump.sh
   tests/            unit and integration suites
-client/      React app (features/, components/, api/, pwa/, styles/); public/ holds the manifest, icons and sw.js
+client/      React app (features/: landing, learn, discussions, markets, settings...; components/brand/sketch draws the city skyline); public/ holds the manifest, icons and sw.js
 e2e/         Playwright specs and the screenshot script
 database/    initdb restore script and the committed seed dump
 docs/report/ project report, diagrams, screenshots and test evidence
@@ -183,6 +217,10 @@ All routes are under `/api/v1` and return JSON; everything except `/auth` needs 
 | Balance | `GET/PUT /balance`, `GET /balance/banks`, `POST /balance/bank-demo` (sample figures, nothing is connected) |
 | Analytics | `GET /analytics/summary`, `/by-category`, `/trend`, `/daily`, `/weekday`, `/merchants`, `/category-trend` |
 | Copilot | `GET /assistant/status`, `/insights`, `GET/DELETE /assistant/history`, `POST /assistant/message`, `POST /assistant/actions/:id/confirm` and `/cancel` |
+| Learn | `GET /learn/articles?domain=`, `GET /learn/articles/:slug` |
+| Community | `GET/POST /community/posts`, `GET/DELETE /community/posts/:id`, `GET/POST /community/comments`, `DELETE /community/comments/:id`, `PUT /community/reactions` (`like`, `dislike` or `null`; a set, not a toggle) |
+| Markets | `GET /markets/overview`, `/indices/:name`, `/stocks/nifty50`, `/stocks/search?q=`, `/stocks/:symbol`, `/funds/categories`, `/funds/top?category=`, `/funds/search?q=`, `/funds/:code` |
+| Watchlist | `GET/POST /watchlist`, `DELETE /watchlist/:id` (at most 50 entries) |
 
 ## Screenshots
 
@@ -199,6 +237,7 @@ All routes are under `/api/v1` and return JSON; everything except `/auth` needs 
 
 ## Troubleshooting
 
+- **MongoDB stopped with "Too many open files":** the test suites build many collections and indexes quickly. `docker-compose.yml` now raises the container's file limit; run `docker compose up -d mongo` to apply it (your data volume is kept).
 - **"Could not connect to MongoDB"**: start the database with `docker compose up -d`.
 - **Empty dashboard after cloning**: the dump restores only on a fresh volume. Run `npm run db:reset` or `npm run seed:fresh`.
 - **Port already in use**: the API uses `API_PORT` (default 5000) from `server/.env`; Vite uses 5173.

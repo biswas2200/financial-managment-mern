@@ -292,6 +292,94 @@ async function main() {
       await gctx.close();
     }
 
+    // ---- Landing, Learn, Discussions, Markets (shown for the demo account; nothing is changed) ----
+    const NEW_AREAS = ['landing', 'learn', 'discussions', 'markets', 'settings-pages', 'mobile-more'];
+    if (NEW_AREAS.some(want)) {
+      if (want('landing')) {
+        const lctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light', locale: 'en-IN', reducedMotion: 'reduce' });
+        const l = await lctx.newPage();
+        await l.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+        await l.goto(`${BASE}/`);
+        await settle(l, 1500);
+        await shot(l, 'landing');
+        await shot(l, 'landing-full', { fullPage: true });
+        await l.goto(`${BASE}/login`);
+        await settle(l, 1500);
+        await l.addStyleTag({ content: '[data-demo-hint]{display:none!important}' });
+        await shot(l, 'login');
+        await lctx.close();
+        const dctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark', locale: 'en-IN', reducedMotion: 'reduce' });
+        const d = await dctx.newPage();
+        await d.goto(`${BASE}/`);
+        await settle(d, 1500);
+        await shot(d, 'landing-dark');
+        await dctx.close();
+      }
+
+      const actx = await signedInContext(browser, { colorScheme: 'light', reducedMotion: 'reduce' });
+      const a = await actx.newPage();
+      await a.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+      const hideLauncher = () => a.addStyleTag({ content: '[data-copilot-launcher]{display:none!important}' });
+
+      if (want('learn')) {
+        await a.goto(`${BASE}/learn`);
+        await settle(a, 1200);
+        await hideLauncher();
+        await shot(a, 'learn');
+        await a.goto(`${BASE}/learn/compounding-and-sip`);
+        await settle(a, 1200);
+        await shot(a, 'article');
+      }
+
+      if (want('discussions')) {
+        await a.goto(`${BASE}/discussions`);
+        await settle(a, 1200);
+        await hideLauncher();
+        await shot(a, 'discussions');
+      }
+
+      if (want('markets')) {
+        await a.goto(`${BASE}/markets`);
+        await settle(a, 1800);
+        await hideLauncher();
+        await shot(a, 'markets');
+        await a.goto(`${BASE}/markets/stocks/RELIANCE`);
+        await settle(a, 1800);
+        await shot(a, 'stock');
+        await a.goto(`${BASE}/markets/funds`);
+        await settle(a, 2500);
+        await shot(a, 'funds');
+        await a.goto(`${BASE}/markets/funds/120716`);
+        await settle(a, 2500);
+        await shot(a, 'fund');
+      }
+
+      if (want('settings-pages')) {
+        await a.goto(`${BASE}/settings/categories`);
+        await settle(a, 1000);
+        await hideLauncher();
+        await shot(a, 'settings-categories');
+      }
+      await actx.close();
+
+      if (want('mobile-more')) {
+        const mctx = await signedInContext(browser, { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: 'light', reducedMotion: 'reduce' });
+        const m = await mctx.newPage();
+        await m.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+        await m.goto(`${BASE}/markets`);
+        await settle(m, 2000);
+        await shot(m, 'mobile-markets');
+        await m.getByRole('button', { name: 'More' }).click();
+        await m.waitForTimeout(500);
+        await shot(m, 'mobile-more');
+        await m.keyboard.press('Escape');
+        await m.goto(`${BASE}/learn/emergency-fund`);
+        await settle(m, 1500);
+        await shot(m, 'mobile-article');
+        await mctx.close();
+      }
+    }
+
     if (want('mobile')) {
       const mctx = await signedInContext(browser, {
         viewport: { width: 390, height: 844 },
