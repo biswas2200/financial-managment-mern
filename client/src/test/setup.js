@@ -45,3 +45,6 @@ if (typeof HTMLDialogElement !== 'undefined') {
     this.dispatchEvent(new Event('close'));
   };
 }
+
+// jsdom does not implement scrolling an element.
+Element.prototype.scrollTo ??= function scrollTo() {};

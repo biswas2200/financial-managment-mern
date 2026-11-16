@@ -533,3 +533,29 @@
 .drawer-in {
   animation: drawer-in 0.22s ease-out;
 }
+
+/* ---- Sidebar scroll and the phone "More" sheet ---- */
+.rail-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+.sheet-in[open] {
+  animation: sheet-in 0.3s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+.sheet-in::backdrop {
+  background: rgb(13 17 32 / 0.5);
+  backdrop-filter: blur(4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheet-in[open] {
+    animation: none;
+  }
+}

@@ -1,20 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
-import {
-  LayoutDashboard,
-  ArrowLeftRight,
-  ChartColumn,
-  PiggyBank,
-  MessageCircle,
-  Settings,
-  Plus,
-  LogOut,
-  Sun,
-  Moon,
-  Keyboard,
-  ArrowUpRight,
-} from 'lucide-react';
+import { Plus, LogOut, Sun, Moon, Keyboard, ArrowUpRight, Ellipsis } from 'lucide-react';
 import { Logo, LogoMark } from '../brand/Logo.jsx';
 import { Button, Dialog } from '../ui/primitives.jsx';
 import { Avatar } from '../ui/Avatar.jsx';
@@ -22,18 +9,12 @@ import { useTheme } from '../../app/theme.jsx';
 import { useLogout, useMe } from '../../api/hooks.js';
 import { useHotkeys } from '../../hooks/useHotkeys.js';
 import { TransactionDialog } from '../../features/transactions/TransactionDialog.jsx';
-import { CopilotLauncher } from '../../features/assistant/CopilotDrawer.jsx';
+import { CopilotLauncher, CopilotProvider } from '../../features/assistant/CopilotDrawer.jsx';
 import { AccountMenu } from './AccountMenu.jsx';
+import { SidebarNav } from './SidebarNav.jsx';
+import { MoreSheet } from './MoreSheet.jsx';
+import { MOBILE_TABS, SETTINGS_ITEM } from './nav.js';
 import { InstallButton } from '../../pwa/InstallButton.jsx';
-
-const NAV = [
-  { to: '/', label: 'Overview', icon: LayoutDashboard, end: true },
-  { to: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { to: '/analytics', label: 'Analytics', icon: ChartColumn },
-  { to: '/budgets', label: 'Budgets', icon: PiggyBank },
-  { to: '/copilot', label: 'Copilot', icon: MessageCircle },
-  { to: '/settings', label: 'Settings', icon: Settings },
-];
 
 const SHORTCUTS = [
   ['N', 'Add an expense'],
@@ -81,13 +62,13 @@ function Sidebar({ onAdd, onShortcuts }) {
 
   return (
     <div className="rail hidden bg-rail text-rail-ink lg:block">
-      <aside className="sticky top-0 flex h-dvh flex-col px-4 py-6">
+      <aside className="sticky top-0 flex h-dvh flex-col px-4 py-5">
         <div className="flex items-center justify-between pl-2">
           <Logo textClassName="text-rail-ink" />
           <ThemeToggle className="text-rail-ink-2 hover:bg-white/10 hover:text-rail-ink" />
         </div>
 
-        <div className="mt-8 flex flex-col gap-2">
+        <div className="mt-6 flex flex-col gap-2">
           <Button className="w-full justify-between !bg-thread !text-[#2a1c00] hover:!brightness-105" onClick={() => onAdd('expense')} title="Shortcut: N">
             <span className="inline-flex items-center gap-2">
               <Plus size={18} aria-hidden />
@@ -104,33 +85,21 @@ function Sidebar({ onAdd, onShortcuts }) {
           </Button>
         </div>
 
-        <nav aria-label="Main" className="mt-6 flex flex-col gap-0.5">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                clsx(
-                  'relative flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-[0.9375rem] font-medium transition-[background-color,color,transform] duration-200',
-                  isActive
-                    ? 'rail-active bg-rail-2 text-white'
-                    : 'text-rail-ink-2 hover:translate-x-0.5 hover:bg-white/6 hover:text-rail-ink',
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && <span aria-hidden className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-thread" />}
-                  <Icon size={19} aria-hidden />
-                  {label}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
+        <SidebarNav />
 
-        <div className="mt-auto">
+        <div className="mt-2 shrink-0">
+          <NavLink
+            to={SETTINGS_ITEM.to}
+            className={({ isActive }) =>
+              clsx(
+                'mb-1 flex items-center gap-3 rounded-[10px] px-3 py-2 text-[0.9375rem] font-medium transition-colors',
+                isActive ? 'bg-rail-2 text-white' : 'text-rail-ink-2 hover:bg-white/6 hover:text-rail-ink',
+              )
+            }
+          >
+            <SETTINGS_ITEM.icon size={18} aria-hidden />
+            {SETTINGS_ITEM.label}
+          </NavLink>
           <InstallButton className="mb-1 text-thread hover:bg-white/8" />
           <button
             type="button"
@@ -182,30 +151,22 @@ function MobileTopbar({ onAdd }) {
   );
 }
 
-function MobileTabBar() {
-  const items = NAV.filter((n) => n.to !== '/settings');
+function MobileTabBar({ onMore }) {
+  const { pathname } = useLocation();
+  const onTab = MOBILE_TABS.some((t) => (t.end ? pathname === t.to : pathname === t.to || pathname.startsWith(`${t.to}/`)));
+  const tabClass = (active) => clsx('flex flex-col items-center gap-0.5 py-2 text-[0.6875rem] font-medium', active ? 'text-brand' : 'text-ink-3');
+  const pill = (active) =>
+    clsx('flex h-7 w-12 items-center justify-center rounded-full transition-[background-color,transform] duration-200', active ? 'scale-105 bg-brand-soft shadow-inset' : 'active:scale-90');
   return (
     <nav
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 bg-surface/90 pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_0_var(--line),0_-10px_24px_-14px_rgb(21_27_51/0.3)] backdrop-blur-md lg:hidden"
     >
-      {items.map(({ to, label, icon: Icon, end }) => (
-        <NavLink
-          key={to}
-          to={to}
-          end={end}
-          className={({ isActive }) =>
-            clsx('flex flex-col items-center gap-0.5 py-2 text-[0.6875rem] font-medium', isActive ? 'text-brand' : 'text-ink-3')
-          }
-        >
+      {MOBILE_TABS.map(({ to, label, icon: Icon, end }) => (
+        <NavLink key={to} to={to} end={end} className={({ isActive }) => tabClass(isActive)}>
           {({ isActive }) => (
             <>
-              <span
-                className={clsx(
-                  'flex h-7 w-12 items-center justify-center rounded-full transition-[background-color,transform] duration-200',
-                  isActive ? 'scale-105 bg-brand-soft shadow-inset' : 'active:scale-90',
-                )}
-              >
+              <span className={pill(isActive)}>
                 <Icon size={20} aria-hidden />
               </span>
               {label}
@@ -213,6 +174,12 @@ function MobileTabBar() {
           )}
         </NavLink>
       ))}
+      <button type="button" onClick={onMore} aria-haspopup="dialog" className={tabClass(!onTab)}>
+        <span className={pill(!onTab)}>
+          <Ellipsis size={20} aria-hidden />
+        </span>
+        More
+      </button>
     </nav>
   );
 }
@@ -235,6 +202,7 @@ function ShortcutsDialog({ open, onClose }) {
 export function AppShell() {
   const [dialog, setDialog] = useState({ open: false, editing: null, type: 'expense', date: undefined });
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const location = useLocation();
   const [params, setParams] = useSearchParams();
 
@@ -263,6 +231,7 @@ export function AppShell() {
   );
 
   return (
+    <CopilotProvider>
     <QuickAddContext.Provider value={quickAdd}>
       <div className="min-h-dvh lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
         <a
@@ -280,7 +249,7 @@ export function AppShell() {
             </div>
           </main>
         </div>
-        <MobileTabBar />
+        <MobileTabBar onMore={() => setMoreOpen(true)} />
         {location.pathname !== '/copilot' && <CopilotLauncher />}
       </div>
       <TransactionDialog
@@ -291,7 +260,9 @@ export function AppShell() {
         onClose={() => setDialog((d) => ({ ...d, open: false }))}
       />
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <MoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
     </QuickAddContext.Provider>
+    </CopilotProvider>
   );
 }
 

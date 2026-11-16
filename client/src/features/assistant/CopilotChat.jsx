@@ -100,7 +100,7 @@ function Message({ message, onConfirm, onCancel, busyId }) {
 }
 
 /** Conversation with Kosha Copilot: used on the Copilot page and in the drawer. */
-export function CopilotChat({ compact = false, className }) {
+export function CopilotChat({ compact = false, className, initialPrompt, onPromptConsumed }) {
   const { data: history = [], isLoading } = useAssistantHistory();
   const { data: status } = useAssistantStatus();
   const send = useSendMessage();
@@ -115,6 +115,21 @@ export function CopilotChat({ compact = false, className }) {
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
   }, [history.length, send.isPending]);
+
+  // Another page can hand Copilot a question to answer straight away. It is sent once, after the history has loaded.
+  const askedRef = useRef(null);
+  useEffect(() => {
+    const message = initialPrompt?.trim();
+    if (!message) {
+      askedRef.current = null;
+      return;
+    }
+    if (isLoading || askedRef.current === message) return;
+    askedRef.current = message;
+    send.mutate(message, { onError: (err) => toast.error(err.message) });
+    onPromptConsumed?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialPrompt, isLoading]);
 
   const submit = (value) => {
     const message = value.trim();
