@@ -332,10 +332,30 @@ async function main() {
       }
 
       if (want('discussions')) {
-        await a.goto(`${BASE}/discussions`);
-        await settle(a, 1200);
-        await hideLauncher();
-        await shot(a, 'discussions');
+        // A throwaway member writes a few realistic posts, is photographed, then deletes the account (and with it, the posts).
+        const sctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light', locale: 'en-IN', reducedMotion: 'reduce' });
+        const password = 'showcase2026';
+        const email = `showcase-${Date.now()}@kosha.test`;
+        const reg = await sctx.request.post(`${BASE}/api/v1/auth/register`, { data: { name: 'Priya Nair', email, password, acceptedTerms: true } });
+        if (!reg.ok()) throw new Error(`Could not create the showcase member (${reg.status()})`);
+        const make = async (space, title, body) => (await (await sctx.request.post(`${BASE}/api/v1/community/posts`, { data: { space, title, body } })).json()).id;
+        const first = await make('stocks', 'How do I read a P/E ratio?', 'I keep seeing P/E on every stock page. What is a sensible way to read it, and should I compare it with other companies?');
+        await make('funds', 'SIP or lump sum for a ten-year goal?', 'I can save 10,000 a month and I also have a bonus coming. Which approach do people usually prefer, and why?');
+        await make('safety', 'A caller said they sent me money by mistake', 'They asked me to send it back from my UPI app. It felt off, so I did not. Has anyone seen this one?');
+        await make('saving', 'How big an emergency fund with a home-loan EMI?', 'My essentials come to about 45,000 a month including the EMI. Is six months enough, or should I keep more?');
+        await sctx.request.post(`${BASE}/api/v1/community/comments`, { data: { kind: 'post', target: first, body: 'Compare it with companies in the same industry and with its own history, and remember a low P/E is not automatically cheap.' } });
+        await sctx.request.put(`${BASE}/api/v1/community/reactions`, { data: { kind: 'post', target: first, value: 'like' } });
+        const dp = await sctx.newPage();
+        await dp.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+        await dp.goto(`${BASE}/discussions`);
+        await settle(dp, 1500);
+        await dp.addStyleTag({ content: '[data-copilot-launcher]{display:none!important}' });
+        await shot(dp, 'discussions');
+        await dp.goto(`${BASE}/discussions/${first}`);
+        await settle(dp, 1500);
+        await shot(dp, 'post');
+        await sctx.request.delete(`${BASE}/api/v1/auth/me`, { data: { password } });
+        await sctx.close();
       }
 
       if (want('markets')) {

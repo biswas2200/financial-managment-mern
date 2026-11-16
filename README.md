@@ -181,10 +181,20 @@ Development followed test-driven development: each feature started with a failin
 
 | Suite | Tests | Notes |
 |---|---|---|
-| shared | 79 | money parsing and formatting, IST dates, validation schemas, phone, date of birth, avatar and balance rules |
-| server | 184 | unit (parser, intents, Gemini loop and sign-in, seed) and API integration against MongoDB: profile, consent, balance, account deletion |
-| client | 171 | API client, filters, forms, dropdown, month picker, calendar, balance dialog, avatar and date-of-birth inputs, policy pages, menus, hotkeys, 3D tilt and count-up, PWA |
-| e2e | 43 | sign-up and consent, CRUD and dashboard totals, filters, undo, Copilot confirm, budgets and custom categories, months and days, balance, profile, phone layout |
+| shared | 109 | money, IST dates, validation schemas, phone, date of birth, avatar, balance, community rules (domains, post and comment limits, ids written one way, invisible characters, `formatCount` that never goes below zero), watchlist |
+| server | 412 | unit (parser, intents, Gemini loop, NSE and AMFI parsing, return maths, the market service with fake files, caching and eviction, article content, Copilot tools) and API integration against MongoDB: auth, profile, balance, transactions, budgets, community (reactions under concurrency, cascade deletes), learn, markets, watchlist, Copilot |
+| client | 405 | forms, dropdown, month picker, calendar, reactions, Reader, article reader, comments, discussions, every Markets screen, sidebar and More sheet, Copilot drawer and cards, the landing page and sketch generators, auth gate and offline screen, route errors, service worker, manifest |
+| e2e | 102 | real browser against the real server: sign-up and consent, CRUD, budgets, Copilot, months and days, balance, profile, settings pages, landing and the live sketch, Learn (shared like/dislike counts, comments), Discussions, Markets with live NSE and AMFI data and honest failures, watchlist, Copilot with guides and no advice, sidebar at laptop heights, phone More sheet, no sideways scroll on any page, installed app (offline, caches) |
+
+The market and community suites never touch the network: the market service is given fake NSE and AMFI files. The browser
+suite does use the real sources, and skips the tests that need numbers if they cannot be reached.
+
+**Independent review.** Once the features were done, a separate reviewer agent audited everything since the previous release
+for security, correctness, accessibility, the installed app, animation cost and a fresh-account walkthrough, and
+re-ran every suite. It found no security hole or data leak, but it did find real defects (a reaction rule that an
+upper-case id could bypass, search that returned the wrong company, links hidden by the sidebar on laptop heights,
+a crash after an update, market data that did not reach an offline user, shortcuts firing inside modals, Copilot
+routing mistakes, unbounded caches). Each became a failing test first and was then fixed.
 
 ## Project structure
 
@@ -234,6 +244,13 @@ All routes are under `/api/v1` and return JSON; everything except `/auth` needs 
 | ![Month picker](docs/report/screenshots/month-picker.png) | ![A month before sign-up](docs/report/screenshots/before-account.png) |
 | ![A day's spending](docs/report/screenshots/day-detail.png) | ![Settings](docs/report/screenshots/settings.png) |
 | ![Sign up with consent](docs/report/screenshots/register.png) | ![Privacy Policy](docs/report/screenshots/privacy.png) |
+| ![Landing page](docs/report/screenshots/landing.png) | ![Landing page, dark](docs/report/screenshots/landing-dark.png) |
+| ![Sign in beside the sketch](docs/report/screenshots/login.png) | ![Markets](docs/report/screenshots/markets.png) |
+| ![A stock](docs/report/screenshots/stock.png) | ![A mutual fund](docs/report/screenshots/fund.png) |
+| ![Mutual funds](docs/report/screenshots/funds.png) | ![Learn](docs/report/screenshots/learn.png) |
+| ![An article](docs/report/screenshots/article.png) | ![Discussions](docs/report/screenshots/discussions.png) |
+| ![A post with comments](docs/report/screenshots/post.png) | ![Categories settings](docs/report/screenshots/settings-categories.png) |
+| ![Phone: markets](docs/report/screenshots/mobile-markets.png) | ![Phone: More sheet](docs/report/screenshots/mobile-more.png) |
 
 ## Troubleshooting
 
