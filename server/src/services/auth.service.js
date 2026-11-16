@@ -6,6 +6,7 @@ import { Budget } from '../models/Budget.js';
 import { AssistantMessage } from '../models/AssistantMessage.js';
 import { ApiError } from '../utils/ApiError.js';
 import { seedDefaultCategories } from './category.service.js';
+import { removeMemberContent } from './community.service.js';
 
 export async function register({ name, email, password, phone, dateOfBirth }) {
   if (await User.exists({ email })) {
@@ -68,6 +69,7 @@ export async function deleteAccount(userId, { password }) {
     Budget.deleteMany({ user: user._id }),
     Category.deleteMany({ user: user._id }),
     AssistantMessage.deleteMany({ user: user._id }),
+    removeMemberContent(user._id),
   ]);
   await user.deleteOne();
 }

@@ -7,6 +7,8 @@ import transactionRoutes from './transaction.routes.js';
 import budgetRoutes from './budget.routes.js';
 import balanceRoutes from './balance.routes.js';
 import analyticsRoutes from './analytics.routes.js';
+import communityRoutes from './community.routes.js';
+import learnRoutes from './learn.routes.js';
 import { assistantRoutes } from './assistant.routes.js';
 
 /** Mounts every /api/v1 resource. Everything except /auth requires a session. */
@@ -19,6 +21,8 @@ export function createApiRouter(options = {}) {
   router.use('/budgets', requireAuth, budgetRoutes);
   router.use('/analytics', requireAuth, analyticsRoutes);
   router.use('/balance', requireAuth, balanceRoutes);
+  router.use('/learn', requireAuth, learnRoutes);
+  router.use('/community', requireAuth, communityRoutes);
   router.use('/assistant', requireAuth, assistantRoutes(createAgent(options.assistant)));
 
   return router;
