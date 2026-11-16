@@ -7,8 +7,9 @@ const reader = (page) => page.getByRole('dialog', { name: /emergency fund/i });
 
 // Likes and comments on an article are shared by everyone, so these tests read the numbers they start from
 // and check how they change, instead of assuming a clean database.
-const likeButton = (d) => d.getByRole('button', { name: /^Like, \d/ });
-const dislikeButton = (d) => d.getByRole('button', { name: /^Dislike, \d/ });
+// The article's own buttons come first; the comments under it (some written by sample members) have their own.
+const likeButton = (d) => d.getByRole('button', { name: /^Like, \d/ }).first();
+const dislikeButton = (d) => d.getByRole('button', { name: /^Dislike, \d/ }).first();
 const num = async (button) => Number((await button.getAttribute('aria-label')).split(', ')[1]);
 const read = async (d) => ({ likes: await num(likeButton(d)), dislikes: await num(dislikeButton(d)) });
 const commentCount = async (d) => Number((await d.getByRole('heading', { name: /^Comments \(\d+\)$/ }).textContent()).match(/\d+/)[0]);

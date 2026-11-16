@@ -6,7 +6,7 @@ test.describe('Copilot and budgets', () => {
     await registerNewUser(page);
     await page.getByRole('link', { name: 'Copilot' }).first().click();
 
-    await page.getByLabel('Message Copilot').fill('Spent 300 on Uber yesterday');
+    await page.getByLabel('Message Copilot').fill('Spent 300 on Uber yesterday, category Transport');
     await page.keyboard.press('Enter');
 
     const confirm = page.getByRole('button', { name: 'Confirm' });

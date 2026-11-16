@@ -112,9 +112,9 @@ test.describe('Phone: tab bar and the More sheet', () => {
     await registerNewUser(page);
     await page.getByRole('navigation', { name: 'Main' }).getByRole('button', { name: 'More' }).click();
     const sheet = page.getByRole('dialog', { name: 'More' });
-    expect(await sheet.evaluate((el) => el.scrollHeight <= el.clientHeight)).toBe(true); // all of it fits on a 390x844 phone
+    await expect.poll(() => sheet.evaluate((el) => el.scrollHeight <= el.clientHeight)).toBe(true); // all of it fits on a 390x844 phone
     await page.setViewportSize({ width: 360, height: 560 });
-    expect(await sheet.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+    await expect.poll(() => sheet.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true); // the layout needs a moment to follow the resize
     const title = sheet.getByRole('heading', { name: 'More' });
     const before = (await title.boundingBox()).y;
     await sheet.evaluate((el) => el.scrollTo({ top: 400 }));

@@ -116,8 +116,15 @@ test.describe('Discussions', () => {
     const first = page.getByRole('link', { name: `First question here ${stamp}` }).locator('xpath=ancestor::article');
     await first.getByRole('button', { name: 'Like, 0', exact: true }).click();
     await expect(first.getByRole('button', { name: 'Like, 1', exact: true })).toBeVisible();
-    const order = async () =>
-      page.getByRole('article').evaluateAll((els, s) => els.map((el) => el.textContent).map((t) => (t.includes(`First question here ${s}`) ? 'first' : t.includes(`Second question here ${s}`) ? 'second' : null)).filter(Boolean), stamp);
+    // Sample discussions with many likes come first, so keep loading until both of ours are on the page.
+    const showMore = page.getByRole('button', { name: 'Show more posts' });
+    const order = async () => {
+      while (await showMore.isVisible()) {
+        await showMore.click();
+        await page.waitForTimeout(300);
+      }
+      return page.getByRole('article').evaluateAll((els, s) => els.map((el) => el.textContent).map((t) => (t.includes(`First question here ${s}`) ? 'first' : t.includes(`Second question here ${s}`) ? 'second' : null)).filter(Boolean), stamp);
+    };
 
     await page.getByText('Most liked').click();
     await expect.poll(order).toEqual(['first', 'second']);
