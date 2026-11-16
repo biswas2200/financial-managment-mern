@@ -28,3 +28,6 @@ Thumbs.db
 # report build scratch
 docs/report/.tmp/
 ~$*.docx
+
+# LibreOffice lock files
+.~lock.*#
