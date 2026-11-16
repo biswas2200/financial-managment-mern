@@ -157,6 +157,55 @@ describe('Nifty 50 list', () => {
   });
 });
 
+describe('stock search puts the company you mean first', () => {
+  const EXTRA = [
+    { symbol: 'SBIN', name: 'STATE BANK OF INDIA', isin: 'INE062A01020', industry: 'Financial Services', nifty50: true, base: 800, slope: 0, jump: 0, volume: 9_000_000 },
+    { symbol: 'SBILIFE', name: 'SBI LIFE INSURANCE COMPANY LTD', isin: 'INE123W01016', industry: 'Financial Services', nifty50: true, base: 1500, slope: 0, jump: 0, volume: 800_000 },
+    { symbol: 'SBICARD', name: 'SBI CARDS AND PAYMENT SERVICES LTD', isin: 'INE018E01016', industry: 'Financial Services', nifty50: false, base: 700, slope: 0, jump: 0, volume: 700_000 },
+    { symbol: 'SBIETF', name: 'SBI NIFTY 50 ETF', isin: 'INF200K01RO2', industry: null, nifty50: false, base: 250, slope: 0, jump: 0, volume: 60_000 },
+    { symbol: 'LT', name: 'LARSEN & TOUBRO LTD', isin: 'INE018A01030', industry: 'Construction', nifty50: true, base: 3600, slope: 0, jump: 0, volume: 1_500_000 },
+    { symbol: 'LTF', name: 'L&T FINANCE LTD', isin: 'INE498L01015', industry: 'Financial Services', nifty50: false, base: 260, slope: 0, jump: 0, volume: 2_000_000 },
+    { symbol: 'LTTS', name: 'L&T TECHNOLOGY SERVICES LTD', isin: 'INE010V01017', industry: 'IT', nifty50: false, base: 4200, slope: 0, jump: 0, volume: 120_000 },
+  ];
+  const svc = () => make({}, { nse: fakeNse({ extra: EXTRA }) }).service;
+
+  it('ranks by how well the symbol matches, then Nifty 50 membership, then how much was traded', async () => {
+    expect((await svc().searchStocks('sbi')).map((s) => s.symbol)).toEqual(['SBIN', 'SBILIFE', 'SBICARD', 'SBIETF']);
+  });
+
+  it('puts an exact symbol before longer symbols that start the same way', async () => {
+    const r = await svc().searchStocks('lt');
+    expect(r[0].symbol).toBe('LT');
+    expect(r.map((s) => s.symbol)).toEqual(expect.arrayContaining(['LTF', 'LTTS']));
+  });
+
+  it('understands the names people actually use for the biggest companies', async () => {
+    expect((await svc().searchStocks('l&t'))[0].symbol).toBe('LT');
+    expect((await svc().searchStocks('larsen'))[0].symbol).toBe('LT');
+    expect((await svc().searchStocks('sbi'))[0].symbol).toBe('SBIN');
+  });
+
+  it('puts matches inside a company name after matches on its symbol', async () => {
+    const r = await svc().searchStocks('bank');
+    expect(r.map((s) => s.symbol)).toContain('SBIN');
+  });
+});
+
+describe('fund search puts the scheme you named first', () => {
+  const NEXT50 = { code: 143341, name: 'UTI Nifty Next 50 Index Fund - Direct Plan - Growth', house: 'UTI Mutual Fund', category: 'Other Scheme - Index Funds', growth: 0.0003, since: '2018-01-02' };
+  const svc = () => make({}, { mf: fakeMf({ extra: [NEXT50] }) }).service;
+
+  it('prefers a name that contains everything you typed, in order, over one that merely has the same words', async () => {
+    const r = await svc().searchFunds('uti nifty 50 index fund');
+    expect(r.map((f) => f.code)).toEqual([120716, 143341]);
+  });
+
+  it('still finds the close matches after the exact one', async () => {
+    const r = await svc().searchFunds('uti nifty index');
+    expect(r.map((f) => f.code)).toEqual(expect.arrayContaining([120716, 143341]));
+  });
+});
+
 describe('indices', () => {
   it('shows the level, valuation and returns including 3 and 5 years annualised', async () => {
     const d = await make().service.indexDetail('nifty 50');

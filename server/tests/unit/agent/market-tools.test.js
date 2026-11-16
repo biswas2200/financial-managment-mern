@@ -79,6 +79,36 @@ describe('Copilot market tools', () => {
   });
 });
 
+describe('Copilot looks up the company or fund you meant', () => {
+  const EXTRA = [
+    { symbol: 'SBIN', name: 'STATE BANK OF INDIA', isin: 'INE062A01020', industry: 'Financial Services', nifty50: true, base: 800, slope: 0, jump: 0, volume: 9_000_000 },
+    { symbol: 'SBIETF', name: 'SBI NIFTY 50 ETF', isin: 'INF200K01RO2', industry: null, nifty50: false, base: 250, slope: 0, jump: 0, volume: 60_000 },
+    { symbol: 'LT', name: 'LARSEN & TOUBRO LTD', isin: 'INE018A01030', industry: 'Construction', nifty50: true, base: 3600, slope: 0, jump: 0, volume: 1_500_000 },
+    { symbol: 'LTF', name: 'L&T FINANCE LTD', isin: 'INE498L01015', industry: 'Financial Services', nifty50: false, base: 260, slope: 0, jump: 0, volume: 2_000_000 },
+  ];
+  const NEXT50 = { code: 143341, name: 'UTI Nifty Next 50 Index Fund - Direct Plan - Growth', house: 'UTI Mutual Fund', category: 'Other Scheme - Index Funds', growth: 0.0003, since: '2018-01-02' };
+  const ex = () => executor({ nse: fakeNse({ extra: EXTRA }), mf: fakeMf({ extra: [NEXT50] }) });
+
+  it('picks State Bank of India for "sbi" and Larsen & Toubro for "l&t", and mentions the other matches', async () => {
+    const sbi = await ex().run('get_stock', { query: 'sbi' });
+    expect(sbi.result).toMatchObject({ symbol: 'SBIN', name: 'STATE BANK OF INDIA' });
+    expect(sbi.result.other_matches).toEqual(['SBIETF: SBI NIFTY 50 ETF']);
+    expect((await ex().run('get_stock', { query: 'l&t' })).result.symbol).toBe('LT');
+  });
+
+  it('picks the fund whose name holds what you typed, and lists the near misses', async () => {
+    const r = await ex().run('get_fund', { query: 'uti nifty 50 index fund' });
+    expect(r.result.name).toBe(FUNDS[0].name);
+    expect(r.result.other_matches).toEqual([NEXT50.name]);
+    expect(r.result.matched_exactly).toBe(true);
+  });
+
+  it('says when it is guessing the closest match', async () => {
+    const r = await ex().run('get_fund', { query: 'uti nifty index' });
+    expect(r.result.matched_exactly).toBe(false);
+  });
+});
+
 describe('Copilot system prompt', () => {
   const prompt = buildSystemPrompt({ user: { name: 'Meera Iyer' }, categories: [], now: NOW_MONDAY_MORNING });
 

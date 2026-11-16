@@ -55,8 +55,8 @@ export function bhavZip(day, rows) {
   return Buffer.from(zipSync({ [`BhavCopy_NSE_CM_0_0_0_${day.replaceAll('-', '')}_F_0000.csv`]: strToU8(csv) }));
 }
 
-export const stocksOn = (day) =>
-  STOCKS.map((s) => {
+export const stocksOn = (day, extra = []) =>
+  [...STOCKS, ...extra].map((s) => {
     const close = stockClose(s, day);
     return { ...s, series: 'EQ', open: close, high: close + 1, low: close - 1, close, prevClose: stockPrevClose(s, day) };
   });
@@ -83,7 +83,7 @@ const constituents = (list) =>
  * A stand-in for the downloader. `files` lists the days that have been published; a weekday not in it behaves
  * like a market holiday (404). `calls` records every URL asked for.
  */
-export function fakeNse({ publishedFrom = '2021-01-01', published = new Set(), skip = new Set(), fail = false, failWith = 403 } = {}) {
+export function fakeNse({ publishedFrom = '2021-01-01', published = new Set(), skip = new Set(), fail = false, failWith = 403, extra = [], lateBhav = new Set() } = {}) {
   const calls = [];
   const has = (day) => !isWeekend(day) && day >= publishedFrom && !skip.has(day) && (day <= LATEST || published.has(day));
   const fetchBuffer = async (url) => {
@@ -101,10 +101,10 @@ export function fakeNse({ publishedFrom = '2021-01-01', published = new Set(), s
     m = url.match(/BhavCopy_NSE_CM_0_0_0_(\d{4})(\d{2})(\d{2})_F_0000\.csv\.zip$/);
     if (m) {
       const day = `${m[1]}-${m[2]}-${m[3]}`;
-      return has(day) ? bhavZip(day, [...stocksOn(day), { symbol: 'XYZ', name: 'XYZ BONDS', isin: 'INE000X01009', series: 'BE', open: 10, high: 10, low: 10, close: 10, prevClose: 9, volume: 10 }]) : null;
+      return has(day) && !lateBhav.has(day) ? bhavZip(day, [...stocksOn(day, extra), { symbol: 'XYZ', name: 'XYZ BONDS', isin: 'INE000X01009', series: 'BE', open: 10, high: 10, low: 10, close: 10, prevClose: 9, volume: 10 }]) : null;
     }
-    if (url.endsWith('ind_nifty50list.csv')) return constituents(STOCKS.filter((s) => s.nifty50));
-    if (url.endsWith('ind_nifty500list.csv')) return constituents(STOCKS);
+    if (url.endsWith('ind_nifty50list.csv')) return constituents([...STOCKS, ...extra].filter((s) => s.nifty50));
+    if (url.endsWith('ind_nifty500list.csv')) return constituents([...STOCKS, ...extra]);
     throw new Error(`Unexpected URL in test: ${url}`);
   };
   return { fetchBuffer, calls, published };
@@ -135,19 +135,21 @@ export function fundSeries(fund) {
   return out; // newest first, like the real service
 }
 
-export function fakeMf({ fail = false, missing = new Set() } = {}) {
+export function fakeMf({ fail = false, missing = new Set(), extra = [] } = {}) {
+  const all = [...FUNDS, ...extra];
   const calls = [];
   const fetchJson = async (url) => {
     calls.push(url);
     if (fail) throw Object.assign(new Error('mfapi down'), { status: 503 });
     const search = url.match(/\/mf\/search\?q=(.*)$/);
     if (search) {
-      const q = decodeURIComponent(search[1]).toLowerCase();
-      return FUNDS.filter((f) => f.name.toLowerCase().includes(q)).map((f) => ({ schemeCode: f.code, schemeName: f.name }));
+      // Like the real service: every word must appear somewhere in the name.
+      const words = decodeURIComponent(search[1]).toLowerCase().split(/\s+/).filter(Boolean);
+      return all.filter((f) => words.every((w) => f.name.toLowerCase().includes(w))).map((f) => ({ schemeCode: f.code, schemeName: f.name }));
     }
     const one = url.match(/\/mf\/(\d+)$/);
     if (one) {
-      const fund = FUNDS.find((f) => String(f.code) === one[1]);
+      const fund = all.find((f) => String(f.code) === one[1]);
       if (!fund || missing.has(fund.code)) return { status: 'ERROR', data: [] };
       return {
         meta: { fund_house: fund.house, scheme_type: 'Open Ended Schemes', scheme_category: fund.category, scheme_code: fund.code, scheme_name: fund.name },
