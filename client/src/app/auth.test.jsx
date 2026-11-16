@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { RequireAuth, GuestOnly } from './auth.jsx';
 
@@ -54,6 +55,40 @@ describe('RequireAuth', () => {
     renderAt('/', <p>Landing page</p>);
     expect(screen.getByRole('status', { name: 'Loading Kosha' })).toBeInTheDocument();
     expect(screen.queryByText('Landing page')).not.toBeInTheDocument();
+  });
+});
+
+describe('RequireAuth when the server cannot be reached', () => {
+  const networkError = Object.assign(new Error("Can't reach the Kosha server."), { status: 0, code: 'NETWORK_ERROR' });
+
+  it('does not mistake being offline for being signed out: it says so and offers to try again', async () => {
+    const refetch = vi.fn();
+    me = { data: undefined, isLoading: false, error: networkError, refetch };
+    renderAt('/', <p>Landing page</p>);
+    expect(screen.getByRole('heading', { name: /you're offline/i })).toBeInTheDocument();
+    expect(screen.queryByText('Landing page')).not.toBeInTheDocument();
+    expect(screen.queryByText('Login page')).not.toBeInTheDocument();
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Try again' }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  it('does the same on any other page, instead of sending someone to sign in', () => {
+    me = { data: undefined, isLoading: false, error: networkError, refetch: vi.fn() };
+    renderAt('/budgets');
+    expect(screen.getByRole('heading', { name: /you're offline/i })).toBeInTheDocument();
+    expect(screen.queryByText('Login page')).not.toBeInTheDocument();
+  });
+
+  it('still treats a real "not signed in" answer as signed out', () => {
+    me = { data: undefined, isLoading: false, error: Object.assign(new Error('Please sign in'), { status: 401 }), refetch: vi.fn() };
+    renderAt('/budgets');
+    expect(screen.getByText('Login page')).toBeInTheDocument();
+  });
+
+  it('keeps showing the app if you drop offline after signing in', () => {
+    me = { data: { id: 'u1' }, isLoading: false, error: networkError, refetch: vi.fn() };
+    renderAt('/');
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
 });
 
