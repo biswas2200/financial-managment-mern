@@ -16,6 +16,8 @@ import { Category } from '../src/models/Category.js';
 import { Transaction } from '../src/models/Transaction.js';
 import { Budget } from '../src/models/Budget.js';
 import { AssistantMessage } from '../src/models/AssistantMessage.js';
+import { WatchlistItem } from '../src/models/WatchlistItem.js';
+import { removeMemberContent } from '../src/services/community.service.js';
 import { seedDefaultCategories } from '../src/services/category.service.js';
 import { generateTransactions, generateBudgets } from '../src/seed/generator.js';
 
@@ -33,6 +35,8 @@ async function removeUser(email) {
     Budget.deleteMany({ user: user._id }),
     Category.deleteMany({ user: user._id }),
     AssistantMessage.deleteMany({ user: user._id }),
+    WatchlistItem.deleteMany({ user: user._id }),
+    removeMemberContent(user._id), // their posts, comments and likes, so none are left pointing at a missing person
   ]);
   await user.deleteOne();
 }

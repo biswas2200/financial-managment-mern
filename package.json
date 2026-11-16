@@ -19,6 +19,7 @@
     "db:dump": "bash server/scripts/dump.sh",
     "seed": "npm run seed -w server --",
     "seed:fresh": "npm run seed -w server -- --fresh",
+    "seed:community": "npm run seed:community -w server",
     "dev": "concurrently -k -n api,web -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
     "dev:lan": "concurrently -k -n api,web -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w client -- --host\"",
     "pwa": "npm run build && concurrently -k -n api,web -c cyan,magenta \"npm run dev -w server\" \"npm run preview -w client -- --host\"",
