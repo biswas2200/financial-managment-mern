@@ -65,7 +65,7 @@ describe('Fund page', () => {
     expect(rows[1]).toHaveTextContent('-2.02%');
     expect(rows[2]).toHaveTextContent('+9.97%');
     expect(rows[2]).toHaveTextContent(/a year/i);
-    expect(screen.getByText(/since launch/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Since launch \(/i)).toBeInTheDocument();
     expect(screen.getByText(/11\.87%/)).toBeInTheDocument();
   });
 
@@ -73,7 +73,7 @@ describe('Fund page', () => {
     renderPage();
     const risk = screen.getByRole('region', { name: 'How bumpy has it been?' });
     expect(risk).toHaveTextContent('38.42%');
-    expect(risk).toHaveTextContent(/fell as much as/i);
+    expect(risk).toHaveTextContent(/fallen as much as/i);
     expect(risk).toHaveTextContent('83.6%');
     expect(risk).toHaveTextContent(/of one-year periods/i);
   });
@@ -82,7 +82,7 @@ describe('Fund page', () => {
     renderPage();
     expect(screen.getByRole('img', { name: /NAV from ₹150\.0000 to ₹179\.0000/ })).toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Table' }));
-    expect(screen.getByRole('table')).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'NAV history' })).toBeInTheDocument();
   });
 
   it('can be watched and explained by Copilot, which is told not to recommend', async () => {

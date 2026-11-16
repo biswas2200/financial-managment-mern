@@ -20,6 +20,13 @@ const LearnPage = lazy(() => import('../features/learn/LearnPage.jsx'));
 const ArticleReader = lazy(() => import('../features/learn/ArticleReader.jsx'));
 const DiscussionsPage = lazy(() => import('../features/discussions/DiscussionsPage.jsx'));
 const PostReader = lazy(() => import('../features/discussions/PostReader.jsx'));
+const MarketsPage = lazy(() => import('../features/markets/MarketsPage.jsx'));
+const StocksPage = lazy(() => import('../features/markets/StocksPage.jsx'));
+const StockDetail = lazy(() => import('../features/markets/StockDetail.jsx'));
+const IndexDetail = lazy(() => import('../features/markets/IndexDetail.jsx'));
+const FundsPage = lazy(() => import('../features/markets/FundsPage.jsx'));
+const FundDetail = lazy(() => import('../features/markets/FundDetail.jsx'));
+const WatchlistPage = lazy(() => import('../features/markets/WatchlistPage.jsx'));
 const SettingsLayout = lazy(() => import('../features/settings/SettingsLayout.jsx'));
 const ProfileSettings = lazy(() => import('../features/settings/ProfileSettings.jsx'));
 const PreferencesSettings = lazy(() => import('../features/settings/PreferencesSettings.jsx'));
@@ -81,6 +88,13 @@ const router = createBrowserRouter([
           { path: 'analytics', element: page(AnalyticsPage) },
           { path: 'budgets', element: page(BudgetsPage) },
           { path: 'copilot', element: page(AssistantPage) },
+          { path: 'markets', element: page(MarketsPage) },
+          { path: 'markets/indices/:name', element: page(IndexDetail) },
+          { path: 'markets/stocks', element: page(StocksPage) },
+          { path: 'markets/stocks/:symbol', element: page(StockDetail) },
+          { path: 'markets/funds', element: page(FundsPage) },
+          { path: 'markets/funds/:code', element: page(FundDetail) },
+          { path: 'markets/watchlist', element: page(WatchlistPage) },
           { path: 'learn', element: page(LearnPage), children: [{ path: ':slug', element: page(ArticleReader) }] },
           { path: 'discussions', element: page(DiscussionsPage), children: [{ path: ':id', element: page(PostReader) }] },
           {

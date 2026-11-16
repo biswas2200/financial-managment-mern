@@ -50,3 +50,20 @@ export function timeAgo(value, now = new Date()) {
   if (days < 7) return `${days} d ago`;
   return dateLong(value);
 }
+
+// ---------- Markets ----------
+
+const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
+const grouped = (v, min, max) => v.toLocaleString('en-IN', { minimumFractionDigits: min, maximumFractionDigits: max });
+
+/** A price in rupees with Indian digit grouping, or a dash when there is none. */
+export const rupees = (v, { decimals = 2 } = {}) => (isNum(v) ? `₹${grouped(v, decimals, decimals)}` : '–');
+
+/** An index level: plain number, two decimals. */
+export const level = (v) => (isNum(v) ? grouped(v, 2, 2) : '–');
+
+/** Value traded, in crore: whole numbers above 100, one decimal above 10, two below. */
+export const crore = (v) => (isNum(v) ? `₹${grouped(v, 0, v >= 100 ? 0 : v >= 10 ? 1 : 2)} Cr` : '–');
+
+/** A whole number with Indian grouping. */
+export const integer = (v) => (isNum(v) ? Math.round(v).toLocaleString('en-IN') : '–');

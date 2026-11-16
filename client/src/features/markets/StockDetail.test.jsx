@@ -57,7 +57,7 @@ describe('Stock page', () => {
     expect(screen.getByText('Oil Gas & Consumable Fuels')).toBeInTheDocument();
     expect(screen.getByText('Nifty 50')).toBeInTheDocument();
     expect(screen.getByText('₹1,339.70')).toBeInTheDocument();
-    expect(screen.getByText('+1.49%').closest('[data-trend]')).toHaveAttribute('data-trend', 'up');
+    expect(screen.getAllByText('+1.49%')[0].closest('[data-trend]')).toHaveAttribute('data-trend', 'up');
     expect(screen.getByText(/as of 13 Nov 2026/i)).toBeInTheDocument();
   });
 
