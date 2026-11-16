@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,42 +7,37 @@ import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
 import { Button, Checkbox, Field, Input } from '../../components/ui/primitives.jsx';
 import { DobInput } from '../../components/ui/DobInput.jsx';
 import { Logo } from '../../components/brand/Logo.jsx';
-import { wavePaths, rosettePath } from '../../components/brand/guilloche.js';
+import { CityScene } from '../../components/brand/sketch/CityScene.jsx';
 
 // Seed-dataset demo account (local development only; see server/scripts/seed.js)
 const DEMO = { email: 'demo@kosha.app', password: 'Demo@1234' };
 
 function BrandPanel() {
-  const art = useMemo(
-    () => ({
-      waves: wavePaths({ width: 600, height: 900, count: 34, step: 8 }),
-      rosette: rosettePath({ cx: 470, cy: 790, R: 130, r: 47, d: 94, turns: 27 }),
-    }),
-    [],
-  );
   return (
-    <div className="relative isolate hidden overflow-hidden bg-note lg:flex lg:flex-col lg:justify-between lg:p-12">
-      <svg viewBox="0 0 600 900" preserveAspectRatio="xMidYMid slice" className="guilloche-draw absolute inset-0 -z-10 h-full w-full" aria-hidden>
-        <g fill="none" stroke="var(--note-line)" strokeWidth="0.7" opacity="0.2">
-          {art.waves.map((d, i) => (
-            <path key={i} d={d} style={{ '--len': 900, animationDelay: `${i * 25}ms` }} />
-          ))}
-        </g>
-        <path d={art.rosette} fill="none" stroke="var(--note-line)" strokeWidth="0.6" opacity="0.35" style={{ '--len': 40000, animationDuration: '2.6s' }} />
-      </svg>
-      <div
-        aria-hidden
-        className="absolute inset-y-0 right-24 -z-10 w-2"
-        style={{ background: 'repeating-linear-gradient(to bottom, var(--thread) 0 22px, color-mix(in oklch, var(--thread) 35%, transparent) 22px 32px)' }}
-      />
-      <Logo size={32} />
-      <div className="max-w-md">
-        <p className="font-wide text-[2.5rem] leading-[1.1] font-semibold tracking-[-0.015em] text-ink">Know where every rupee goes.</p>
-        <p className="mt-4 text-[1.0625rem] text-ink-2">
-          Log income and expenses in seconds, see your month at a glance, and ask Copilot anything about your spending.
-        </p>
+    <div className="relative isolate hidden overflow-hidden lg:block" style={{ '--sk-h': 'clamp(220px, 36vh, 320px)' }}>
+      <CityScene variant="tall" />
+      <div className="relative z-10 flex h-full flex-col p-12">
+        <Logo size={32} />
+        <div className="mt-14 max-w-md">
+          <p className="font-extrawide text-[2.5rem] leading-[1.08] font-bold tracking-[-0.015em] text-ink">Know where every rupee goes.</p>
+          <p className="mt-4 text-[1.0625rem] text-ink-2">
+            Log income and expenses in seconds, see your month at a glance, and ask Copilot anything about your spending.
+          </p>
+        </div>
+        <p className="mt-auto pb-[calc(var(--sk-h)+1.5rem)] text-sm text-ink-2">Your data stays in your own Kosha database.</p>
       </div>
-      <p className="text-sm text-ink-2">Your data stays in your own Kosha database.</p>
+    </div>
+  );
+}
+
+/** A short strip of the skyline above the form on phones, where the side panel is hidden. */
+function MobileBanner() {
+  return (
+    <div className="relative isolate h-[170px] overflow-hidden lg:hidden" style={{ '--sk-h': '128px' }}>
+      <CityScene labels={false} decorative />
+      <div className="relative z-10 p-4">
+        <Logo size={26} />
+      </div>
     </div>
   );
 }
@@ -52,9 +46,9 @@ function AuthLayout({ title, subtitle, children, footer }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <BrandPanel />
-      <main className="flex items-center justify-center px-4 py-10 sm:px-8">
+      <MobileBanner />
+      <main className="flex items-center justify-center px-4 py-8 sm:px-8 lg:py-10">
         <div className="w-full max-w-sm">
-          <Logo size={30} className="mb-10 lg:hidden" />
           <h1 className="font-wide text-[1.875rem] leading-tight font-semibold">{title}</h1>
           <p className="mt-1.5 text-ink-2">{subtitle}</p>
           <div className="mt-8">{children}</div>
@@ -103,6 +97,7 @@ export function LoginPage() {
           Sign in
         </Button>
       </form>
+      {import.meta.env.DEV && (
       <div data-demo-hint className="mt-6 rounded-xl raised bg-surface p-4 text-sm shadow-raise-1">
         <p className="font-semibold">Exploring the project?</p>
         <p className="mt-1 text-ink-2">
@@ -120,6 +115,7 @@ export function LoginPage() {
           Fill in demo account
         </Button>
       </div>
+      )}
     </AuthLayout>
   );
 }

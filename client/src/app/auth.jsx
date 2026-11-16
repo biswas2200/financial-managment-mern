@@ -10,12 +10,18 @@ function Splash() {
   );
 }
 
-/** Only signed-in users get past this point. */
-export function RequireAuth() {
+/**
+ * Only signed-in users get past this point. A visitor at the front door ("/") sees the `landing` page instead,
+ * if there is one; anywhere else they are sent to sign in.
+ */
+export function RequireAuth({ landing }) {
   const { data: user, isLoading } = useMe();
   const location = useLocation();
   if (isLoading) return <Splash />;
-  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!user) {
+    if (landing && location.pathname === '/') return landing;
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
   return <Outlet />;
 }
 

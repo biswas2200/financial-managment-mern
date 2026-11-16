@@ -16,6 +16,7 @@ const TransactionsPage = lazy(() => import('../features/transactions/Transaction
 const AnalyticsPage = lazy(() => import('../features/analytics/AnalyticsPage.jsx'));
 const BudgetsPage = lazy(() => import('../features/budgets/BudgetsPage.jsx'));
 const AssistantPage = lazy(() => import('../features/assistant/AssistantPage.jsx'));
+const LandingPage = lazy(() => import('../features/landing/LandingPage.jsx'));
 const LearnPage = lazy(() => import('../features/learn/LearnPage.jsx'));
 const ArticleReader = lazy(() => import('../features/learn/ArticleReader.jsx'));
 const DiscussionsPage = lazy(() => import('../features/discussions/DiscussionsPage.jsx'));
@@ -78,7 +79,7 @@ const router = createBrowserRouter([
     ],
   },
   {
-    element: <RequireAuth />,
+    element: <RequireAuth landing={page(LandingPage)} />,
     children: [
       {
         element: <AppShell />,

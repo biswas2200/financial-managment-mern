@@ -1,11 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import clsx from 'clsx';
-import { Plus, LogOut, Sun, Moon, Keyboard, ArrowUpRight, Ellipsis } from 'lucide-react';
+import { Plus, LogOut, Keyboard, ArrowUpRight, Ellipsis } from 'lucide-react';
 import { Logo, LogoMark } from '../brand/Logo.jsx';
 import { Button, Dialog } from '../ui/primitives.jsx';
+import { ThemeToggle } from '../ui/ThemeToggle.jsx';
 import { Avatar } from '../ui/Avatar.jsx';
-import { useTheme } from '../../app/theme.jsx';
 import { useLogout, useMe } from '../../api/hooks.js';
 import { useHotkeys } from '../../hooks/useHotkeys.js';
 import { TransactionDialog } from '../../features/transactions/TransactionDialog.jsx';
@@ -38,22 +38,6 @@ export const Kbd = ({ children, className, inverse = false, plain = false }) => 
     {children}
   </kbd>
 );
-
-function ThemeToggle({ className }) {
-  const { resolved, setTheme } = useTheme();
-  const dark = resolved === 'dark';
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className={className}
-      aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
-      onClick={() => setTheme(dark ? 'light' : 'dark')}
-    >
-      {dark ? <Sun size={18} /> : <Moon size={18} />}
-    </Button>
-  );
-}
 
 function Sidebar({ onAdd, onShortcuts }) {
   const { data: user } = useMe();
