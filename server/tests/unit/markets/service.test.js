@@ -146,6 +146,17 @@ describe('stocks', () => {
   });
 });
 
+describe('Nifty 50 list', () => {
+  it('lists every Nifty 50 company with its quote and industry, by symbol', async () => {
+    const r = await make().service.nifty50();
+    expect(r.asOf).toBe(LATEST);
+    expect(r.items.map((s) => s.symbol)).toEqual(['AAA', 'BBB', 'CCC']);
+    expect(r.items[0]).toMatchObject({ name: 'AAA FINANCE LTD', industry: 'Financial Services', close: stockClose(stock('AAA'), LATEST) });
+    expect(r.items[1].changePct).toBeLessThan(0);
+    expect(r.items.every((s) => typeof s.valueCr === 'number')).toBe(true);
+  });
+});
+
 describe('indices', () => {
   it('shows the level, valuation and returns including 3 and 5 years annualised', async () => {
     const d = await make().service.indexDetail('nifty 50');

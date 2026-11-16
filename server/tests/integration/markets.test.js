@@ -16,7 +16,7 @@ describe('Markets API', () => {
   useTestDatabase();
 
   it('needs a session', async () => {
-    for (const path of ['/overview', '/indices/Nifty%2050', '/stocks/search?q=aa', '/stocks/AAA', '/funds/categories', '/funds/top?category=index', '/funds/120716']) {
+    for (const path of ['/overview', '/indices/Nifty%2050', '/stocks/search?q=aa', '/stocks/nifty50', '/stocks/AAA', '/funds/categories', '/funds/top?category=index', '/funds/120716']) {
       await request(app).get(`${api}${path}`).expect(401);
     }
     await request(app).get('/api/v1/watchlist').expect(401);
@@ -43,6 +43,13 @@ describe('Markets API', () => {
     await agent.get(`${api}/stocks/search`).expect(400);
     await agent.get(`${api}/stocks/search?q=a`).expect(400);
     await agent.get(`${api}/stocks/search?q=${'x'.repeat(41)}`).expect(400);
+  });
+
+  it('serves the Nifty 50 list before it treats the word as a symbol', async () => {
+    const { agent } = await signUp(app);
+    const res = await agent.get(`${api}/stocks/nifty50`).expect(200);
+    expect(res.body.asOf).toBe(LATEST);
+    expect(res.body.items.map((s) => s.symbol)).toEqual(['AAA', 'BBB', 'CCC']);
   });
 
   it('serves one stock, accepts lower case, and rejects bad symbols', async () => {
