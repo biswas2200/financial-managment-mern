@@ -289,9 +289,12 @@ describe('Community reactions: likes and dislikes are separate counts and never 
       expect(Number.isInteger(body.likes) && body.likes >= 0, `likes after step ${i}`).toBe(true);
       expect(Number.isInteger(body.dislikes) && body.dislikes >= 0, `dislikes after step ${i}`).toBe(true);
     }
+    // The counts kept on the post (used for "most liked") agree with the reactions actually stored.
     const stored = await mongoose.connection.db.collection('posts').findOne({});
-    expect(stored.likes).toBeGreaterThanOrEqual(0);
-    expect(stored.dislikes).toBeGreaterThanOrEqual(0);
+    const reactions = await mongoose.connection.db.collection('reactions').find({ kind: 'post' }).toArray();
+    expect(stored.likes).toBe(reactions.filter((r) => r.value === 'like').length);
+    expect(stored.dislikes).toBe(reactions.filter((r) => r.value === 'dislike').length);
+    expect(stored.score).toBe(stored.likes - stored.dislikes);
   });
 
   it('reports each viewer their own reaction', async () => {
@@ -326,12 +329,40 @@ describe('Community reactions: likes and dislikes are separate counts and never 
     }
   });
 
-  it('never lets one person react twice by using a second request body shape', async () => {
+  it('keeps one reaction per person per post however many times they switch', async () => {
     const { a, id } = await setup();
     await react(a, 'post', id, 'like').expect(200);
     await react(a, 'post', id, 'dislike').expect(200);
     await react(a, 'post', id, 'like').expect(200);
     expect(await mongoose.connection.db.collection('reactions').countDocuments({ target: id })).toBe(1);
+  });
+
+  it('treats an upper-case spelling of an id as the same post, so a person can never hold two reactions on it', async () => {
+    const { a, id } = await setup();
+    await react(a, 'post', id, 'like').expect(200);
+    const res = await react(a, 'post', id.toUpperCase(), 'dislike').expect(200);
+    expect(res.body).toEqual({ likes: 0, dislikes: 1, myReaction: 'dislike' });
+    expect(await mongoose.connection.db.collection('reactions').countDocuments({ kind: 'post' })).toBe(1);
+    const stored = await mongoose.connection.db.collection('posts').findOne({});
+    expect(stored).toMatchObject({ likes: 0, dislikes: 1 });
+  });
+
+  it('puts a comment written under an upper-case id on the real post, and deletes it with the post', async () => {
+    const { a, id } = await setup();
+    await a.agent.post(`${api}/comments`).send({ kind: 'post', target: id.toUpperCase(), body: 'Counted properly' }).expect(201);
+    const list = await a.agent.get(`${api}/comments?kind=post&target=${id.toUpperCase()}`).expect(200);
+    expect(list.body.items.map((c) => c.body)).toEqual(['Counted properly']);
+    expect((await a.agent.get(`${api}/posts/${id}`).expect(200)).body.commentCount).toBe(1);
+    await a.agent.delete(`${api}/posts/${id}`).expect(204);
+    expect(await mongoose.connection.db.collection('comments').countDocuments()).toBe(0);
+  });
+
+  it('refuses a post or comment target that is not an id', async () => {
+    const { a } = await setup();
+    for (const target of ['abc', '../x', 'zzzzzzzzzzzzzzzzzzzzzzzz']) {
+      await a.agent.put(`${api}/reactions`).send({ kind: 'post', target, value: 'like' }).expect(400);
+      await a.agent.post(`${api}/comments`).send({ kind: 'post', target, body: 'Hi' }).expect(400);
+    }
   });
 });
 

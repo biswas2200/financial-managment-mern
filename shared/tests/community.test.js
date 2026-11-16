@@ -138,3 +138,41 @@ describe('list queries', () => {
     expect(postListQuery.parse({ space: '' }).space).toBeUndefined();
   });
 });
+
+describe('targets: posts and comments are named by a 24-character id, written one way only', () => {
+  const ID = 'a1b2c3d4e5f6a1b2c3d4e5f6';
+
+  it('lower-cases an id so the same post can never be reached under two spellings', () => {
+    for (const schema of [reactionSchema, commentSchema]) {
+      const body = schema === reactionSchema ? { kind: 'post', target: ID.toUpperCase(), value: 'like' } : { kind: 'post', target: ID.toUpperCase(), body: 'Hello' };
+      expect(schema.parse(body).target, schema === reactionSchema ? 'reaction' : 'comment').toBe(ID);
+    }
+    expect(commentListQuery.parse({ kind: 'post', target: ID.toUpperCase() }).target).toBe(ID);
+    expect(reactionSchema.parse({ kind: 'comment', target: ID.toUpperCase(), value: null }).target).toBe(ID);
+  });
+
+  it('rejects a post or comment target that is not an id', () => {
+    for (const target of ['abc', 'g1b2c3d4e5f6a1b2c3d4e5f6', `${ID}0`, ID.slice(1), '../etc/passwd']) {
+      expect(reactionSchema.safeParse({ kind: 'post', target, value: 'like' }).success, target).toBe(false);
+      expect(commentSchema.safeParse({ kind: 'post', target, body: 'Hi' }).success, target).toBe(false);
+    }
+  });
+
+  it('leaves an article slug exactly as it is', () => {
+    expect(reactionSchema.parse({ kind: 'article', target: 'emergency-fund', value: 'like' }).target).toBe('emergency-fund');
+    expect(commentSchema.parse({ kind: 'article', target: 'emergency-fund', body: 'Hi' }).target).toBe('emergency-fund');
+  });
+});
+
+describe('invisible characters', () => {
+  it('are removed from posts, so a title cannot be made of nothing', () => {
+    const ok = { space: 'general', body: 'A body that is long enough to pass.' };
+    expect(postSchema.safeParse({ ...ok, title: '\u200B\u200B\u200B' }).success).toBe(false);
+    expect(postSchema.parse({ ...ok, title: 'Hel\u200Blo there' }).title).toBe('Hello there');
+    expect(postSchema.parse({ ...ok, title: '\u202Ereversed\u202C title' }).title).toBe('reversed title');
+  });
+
+  it('are removed from comments too', () => {
+    expect(commentSchema.safeParse({ kind: 'article', target: 'emergency-fund', body: '\u200B \u200B' }).success).toBe(false);
+  });
+});
