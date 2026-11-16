@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { registerNewUser } from './helpers.js';
+import { CONSENT_GIVEN } from '../consent.js';
 
 test.use({ reducedMotion: 'reduce' });
 
@@ -53,7 +54,7 @@ test.describe('Discussions', () => {
     const mine = page.getByRole('dialog', { name: `SIP or lump sum for ten years? ${stamp}` });
     await expect(mine.getByRole('button', { name: 'Delete post' })).toBeVisible();
 
-    const other = await browser.newContext({ locale: 'en-IN', reducedMotion: 'reduce' });
+    const other = await browser.newContext({ locale: 'en-IN', reducedMotion: 'reduce', storageState: CONSENT_GIVEN });
     const second = await other.newPage();
     await registerNewUser(second, 'Dev Patel');
     await second.goto('/discussions');
@@ -144,7 +145,7 @@ test.describe('Discussions', () => {
     await d.getByRole('button', { name: 'Delete everything' }).click();
     await expect(page).toHaveURL(/\/login$/);
 
-    const other = await browser.newContext({ locale: 'en-IN', reducedMotion: 'reduce' });
+    const other = await browser.newContext({ locale: 'en-IN', reducedMotion: 'reduce', storageState: CONSENT_GIVEN });
     const second = await other.newPage();
     await registerNewUser(second);
     await second.goto('/discussions');

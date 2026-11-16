@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { CONSENT_GIVEN } from './consent.js';
 
 /**
  * End-to-end tests drive the real app (React → Express → MongoDB) in the system
@@ -18,6 +19,7 @@ export default defineConfig({
     channel: 'chrome',
     headless: true,
     locale: 'en-IN',
+    storageState: CONSENT_GIVEN, // the cookie banner has been answered; the cookie specs start from nothing
     timezoneId: 'Asia/Kolkata',
     viewport: { width: 1366, height: 860 },
     trace: 'retain-on-failure',

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { registerNewUser } from './helpers.js';
+import { CONSENT_GIVEN } from '../consent.js';
 
 test.use({ reducedMotion: 'reduce' });
 
@@ -91,7 +92,7 @@ test.describe('Learn', () => {
     await likeButton(reader(page)).click();
     await expect(likeButton(reader(page))).toHaveAttribute('aria-label', `Like, ${start.likes + 1}`);
 
-    const other = await browser.newContext({ locale: 'en-IN', reducedMotion: 'reduce' });
+    const other = await browser.newContext({ locale: 'en-IN', reducedMotion: 'reduce', storageState: CONSENT_GIVEN });
     const second = await other.newPage();
     await registerNewUser(second, 'Dev Patel');
     await second.goto('/learn/emergency-fund');
@@ -119,7 +120,7 @@ test.describe('Learn', () => {
     await expect(comment).toContainText('Asha R.');
     await expect(dialog.getByRole('heading', { name: `Comments (${before + 1})` })).toBeVisible();
 
-    const other = await browser.newContext({ locale: 'en-IN', reducedMotion: 'reduce' });
+    const other = await browser.newContext({ locale: 'en-IN', reducedMotion: 'reduce', storageState: CONSENT_GIVEN });
     const second = await other.newPage();
     await registerNewUser(second, 'Dev Patel');
     await second.goto('/learn/emergency-fund');

@@ -60,7 +60,7 @@ async function main() {
     const needsApp = APP_SHOTS.some(want);
     const ctx = needsApp ? await signedInContext(browser, { colorScheme: 'light' }) : null;
     const page = needsApp ? await ctx.newPage() : null;
-    if (page) await page.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+    if (page) await page.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'light'); });
 
     if (want('dashboard')) {
       await page.goto(`${BASE}/`);
@@ -141,7 +141,7 @@ async function main() {
     }
 
     if (want('dark')) {
-      await page.addInitScript(() => localStorage.setItem('kosha-theme', 'dark'));
+      await page.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'dark'); });
       await page.goto(`${BASE}/`);
       await settle(page, 2600);
       await shot(page, 'dashboard-dark');
@@ -157,7 +157,7 @@ async function main() {
       const ym = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Kolkata' }).slice(0, 7);
       const nctx = await signedInContext(browser, { colorScheme: 'light' });
       const n = await nctx.newPage();
-      await n.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+      await n.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'light'); });
 
       if (want('balance')) {
         // A balance below zero is explained and fixable. Nothing is saved: the dialog is closed each time.
@@ -228,7 +228,7 @@ async function main() {
       if (want('register')) {
         const rctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: 'en-IN', timezoneId: 'Asia/Kolkata', colorScheme: 'light' });
         const r = await rctx.newPage();
-        await r.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+        await r.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'light'); });
         await r.goto(`${BASE}/register`);
         await settle(r, 1500);
         await r.getByLabel('Name').fill('Priya Nair');
@@ -260,7 +260,7 @@ async function main() {
       const res = await octx.request.post(`${BASE}/api/v1/auth/register`, { data: { name: 'Priya Nair', email, password: 'firstRun2026', acceptedTerms: true } });
       if (!res.ok()) throw new Error(`Could not create the onboarding account (${res.status()})`);
       const o = await octx.newPage();
-      await o.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+      await o.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'light'); });
       await o.goto(`${BASE}/`);
       await settle(o, 2200);
       await shot(o, 'onboarding');
@@ -298,7 +298,7 @@ async function main() {
       if (want('landing')) {
         const lctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light', locale: 'en-IN', reducedMotion: 'reduce' });
         const l = await lctx.newPage();
-        await l.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+        await l.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'light'); });
         await l.goto(`${BASE}/`);
         await settle(l, 1500);
         await shot(l, 'landing');
@@ -318,7 +318,7 @@ async function main() {
 
       const actx = await signedInContext(browser, { colorScheme: 'light', reducedMotion: 'reduce' });
       const a = await actx.newPage();
-      await a.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+      await a.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'light'); });
       const hideLauncher = () => a.addStyleTag({ content: '[data-copilot-launcher]{display:none!important}' });
 
       if (want('learn')) {
@@ -346,7 +346,7 @@ async function main() {
         await sctx.request.post(`${BASE}/api/v1/community/comments`, { data: { kind: 'post', target: first, body: 'Compare it with companies in the same industry and with its own history, and remember a low P/E is not automatically cheap.' } });
         await sctx.request.put(`${BASE}/api/v1/community/reactions`, { data: { kind: 'post', target: first, value: 'like' } });
         const dp = await sctx.newPage();
-        await dp.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+        await dp.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'light'); });
         await dp.goto(`${BASE}/discussions`);
         await settle(dp, 1500);
         await dp.addStyleTag({ content: '[data-copilot-launcher]{display:none!important}' });
@@ -385,7 +385,7 @@ async function main() {
       if (want('mobile-more')) {
         const mctx = await signedInContext(browser, { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: 'light', reducedMotion: 'reduce' });
         const m = await mctx.newPage();
-        await m.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+        await m.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'light'); });
         await m.goto(`${BASE}/markets`);
         await settle(m, 2000);
         await shot(m, 'mobile-markets');
@@ -409,7 +409,7 @@ async function main() {
         colorScheme: 'light',
       });
       const m = await mctx.newPage();
-      await m.addInitScript(() => localStorage.setItem('kosha-theme', 'light'));
+      await m.addInitScript(() => { localStorage.setItem('kosha-cookies', JSON.stringify({ preferences: true, decidedAt: '2026-01-01T00:00:00.000Z', version: '2026-11-16' })); localStorage.setItem('kosha-theme', 'light'); });
       await m.goto(`${BASE}/`);
       await settle(m, 2600);
       await shot(m, 'mobile-dashboard');
