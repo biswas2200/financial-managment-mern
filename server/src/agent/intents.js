@@ -29,9 +29,14 @@ export function classifyIntent(raw) {
     return 'add_transaction';
   }
 
-  // Investing, markets and learning. These come after logging a payment, so "paid 5000 for my SIP" is still an expense.
-  const notInvesting = /\b(laptop|phone|mobile|car|bike|scooter|house|flat|home|tv|ac|fridge|shoes|watch|gift|ticket|trip|insurance|loan|card|saree|dress|bag)\b/;
-  if (
+  // Investing, markets and learning. These come after logging a payment, so "paid 5000 for my SIP" is still an expense,
+  // and they step aside for questions about the person's own spending ("how much did I spend on mutual funds").
+  const aboutMyMoney = has(/\b(how much|did i (spend|pay|earn)|i spent|my (spending|expenses?|income|rent|salary|budget|money)|share of my|what share of)\b/);
+  const notInvesting =
+    /\b(laptop|phone|mobile|car|bike|scooter|house|flat|home|apartment|plot|land|tv|ac|fridge|shoes|watch|gift|tickets?|trip|medicine|insurance|loan|card|saree|dress|bag|groceries|grocery|dinner|lunch|breakfast|coffee|tea|food|snacks?|clothes)\b/;
+  if (aboutMyMoney) {
+    // fall through to the spending rules below
+  } else if (
     !has(notInvesting) &&
     (has(/\b(should i|shall i|can i|is it (a )?(good|safe|wise|worth)( time)?( to)?)\s+(buy|sell|hold|invest|put money)/) ||
       has(/\b(best|top|good)\s+(stocks?|shares?|funds?|mutual funds?|sips?)\s+(to|for)\s+(buy|invest|sip|me)/) ||
@@ -41,17 +46,21 @@ export function classifyIntent(raw) {
     return 'invest_advice';
   }
   const explain = /\b(what is|what are|what's|explain|meaning of|how does|how do i (start|begin)|how to (start|begin)|teach me)\b/;
+  // "What is the NAV of X" and "what is the Nifty today" want a figure, not a lesson.
+  const wantsFigure = has(/\b(nav|nifty|sensex|p\/?e)\s+(of|for)\b/) || has(/\b(today|now|current|latest|right now)\b/);
   const terms = /\b(sip|emergency fund|inflation|compound\w*|mutual funds?|index funds?|expense ratio|nav|p\/?e( ratio)?|credit scores?|term (insurance|plan)|health insurance|upi|scams?|asset allocation|investing|invest|elss|demat|nifty|sensex)\b/;
-  if (has(explain) && has(terms)) return 'learn';
-  if (has(/\bwatch ?list\b/)) return 'watchlist';
-  if (
-    has(/\b(mutual funds?|index funds?|nav|elss|flexi ?cap|small ?cap|mid ?cap|large ?cap|liquid fund|\w+ fund)\b/) &&
-    !has(/\b(emergency|sinking|provident|retirement|savings?) fund\b/)
-  ) {
-    return 'fund_info';
+  if (!aboutMyMoney) {
+    if (has(explain) && has(terms) && !wantsFigure) return 'learn';
+    if (has(/\bwatch ?list\b/)) return 'watchlist';
+    if (
+      has(/\b(mutual funds?|index funds?|nav|elss|flexi ?cap|small ?cap|mid ?cap|large ?cap|liquid fund|\w+ fund)\b/) &&
+      !has(/\b(emergency|sinking|provident|retirement|savings?) fund\b/)
+    ) {
+      return 'fund_info';
+    }
+    if (has(/\b(nifty|sensex|stock market|share market|the market|markets?|gainers|losers|movers|bse|nse)\b/)) return 'market_overview';
+    if (has(/\b(stocks?|shares?|price of|stock price)\b/) && !has(/\b(my|our) shares?\b|\bshare of\b/)) return 'stock_info';
   }
-  if (has(/\b(nifty|sensex|stock market|share market|the market|markets?|gainers|losers|movers|bse|nse)\b/)) return 'market_overview';
-  if (has(/\b(stocks?|shares?|price of|stock price)\b/)) return 'stock_info';
 
   if (has(/\bbudgets?\b/)) return 'budget_status';
   if (has(/\b(compare|comparison|vs\.?|versus|difference between)\b/)) return 'compare';
@@ -76,6 +85,14 @@ export function classifyIntent(raw) {
     has(/\b(how much|spent|spend|spending|balance|income|earned|summary|overview|total|net|savings|how am i doing|status|this month|last month)\b/)
   ) {
     return 'summary';
+  }
+  // "How is Reliance doing" names a company without saying "stock". Anything about the person's own money was handled above.
+  if (
+    has(/\b(how is|how's|how did|how has)\b/) &&
+    !has(/\b(my|me|you|this month|last month|budget|spending|money|balance|savings|expenses?|income|transactions?|account|things|everything|it going)\b/) &&
+    wordCount(t) <= 6
+  ) {
+    return 'stock_info';
   }
   return 'fallback';
 }

@@ -33,6 +33,7 @@ const subjectOf = (text) =>
     .filter((w) => w && !FILLER.has(w))
     .join(' ');
 
+const yet = (v) => (v === 'not enough history' ? 'not enough history yet' : v);
 const MARKET_DOWN = "I can't reach the market data right now, so I won't guess. Please try again in a few minutes.";
 
 /** "2026-11-09" → "today", "yesterday" or "9 Nov". */
@@ -301,8 +302,10 @@ export function createLocalProvider() {
         if (r.result.error) return done(r.result.error.startsWith('Market data') ? MARKET_DOWN : r.result.error);
         const s = r.result;
         const alsoStock = s.other_matches?.length ? ` (Closest match for "${query}". Also matched: ${s.other_matches.join('; ')}.)` : '';
+        const known = [['1 month', s.returns['1 month']], ['1 year', s.returns['1 year']]].filter(([, v]) => v && v !== 'not enough history');
+        const moved = known.length ? `Its price moved ${known.map(([label, v]) => `${v} over ${label}`).join(' and ')}.` : 'There is not enough price history yet to show returns.';
         return done(
-          `**${s.name}** (${s.symbol}) closed at **${s.close}** on ${dayLong(s.as_of)}, ${s.change_pct} on the day. Its price moved ${s.returns['1 month']} over 1 month and ${s.returns['1 year']} over 1 year. These are end-of-day prices, not adjusted for splits or dividends, and not advice.${alsoStock}`,
+          `**${s.name}** (${s.symbol}) closed at **${s.close}** on ${dayLong(s.as_of)}, ${s.change_pct} on the day. ${moved} These are end-of-day prices, not adjusted for splits or dividends, and not advice.${alsoStock}`,
           { data: r.data },
         );
       }
@@ -315,7 +318,7 @@ export function createLocalProvider() {
         const f = r.result;
         const alsoFund = f.matched_exactly === false || f.other_matches?.length ? ` (${f.matched_exactly === false ? 'Closest match' : 'Matched'} for "${query}". Also matched: ${(f.other_matches ?? []).join('; ') || 'none'}.)` : '';
         return done(
-          `**${f.name}** has a NAV of ${f.nav} (${dayLong(f.nav_date)}). Returns: 1 year ${f.returns['1 year']}, 3 years ${f.returns['3 years']}, 5 years ${f.returns['5 years']}. It has fallen as much as ${f.worst_fall}. Past performance does not predict future returns, and this is not advice.${alsoFund}`,
+          `**${f.name}** has a NAV of ${f.nav} (${dayLong(f.nav_date)}). Returns: 1 year ${yet(f.returns['1 year'])}, 3 years ${yet(f.returns['3 years'])}, 5 years ${yet(f.returns['5 years'])}. It has fallen as much as ${f.worst_fall}. Past performance does not predict future returns, and this is not advice.${alsoFund}`,
           { data: r.data },
         );
       }
