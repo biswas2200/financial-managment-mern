@@ -77,8 +77,10 @@ describe('page background', () => {
 
   it('is flat paper: no soft blue glow behind the page', () => {
     const body = /\n  body \{[^}]*\}/.exec(css)?.[0] ?? '';
-    expect(body).toContain('var(--paper)');
-    expect(body).not.toMatch(/radial-gradient/);
+    const html = /\n  html \{[^}]*\}/.exec(css)?.[0] ?? '';
+    expect(html).toContain('background: var(--paper)');
+    // The body must not paint over the skyline that sits behind the page.
+    expect(body).not.toMatch(/background/);
   });
 
   it('draws the backdrop faintly, in ink that suits each theme', () => {

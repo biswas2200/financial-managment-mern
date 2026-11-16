@@ -163,7 +163,7 @@
   }
   body {
     min-height: 100dvh;
-    background: var(--paper);
+    /* The page's paper is painted on <html>; the skyline sits between it and the content. */
     line-height: 1.5;
   }
   ::selection {
@@ -840,10 +840,10 @@
   --sk-ink: #17181c;
   --sk-paper: var(--paper);
   --sk-sun: #d8452f;
-  opacity: 0.1;
+  opacity: 0.13;
 }
 :root[data-theme='dark'] .sketch-backdrop {
   --sk-ink: #e9e6dc;
   --sk-sun: #e0583f;
-  opacity: 0.12;
+  opacity: 0.16;
 }
