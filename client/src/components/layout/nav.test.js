@@ -41,6 +41,21 @@ describe('navigation', () => {
 });
 
 
+describe('navigation colours', () => {
+  const all = [...flat, SETTINGS_ITEM];
+
+  it('gives every place its own colour, for the phone tab bar and the More sheet', () => {
+    for (const item of all) expect(item.color, item.label).toMatch(/^#[0-9a-f]{6}$/i);
+    const colours = all.map((i) => i.color.toLowerCase());
+    expect(new Set(colours).size).toBe(colours.length);
+  });
+
+  it('keeps places in the same domain recognisably different from each other', () => {
+    const money = NAV_SECTIONS[0].items.map((i) => i.color);
+    expect(new Set(money).size).toBe(money.length);
+  });
+});
+
 describe('pageKey', () => {
   it('keeps one key for a list and the article, post or settings tab opened inside it', () => {
     expect(pageKey('/learn')).toBe('learn');

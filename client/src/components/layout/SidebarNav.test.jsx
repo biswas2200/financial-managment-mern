@@ -39,25 +39,11 @@ describe('SidebarNav', () => {
     expect(screen.getByRole('link', { name: 'Learn' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('tells you when more links are hidden below, and stops once you have scrolled to the end', () => {
+  it('does not scroll by itself: the whole sidebar scrolls as one, like the page', () => {
     renderAt('/');
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    const set = (props) => Object.entries(props).forEach(([k, v]) => Object.defineProperty(nav, k, { configurable: true, value: v }));
-    set({ scrollHeight: 700, clientHeight: 400, scrollTop: 0 });
-    fireEvent.scroll(nav);
-    expect(nav).toHaveAttribute('data-more', 'true');
-    set({ scrollTop: 300 });
-    fireEvent.scroll(nav);
-    expect(nav).toHaveAttribute('data-more', 'false');
-  });
-
-  it('shows no cue when everything fits', () => {
-    renderAt('/');
-    const nav = screen.getByRole('navigation', { name: 'Main' });
-    Object.defineProperty(nav, 'scrollHeight', { configurable: true, value: 400 });
-    Object.defineProperty(nav, 'clientHeight', { configurable: true, value: 400 });
-    fireEvent.scroll(nav);
-    expect(nav).toHaveAttribute('data-more', 'false');
+    expect(nav.className).not.toMatch(/overflow-y-auto/);
+    expect(nav.hasAttribute('data-more')).toBe(false);
   });
 
   it('lights Overview only on the home page', () => {
