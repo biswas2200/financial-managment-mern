@@ -19,7 +19,7 @@ const api = '/api/v1';
 
 async function activeAccount(email) {
   const { agent, user, categories } = await signUp(app, { email, name: 'Some Person' });
-  await agent.post(`${api}/transactions`).send({ type: 'expense', amount: 250, category: categories.Groceries.id, date: new Date().toISOString() }).expect(201);
+  await agent.post(`${api}/transactions`).send({ type: 'expense', amount: 25000, category: categories.Groceries.id, description: 'Weekly groceries', date: '2026-11-08' }).expect(201);
   const post = (await agent.post(`${api}/community/posts`).send({ space: 'general', title: `A question from ${email}`, body: 'A body long enough to be accepted by the form.' }).expect(201)).body;
   await agent.post(`${api}/community/comments`).send({ kind: 'post', target: post.id, body: 'And a comment on my own post.' }).expect(201);
   return { agent, user, post };

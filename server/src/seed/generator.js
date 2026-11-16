@@ -6,7 +6,7 @@
 import { toMinor, toMonthKey, shiftMonth, lastNMonthKeys } from '@kosha/shared';
 
 /** mulberry32: tiny, fast, seedable PRNG */
-function createRng(seed) {
+export function createRng(seed) {
   let a = seed >>> 0;
   const next = () => {
     a = (a + 0x6d2b79f5) >>> 0;
