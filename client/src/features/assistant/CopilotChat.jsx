@@ -19,6 +19,8 @@ import { MessageData } from './MessageData.jsx';
 export const SUGGESTIONS = [
   'How much did I spend this month?',
   'Where is my money going?',
+  'How is the market today?',
+  'What is an emergency fund?',
   'Compare this month with last month',
   'Am I over budget anywhere?',
   'Any unusual spending?',
@@ -170,7 +172,7 @@ export function CopilotChat({ compact = false, className, initialPrompt, onPromp
               Copilot reads your Kosha data to answer, and can draft transactions or budgets for you to confirm.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {SUGGESTIONS.slice(0, compact ? 4 : 6).map((s) => (
+              {SUGGESTIONS.slice(0, compact ? 4 : 8).map((s) => (
                 <button
                   key={s}
                   type="button"

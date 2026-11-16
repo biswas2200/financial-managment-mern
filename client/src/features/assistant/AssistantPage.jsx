@@ -8,6 +8,8 @@ const CAPABILITIES = [
   ['Comparisons', '"Compare this month with last month"'],
   ['Budgets', '"Am I over budget?" or "Set a budget of 5000 for dining"'],
   ['Search', '"Show my Swiggy orders"'],
+  ['Markets', '"How is the market today?" or "Tell me about TCS stock"'],
+  ['Learning', '"What is an emergency fund?" or "Explain SIPs"'],
   ['Logging', '"Spent 300 on Uber yesterday"'],
 ];
 
@@ -50,6 +52,9 @@ export default function AssistantPage() {
               </p>
             )}
             <p className="mt-3 text-ink-2">Drafted transactions and budgets are never saved until you tap Confirm.</p>
+            <p className="mt-3 text-ink-2">
+              Market answers use end-of-day NSE and AMFI data. Copilot explains the numbers; it will not tell you what to buy or sell.
+            </p>
           </section>
         </aside>
       </div>

@@ -1,7 +1,10 @@
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from 'recharts';
+import { Link } from 'react-router-dom';
 import { formatMonthLabel } from '@kosha/shared';
 import { useChartColors } from '../../app/theme.jsx';
-import { money, moneyWhole, percent } from '../../lib/format.js';
+import { money, moneyWhole, percent, rupees, level, dateLong } from '../../lib/format.js';
+import { Change } from '../markets/parts.jsx';
+import { useCopilot } from './CopilotDrawer.jsx';
 import { CategoryBars } from '../../components/charts/CategoryBars.jsx';
 import { BudgetMeter } from '../../components/charts/BudgetMeter.jsx';
 import { ChartTooltip } from '../../components/charts/ChartTooltip.jsx';
@@ -46,8 +49,11 @@ function MiniTrend({ items }) {
   );
 }
 
+const priceText = { stock: (v) => rupees(v), index: (v) => level(v), fund: (v) => rupees(v, { decimals: 4 }) };
+
 /** Renders the chart/table payload a Copilot reply carries (data.kind). */
 export function MessageData({ data }) {
+  const { close } = useCopilot();
   if (!data) return null;
   const frame = 'mt-3 rounded-xl raised bg-surface p-4 shadow-raise-1';
 
@@ -135,6 +141,80 @@ export function MessageData({ data }) {
           ))}
         </ul>
       ) : null;
+    case 'articles':
+      return (
+        <ul className="mt-3 flex flex-col gap-2">
+          {data.items.map((a) => (
+            <li key={a.slug}>
+              <Link to={`/learn/${a.slug}`} onClick={close} className="raised block rounded-xl bg-surface p-4 shadow-raise-1 transition-colors hover:bg-surface-2">
+                <span className="block font-semibold">{a.title}</span>
+                <span className="mt-0.5 block text-sm text-ink-2">{a.summary}</span>
+                <span className="mt-1.5 block text-[0.8125rem] text-ink-3">{a.readMinutes} min read, in Learn</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      );
+    case 'quote':
+      return (
+        <div className={frame}>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <p className="min-w-0 font-semibold">{data.name}</p>
+            <p className="tabular text-lg font-semibold">{(priceText[data.type] ?? priceText.stock)(data.price)}</p>
+          </div>
+          <div className="mt-0.5 flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span className="text-ink-3">End-of-day, {dateLong(data.asOf)}</span>
+            {data.changePct !== null && data.changePct !== undefined && <Change pct={data.changePct} />}
+          </div>
+          {data.returns?.length > 0 && (
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 sm:grid-cols-3">
+              {data.returns.map((r) => (
+                <div key={r.period}>
+                  <dt className="text-[0.8125rem] text-ink-3">{r.label}</dt>
+                  <dd className="text-sm">
+                    <Change pct={r.pct} />
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      );
+    case 'market':
+      return (
+        <div className={frame}>
+          <ul className="grid grid-cols-2 gap-3">
+            {data.indices.map((i) => (
+              <li key={i.name}>
+                <p className="text-[0.8125rem] text-ink-3">{i.name}</p>
+                <p className="tabular font-semibold">{level(i.close)}</p>
+                <p className="text-sm">
+                  <Change pct={i.changePct} />
+                </p>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 border-t border-line pt-3 text-sm text-ink-2">
+            <strong className="tabular text-income-text">{data.breadth.advancers.toLocaleString('en-IN')} advancing</strong>,{' '}
+            <strong className="tabular text-bad-text">{data.breadth.decliners.toLocaleString('en-IN')} declining</strong>
+          </p>
+          <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {data.gainers.map((g) => (
+              <span key={g.symbol} className="inline-flex items-center gap-1.5">
+                <span className="font-semibold">{g.symbol}</span>
+                <Change pct={g.changePct} />
+              </span>
+            ))}
+            {data.losers.map((g) => (
+              <span key={g.symbol} className="inline-flex items-center gap-1.5">
+                <span className="font-semibold">{g.symbol}</span>
+                <Change pct={g.changePct} />
+              </span>
+            ))}
+          </p>
+          <p className="mt-2 text-[0.8125rem] text-ink-3">End-of-day figures from the NSE as of {dateLong(data.asOf)}. Not live.</p>
+        </div>
+      );
     default:
       return null;
   }
