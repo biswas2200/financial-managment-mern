@@ -47,7 +47,7 @@ test.describe('Profile', () => {
 
   test('deleting the account needs the password and ends the session for good', async ({ page }) => {
     const user = await registerNewUser(page);
-    await page.goto('/settings');
+    await page.goto('/settings/privacy');
     await page.getByRole('button', { name: 'Delete my account' }).click();
     const dialog = page.getByRole('dialog', { name: 'Delete your account?' });
 

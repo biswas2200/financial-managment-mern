@@ -16,7 +16,11 @@ const TransactionsPage = lazy(() => import('../features/transactions/Transaction
 const AnalyticsPage = lazy(() => import('../features/analytics/AnalyticsPage.jsx'));
 const BudgetsPage = lazy(() => import('../features/budgets/BudgetsPage.jsx'));
 const AssistantPage = lazy(() => import('../features/assistant/AssistantPage.jsx'));
-const SettingsPage = lazy(() => import('../features/settings/SettingsPage.jsx'));
+const SettingsLayout = lazy(() => import('../features/settings/SettingsLayout.jsx'));
+const ProfileSettings = lazy(() => import('../features/settings/ProfileSettings.jsx'));
+const PreferencesSettings = lazy(() => import('../features/settings/PreferencesSettings.jsx'));
+const CategoriesSettings = lazy(() => import('../features/settings/CategoriesSettings.jsx'));
+const PrivacySettings = lazy(() => import('../features/settings/PrivacySettings.jsx'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,7 +77,16 @@ const router = createBrowserRouter([
           { path: 'analytics', element: page(AnalyticsPage) },
           { path: 'budgets', element: page(BudgetsPage) },
           { path: 'copilot', element: page(AssistantPage) },
-          { path: 'settings', element: page(SettingsPage) },
+          {
+            path: 'settings',
+            element: page(SettingsLayout),
+            children: [
+              { index: true, element: page(ProfileSettings) },
+              { path: 'preferences', element: page(PreferencesSettings) },
+              { path: 'categories', element: page(CategoriesSettings) },
+              { path: 'privacy', element: page(PrivacySettings) },
+            ],
+          },
           { path: '*', element: <NotFound /> },
         ],
       },

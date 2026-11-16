@@ -234,6 +234,13 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+  /* Rows that scroll sideways on a phone (tabs, chips) without a scrollbar track. */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   /* Text fields: an inset well whose ring and halo bloom on focus. The shadow lists always have the
      same four layers so the browser can animate between them. */
   .control {
