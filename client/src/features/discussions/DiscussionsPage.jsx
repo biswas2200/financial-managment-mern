@@ -25,7 +25,7 @@ function PostCard({ post, search, onReact }) {
         <span aria-hidden className="h-2 w-2 rounded-full" style={{ backgroundColor: domainColor(post.space) }} />
         {domainLabel(post.space)}
       </div>
-      <h3 className="font-wide text-[1.0625rem] leading-snug font-semibold text-balance">
+      <h3 className="font-wide text-[1.0625rem] leading-snug font-semibold text-balance [overflow-wrap:anywhere]">
         <Link to={{ pathname: `/discussions/${post.id}`, search }} className="outline-none after:absolute after:inset-0 after:rounded-2xl">
           {post.title}
         </Link>

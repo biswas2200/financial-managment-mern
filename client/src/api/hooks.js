@@ -369,6 +369,7 @@ function patchCached(qc, kind, target, change) {
 export function useReact() {
   const qc = useQueryClient();
   return useMutation({
+    scope: { id: 'reactions' }, // clicks are sent one after another, in order, so the last click is the one that stays
     mutationFn: ({ kind, target, value }) => api('/community/reactions', { method: 'PUT', body: { kind, target, value } }),
     onMutate: ({ kind, target, value }) => patchCached(qc, kind, target, (item) => ({ ...item, ...applyReaction(item, value) })),
     onSuccess: (result, { kind, target }) => patchCached(qc, kind, target, (item) => ({ ...item, ...result })),
@@ -380,6 +381,7 @@ export function useReact() {
 // ---------- Markets ----------
 
 const marketQuery = (key, path, { query, ...options } = {}) => ({
+  networkMode: 'offlineFirst', // try anyway when the browser says it is offline: the service worker may hold a copy
   queryKey: ['markets', ...key],
   queryFn: () => api(`/markets${path}`, { query }),
   staleTime: 10 * 60 * 1000, // the data is end-of-day

@@ -8,6 +8,7 @@ import { ToastProvider } from '../components/ui/toast.jsx';
 import { AppShell } from '../components/layout/AppShell.jsx';
 import { Skeleton } from '../components/ui/primitives.jsx';
 import { OfflineBanner } from '../pwa/OfflineBanner.jsx';
+import { RouteError } from './RouteError.jsx';
 import { LoginPage, RegisterPage } from '../features/auth/AuthPages.jsx';
 import DashboardPage from '../features/dashboard/DashboardPage.jsx';
 import { PrivacyPage, TermsPage } from '../features/legal/LegalPages.jsx';
@@ -68,6 +69,10 @@ function NotFound() {
 }
 
 const router = createBrowserRouter([
+  // A page that cannot load (most often after an update) shows a plain message instead of the framework's error screen.
+  {
+    errorElement: <RouteError />,
+    children: [
   // Readable by anyone, signed in or not: people are asked to agree to these before they have an account.
   { path: '/privacy', element: <PrivacyPage /> },
   { path: '/terms', element: <TermsPage /> },
@@ -112,6 +117,8 @@ const router = createBrowserRouter([
         ],
       },
     ],
+  },
+],
   },
 ]);
 

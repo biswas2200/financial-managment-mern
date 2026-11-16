@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { Button } from '../../components/ui/primitives.jsx';
+import { useRestoreFocus } from '../../hooks/useRestoreFocus.js';
 import { CopilotChat } from './CopilotChat.jsx';
 
 const CopilotContext = createContext({ open: () => {}, close: () => {}, isOpen: false });
@@ -10,6 +11,7 @@ export const useCopilot = () => useContext(CopilotContext);
 
 function Drawer({ prompt, onPromptConsumed, onClose }) {
   const ref = useRef(null);
+  useRestoreFocus(true, '[data-copilot-launcher]'); // before the dialog takes focus
   // A native modal dialog sits in the browser's top layer, so it also opens above an article or post that is already open.
   useEffect(() => {
     const el = ref.current;

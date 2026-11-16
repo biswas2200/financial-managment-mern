@@ -828,3 +828,12 @@
     opacity: 0;
   }
 }
+
+/* Sidebar: a fade at the bottom says there are more links below; the sketch rests while it is off screen. */
+.rail-scroll[data-more='true'] {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
+}
+.sketch-scene[data-paused='true'],
+.sketch-scene[data-paused='true'] * {
+  animation-play-state: paused !important;
+}

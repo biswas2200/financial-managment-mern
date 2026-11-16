@@ -1,23 +1,29 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { RouteError } from './RouteError.jsx';
 
 const reload = vi.fn();
-let originalLocation;
+vi.mock('../lib/reload.js', () => ({ reloadPage: () => reload() }));
 
 beforeEach(() => {
   reload.mockReset();
   sessionStorage.clear();
-  originalLocation = window.location;
-  Object.defineProperty(window, 'location', { configurable: true, value: { ...originalLocation, reload, assign: vi.fn() } });
 });
-afterEach(() => Object.defineProperty(window, 'location', { configurable: true, value: originalLocation }));
 
+let routeError;
+vi.mock('react-router-dom', async (importOriginal) => ({ ...(await importOriginal()), useRouteError: () => routeError }));
+
+// The data router's own error handling needs a real browser (jsdom cannot build its requests), so this renders the
+// error screen directly with the error the router would have given it.
 const renderBroken = (error) => {
-  const router = createMemoryRouter([{ path: '/', element: <p>fine</p>, loader: () => { throw error; }, errorElement: <RouteError /> }]);
-  return render(<RouterProvider router={router} />);
+  routeError = error;
+  return render(
+    <MemoryRouter>
+      <RouteError />
+    </MemoryRouter>,
+  );
 };
 
 describe('RouteError', () => {

@@ -15,6 +15,8 @@ export function useHotkeys(map, { enabled = true } = {}) {
     if (!enabled) return undefined;
     const onKeyDown = (event) => {
       if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey) return;
+      // An article, a post, the Copilot panel or a form is open on top of the page: a letter is for it, not a shortcut.
+      if (document.querySelector('dialog[open]')) return;
       const target = event.target;
       if (target && (target.isContentEditable || TYPING.has(target.tagName))) return;
       const handler = handlers.current[event.key];

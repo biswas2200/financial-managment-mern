@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react';
 import { X } from 'lucide-react';
+import { useRestoreFocus } from '../../hooks/useRestoreFocus.js';
 import { Button } from './primitives.jsx';
 
 /**
@@ -10,6 +11,7 @@ import { Button } from './primitives.jsx';
 export function Reader({ open, onClose, title, meta, children }) {
   const ref = useRef(null);
   const titleId = useId();
+  useRestoreFocus(open); // before the dialog takes focus
 
   useEffect(() => {
     const el = ref.current;
@@ -34,7 +36,7 @@ export function Reader({ open, onClose, title, meta, children }) {
           <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-7">
             <div className="min-w-0">
               {meta && <p className="text-[0.8125rem] text-ink-3">{meta}</p>}
-              <h2 id={titleId} className="mt-0.5 font-wide text-[1.375rem] leading-snug font-semibold text-balance sm:text-[1.625rem]">
+              <h2 id={titleId} className="mt-0.5 font-wide text-[1.375rem] leading-snug font-semibold text-balance [overflow-wrap:anywhere] sm:text-[1.625rem]">
                 {title}
               </h2>
             </div>

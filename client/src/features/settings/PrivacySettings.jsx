@@ -33,7 +33,7 @@ function DeleteAccountDialog({ open, onClose }) {
         })}
       >
         <p className="text-sm text-ink-2">
-          This permanently deletes your profile, transactions, budgets, categories and Copilot messages. It cannot be undone. If you want a copy first, use
+          This permanently deletes your profile, transactions, budgets, categories and Copilot messages, and the posts, comments, reactions and watchlist you added. It cannot be undone. If you want a copy first, use
           Export CSV on the Transactions page.
         </p>
         <Field label="Your password" error={formState.errors.password?.message}>

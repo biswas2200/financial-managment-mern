@@ -19,7 +19,7 @@ function ArticleCard({ article, search }) {
         <span aria-hidden>·</span>
         <span>{LEVELS[article.level] ?? article.level}</span>
       </div>
-      <h3 className="font-wide text-[1.125rem] leading-snug font-semibold text-balance">
+      <h3 className="font-wide text-[1.125rem] leading-snug font-semibold text-balance [overflow-wrap:anywhere]">
         <Link to={{ pathname: `/learn/${article.slug}`, search }} className="outline-none after:absolute after:inset-0 after:rounded-2xl">
           {article.title}
         </Link>
