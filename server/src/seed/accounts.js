@@ -24,17 +24,17 @@ export async function removeAccountData(userId) {
   ]);
 }
 
-/** Accounts made by automated tests use this domain, which no real person has. */
-export const TEST_DOMAIN = 'kosha.test';
+/** Accounts made by automated tests and by reviews use these domains. `.test` is reserved, so no real person has one. */
+export const TEST_DOMAINS = ['kosha.test', 'review.test'];
 
 /**
- * Removes the accounts that automated tests created (emails on kosha.test), with everything they made.
- * It matches the whole domain exactly, so nobody else can be caught by it. Pass `keep` to spare some.
+ * Removes the accounts that automated tests created (emails on kosha.test or review.test), with everything they made.
+ * It matches whole domains exactly, so nobody else can be caught by it. Pass `keep` to spare some.
  */
-export async function removeTestAccounts({ domain = TEST_DOMAIN, keep = [] } = {}) {
-  const escaped = domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export async function removeTestAccounts({ domains = TEST_DOMAINS, keep = [] } = {}) {
+  const escaped = domains.map((d) => d.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
   const spare = new Set(keep.map((e) => e.toLowerCase()));
-  const users = (await User.find({ email: new RegExp(`^[^@\\s]+@${escaped}$`, 'i') }, '_id email').lean()).filter((u) => !spare.has(u.email));
+  const users = (await User.find({ email: new RegExp(`^[^@\\s]+@(${escaped})$`, 'i') }, '_id email').lean()).filter((u) => !spare.has(u.email));
   for (const user of users) {
     await removeAccountData(user._id);
     await User.deleteOne({ _id: user._id });

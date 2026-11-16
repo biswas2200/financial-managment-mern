@@ -62,6 +62,12 @@ describe('removeTestAccounts', () => {
     expect(await Post.countDocuments({ title: /P\/E ratio/ })).toBe(1);
   });
 
+  it('also clears the accounts that reviews created', async () => {
+    await activeAccount('av1-22-abc@review.test');
+    const summary = await removeTestAccounts();
+    expect(summary.accounts).toBe(1);
+  });
+
   it('only ever matches the exact test domain', async () => {
     await activeAccount('a@kosha.test.evil.com');
     await activeAccount('kosha.test@example.com');

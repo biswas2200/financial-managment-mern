@@ -8,6 +8,7 @@ import { CONSENT_GIVEN } from './consent.js';
  */
 export default defineConfig({
   testDir: './specs',
+  globalTeardown: './global-teardown.js', // removes the throwaway accounts the tests made
   timeout: 45_000,
   expect: { timeout: 8_000 },
   fullyParallel: false,
