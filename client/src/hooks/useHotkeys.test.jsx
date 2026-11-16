@@ -20,6 +20,20 @@ describe('useHotkeys', () => {
     expect(onNew).toHaveBeenCalledTimes(1);
   });
 
+  it('does nothing while a modal dialog is open, so typing n in an article does not add an expense over it', () => {
+    const onNew = vi.fn();
+    render(<Harness map={{ n: onNew }} />);
+    const dialog = document.createElement('dialog');
+    dialog.setAttribute('open', '');
+    document.body.append(dialog);
+    fireEvent.keyDown(document.body, { key: 'n' });
+    fireEvent.keyDown(dialog, { key: 'n' });
+    expect(onNew).not.toHaveBeenCalled();
+    dialog.remove();
+    fireEvent.keyDown(document.body, { key: 'n' });
+    expect(onNew).toHaveBeenCalledTimes(1);
+  });
+
   it('ignores keys typed into fields', () => {
     const onNew = vi.fn();
     render(<Harness map={{ n: onNew }} />);

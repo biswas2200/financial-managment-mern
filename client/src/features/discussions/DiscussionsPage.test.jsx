@@ -144,6 +144,12 @@ describe('Discussions page', () => {
     expect(screen.getByText(/no posts yet/i)).toBeInTheDocument();
   });
 
+  it('wraps a very long word in a title instead of stretching the page', () => {
+    setPosts([post({ title: 'x'.repeat(120) })]);
+    renderAt();
+    expect(screen.getByRole('heading', { level: 3 }).className).toMatch(/overflow-wrap:anywhere/);
+  });
+
   it('reminds members that posts are opinions, not advice', () => {
     renderAt();
     expect(screen.getByText(/opinions, not advice/i)).toBeInTheDocument();

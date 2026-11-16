@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, act } from '@testing-library/react';
 import { CityStrip } from './CityStrip.jsx';
 import { SketchSky } from './SketchSky.jsx';
 import { CityScene } from './CityScene.jsx';
@@ -52,6 +52,36 @@ describe('SketchSky', () => {
     expect(container.querySelector('[data-sun]')).toBeInTheDocument();
     expect(container.querySelectorAll('[data-cloud]').length).toBeGreaterThanOrEqual(2);
     expect(container.querySelectorAll('[data-bird]').length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('CityScene when it scrolls out of view', () => {
+  it('pauses its animations off screen and resumes when it comes back, to save the battery', () => {
+    let notify;
+    const originalObserver = globalThis.IntersectionObserver;
+    globalThis.IntersectionObserver = class {
+      constructor(callback) {
+        notify = callback;
+      }
+      observe() {}
+      disconnect() {}
+    };
+    const { container } = render(<CityScene />);
+    const scene = container.querySelector('.sketch-scene');
+    expect(scene).toHaveAttribute('data-paused', 'false');
+    act(() => notify([{ isIntersecting: false }]));
+    expect(scene).toHaveAttribute('data-paused', 'true');
+    act(() => notify([{ isIntersecting: true }]));
+    expect(scene).toHaveAttribute('data-paused', 'false');
+    globalThis.IntersectionObserver = originalObserver;
+  });
+
+  it('still works where the browser has no IntersectionObserver', () => {
+    const originalObserver = globalThis.IntersectionObserver;
+    globalThis.IntersectionObserver = undefined;
+    const { container } = render(<CityScene />);
+    expect(container.querySelector('.sketch-scene')).toHaveAttribute('data-paused', 'false');
+    globalThis.IntersectionObserver = originalObserver;
   });
 });
 

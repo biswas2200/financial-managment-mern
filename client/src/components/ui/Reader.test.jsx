@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -38,6 +39,37 @@ describe('Reader', () => {
     const onClose = renderReader();
     await userEvent.setup().click(screen.getByText('The article text'));
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('gives focus back to what you pressed to open it, when it closes', async () => {
+    const user = userEvent.setup();
+    function Page() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            Open the article
+          </button>
+          {open && (
+            <Reader open onClose={() => setOpen(false)} title="An article">
+              <p>Text</p>
+            </Reader>
+          )}
+        </>
+      );
+    }
+    render(<Page />);
+    const opener = screen.getByRole('button', { name: 'Open the article' });
+    await user.click(opener);
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+  });
+
+  it('wraps a very long word in the title instead of running off the screen', () => {
+    renderReader({ title: 'x'.repeat(120) });
+    expect(screen.getByRole('heading', { level: 2 }).className).toMatch(/overflow-wrap:anywhere/);
   });
 
   it('renders nothing while closed', () => {

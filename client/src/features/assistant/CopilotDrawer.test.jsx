@@ -68,6 +68,15 @@ describe('Copilot drawer', () => {
     expect(screen.queryByRole('dialog', { name: 'Copilot' })).not.toBeInTheDocument();
   });
 
+  it('gives focus back to the button that opened it, when it closes', async () => {
+    renderApp();
+    const user = userEvent.setup();
+    const asker = screen.getByRole('button', { name: 'Ask about this' });
+    await user.click(asker);
+    await user.click(screen.getByRole('button', { name: 'Close Copilot' }));
+    expect(asker).toHaveFocus();
+  });
+
   it('does nothing harmful when used outside a provider', async () => {
     function Lonely() {
       const { open } = useCopilot();
