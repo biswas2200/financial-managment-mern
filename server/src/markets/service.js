@@ -58,6 +58,13 @@ const INDEX_NOTE = 'End-of-day index levels from the NSE. Returns are price retu
 const FUND_NOTE = 'NAV data from AMFI via mfapi.in. Past performance does not predict future returns. Returns above one year are annualised.';
 const SOURCE = { name: 'NSE India', kind: 'end-of-day', url: 'https://www.nseindia.com/' };
 
+/** Names people use that are not the NSE symbol. Only companies whose symbol differs from their name. */
+const STOCK_ALIASES = {
+  'l&t': 'LT', 'l and t': 'LT', 'larsen': 'LT', sbi: 'SBIN', 'state bank': 'SBIN', hul: 'HINDUNILVR', 'hindustan unilever': 'HINDUNILVR',
+  airtel: 'BHARTIARTL', infosys: 'INFY', 'tata consultancy': 'TCS', 'hdfc bank': 'HDFCBANK', 'icici bank': 'ICICIBANK', 'axis bank': 'AXISBANK',
+  'kotak bank': 'KOTAKBANK', 'bajaj finance': 'BAJFINANCE', 'asian paints': 'ASIANPAINT', 'sun pharma': 'SUNPHARMA', 'mahindra': 'M&M', 'm and m': 'M&M',
+};
+
 const unavailable = () =>
   new ApiError(503, 'Market data is not reachable right now. Please try again in a few minutes.', 'MARKET_DATA_UNAVAILABLE');
 
@@ -222,15 +229,27 @@ export function createMarketService({ fetchBuffer = httpBuffer, fetchJson = http
   async function searchStocks(query) {
     const q = String(query ?? '').trim().toLowerCase();
     if (!q) return [];
-    const [{ file }, industryOf] = await Promise.all([latestStocks(), industries().catch(() => new Map())]);
+    const [{ file }, industryOf, members] = await Promise.all([
+      latestStocks(),
+      industries().catch(() => new Map()),
+      nifty50().catch(() => new Set()),
+    ]);
+    const alias = STOCK_ALIASES[q.replace(/\s+/g, ' ')];
     const scored = [];
     for (const row of file.values()) {
       const symbol = row.symbol.toLowerCase();
-      const score = symbol.startsWith(q) ? 0 : symbol.includes(q) ? 1 : row.name.toLowerCase().includes(q) ? 2 : null;
-      if (score !== null) scored.push({ score, row });
+      const name = row.name.toLowerCase();
+      let rank = null;
+      if (symbol === q || row.symbol === alias) rank = 0;
+      else if (symbol.startsWith(q)) rank = 1;
+      else if (name.split(/\s+/).some((word) => word.startsWith(q))) rank = 2;
+      else if (symbol.includes(q)) rank = 3;
+      else if (name.includes(q)) rank = 4;
+      if (rank !== null) scored.push({ rank, row, big: members.has(row.symbol) });
     }
+    // The best symbol match first; among equals, the Nifty 50 companies, then whatever people traded most.
     return scored
-      .sort((a, b) => a.score - b.score || a.row.symbol.localeCompare(b.row.symbol))
+      .sort((a, b) => a.rank - b.rank || Number(b.big) - Number(a.big) || b.row.valueCr - a.row.valueCr || a.row.symbol.localeCompare(b.row.symbol))
       .slice(0, 10)
       .map(({ row }) => ({ symbol: row.symbol, name: row.name, industry: industryOf.get(row.symbol) ?? null }));
   }
@@ -373,7 +392,10 @@ export function createMarketService({ fetchBuffer = httpBuffer, fetchJson = http
     const rows = await download(() => fetchJson(`${MFAPI}/search?q=${encodeURIComponent(q)}`));
     const list = (Array.isArray(rows) ? rows : []).map((r) => ({ code: Number(r.schemeCode), name: String(r.schemeName ?? '').trim() })).filter((r) => r.code && r.name);
     const growth = list.filter((r) => /direct/i.test(r.name) && /growth/i.test(r.name) && !/idcw|dividend|bonus/i.test(r.name));
-    return (growth.length ? growth : list).slice(0, 20);
+    // A name that holds everything you typed, in order, comes before one that merely uses the same words; shorter names first.
+    const phrase = q.toLowerCase().replace(/\s+/g, ' ');
+    const has = (r) => r.name.toLowerCase().replace(/\s+/g, ' ').includes(phrase);
+    return [...(growth.length ? growth : list)].sort((a, b) => Number(has(b)) - Number(has(a)) || a.name.length - b.name.length).slice(0, 20);
   }
 
   async function topFunds(categoryId) {

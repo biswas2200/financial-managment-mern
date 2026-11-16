@@ -509,14 +509,17 @@ export function createToolExecutor({ userId, categories, now = new Date(), marke
           if (err?.status !== 404) throw err;
         }
       }
+      let others = [];
       if (!detail) {
         const found = await markets.searchStocks(q);
         if (!found.length) return { result: { error: `I could not find a stock matching "${q}" on the NSE.` } };
         detail = await markets.stockDetail(found[0].symbol);
+        others = found.slice(1, 4).map((f) => `${f.symbol}: ${f.name}`);
       }
       return {
         result: {
           symbol: detail.symbol,
+          ...(others.length ? { other_matches: others } : {}),
           name: detail.name,
           industry: detail.industry,
           as_of: detail.asOf,
@@ -567,13 +570,19 @@ export function createToolExecutor({ userId, categories, now = new Date(), marke
           if (err?.status !== 404) throw err;
         }
       }
+      let others = [];
+      let exact = true;
       if (!detail) {
         const found = await markets.searchFunds(q);
         if (!found.length) return { result: { error: `I could not find a mutual fund matching "${q}".` } };
         detail = await markets.fundDetail(found[0].code);
+        exact = found[0].name.toLowerCase().replace(/\s+/g, ' ').includes(q.toLowerCase().replace(/\s+/g, ' '));
+        others = found.slice(1, 4).map((f) => f.name);
       }
       return {
         result: {
+          matched_exactly: exact,
+          ...(others.length ? { other_matches: others } : {}),
           name: detail.name,
           fund_house: detail.house,
           category: detail.category,

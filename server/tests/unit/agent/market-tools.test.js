@@ -122,6 +122,15 @@ describe('Copilot system prompt', () => {
     expect(prompt).toMatch(/not a SEBI-registered/i);
   });
 
+  it('asks it to name the match it used when the tool lists other matches', () => {
+    expect(prompt).toContain('other_matches');
+    expect(prompt).toMatch(/closest match/i);
+  });
+
+  it('only refuses to recommend financial investments, so everyday purchase questions are not refused', () => {
+    expect(prompt).toMatch(/everyday purchase|buying a house|groceries/i);
+  });
+
   it('asks it to point to a guide and to say what a number cannot tell you', () => {
     expect(prompt).toContain('find_learning_articles');
     expect(prompt).toMatch(/cannot tell/i);

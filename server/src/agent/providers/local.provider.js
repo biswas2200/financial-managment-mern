@@ -300,8 +300,9 @@ export function createLocalProvider() {
         const r = await call('get_stock', { query });
         if (r.result.error) return done(r.result.error.startsWith('Market data') ? MARKET_DOWN : r.result.error);
         const s = r.result;
+        const alsoStock = s.other_matches?.length ? ` (Closest match for "${query}". Also matched: ${s.other_matches.join('; ')}.)` : '';
         return done(
-          `**${s.name}** (${s.symbol}) closed at **${s.close}** on ${dayLong(s.as_of)}, ${s.change_pct} on the day. Its price moved ${s.returns['1 month']} over 1 month and ${s.returns['1 year']} over 1 year. These are end-of-day prices, not adjusted for splits or dividends, and not advice.`,
+          `**${s.name}** (${s.symbol}) closed at **${s.close}** on ${dayLong(s.as_of)}, ${s.change_pct} on the day. Its price moved ${s.returns['1 month']} over 1 month and ${s.returns['1 year']} over 1 year. These are end-of-day prices, not adjusted for splits or dividends, and not advice.${alsoStock}`,
           { data: r.data },
         );
       }
@@ -312,8 +313,9 @@ export function createLocalProvider() {
         const r = await call('get_fund', { query });
         if (r.result.error) return done(r.result.error.startsWith('Market data') ? MARKET_DOWN : r.result.error);
         const f = r.result;
+        const alsoFund = f.matched_exactly === false || f.other_matches?.length ? ` (${f.matched_exactly === false ? 'Closest match' : 'Matched'} for "${query}". Also matched: ${(f.other_matches ?? []).join('; ') || 'none'}.)` : '';
         return done(
-          `**${f.name}** has a NAV of ${f.nav} (${dayLong(f.nav_date)}). Returns: 1 year ${f.returns['1 year']}, 3 years ${f.returns['3 years']}, 5 years ${f.returns['5 years']}. It has fallen as much as ${f.worst_fall}. Past performance does not predict future returns, and this is not advice.`,
+          `**${f.name}** has a NAV of ${f.nav} (${dayLong(f.nav_date)}). Returns: 1 year ${f.returns['1 year']}, 3 years ${f.returns['3 years']}, 5 years ${f.returns['5 years']}. It has fallen as much as ${f.worst_fall}. Past performance does not predict future returns, and this is not advice.${alsoFund}`,
           { data: r.data },
         );
       }
