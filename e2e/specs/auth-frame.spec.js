@@ -36,4 +36,13 @@ test.describe('Sign in and sign up', () => {
     expect(box.x, 'in the form column, on the right').toBeGreaterThan(720);
     expect(box.y, 'below the Sign in button').toBeGreaterThan(form.y + form.height);
   });
+
+  test('has no demo-account helper, so nothing is typed into the form for you', async ({ page }) => {
+    await page.goto('/login');
+    await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();
+    await expect(page.getByText('Fill in demo account')).toHaveCount(0);
+    await expect(page.getByText('Exploring the project?')).toHaveCount(0);
+    await expect(page.getByLabel('Email')).toHaveValue('');
+    await expect(page.getByLabel('Password', { exact: true })).toHaveValue('');
+  });
 });

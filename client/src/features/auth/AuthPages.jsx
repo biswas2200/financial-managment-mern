@@ -8,9 +8,6 @@ import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
 import { Button, Checkbox, Field, Input } from '../../components/ui/primitives.jsx';
 import { DobInput } from '../../components/ui/DobInput.jsx';
 
-// Seed-dataset demo account (local development only; see server/scripts/seed.js)
-const DEMO = { email: 'demo@kosha.app', password: 'Demo@1234' };
-
 /** The heading, the form and the way to the other page. The frame around it is `AuthLayout`. */
 function AuthCard({ title, subtitle, children, footer }) {
   return (
@@ -31,7 +28,7 @@ export function LoginPage() {
   const login = useLogin();
   const navigate = useNavigate();
   const location = useLocation();
-  const { register, handleSubmit, setValue, formState } = useForm({ resolver: zodResolver(loginSchema) });
+  const { register, handleSubmit, formState } = useForm({ resolver: zodResolver(loginSchema) });
 
   const onSubmit = (values) =>
     login.mutate(values, { onSuccess: () => navigate(location.state?.from?.pathname ?? '/', { replace: true }) });
@@ -65,25 +62,6 @@ export function LoginPage() {
           Sign in
         </Button>
       </form>
-      {import.meta.env.DEV && (
-      <div data-demo-hint className="mt-6 rounded-xl raised bg-surface p-4 text-sm shadow-raise-1">
-        <p className="font-semibold">Exploring the project?</p>
-        <p className="mt-1 text-ink-2">
-          The seed dataset includes a demo account with a year of activity: <span className="font-medium text-ink">{DEMO.email}</span>
-        </p>
-        <Button
-          variant="secondary"
-          size="sm"
-          className="mt-3"
-          onClick={() => {
-            setValue('email', DEMO.email);
-            setValue('password', DEMO.password);
-          }}
-        >
-          Fill in demo account
-        </Button>
-      </div>
-      )}
     </AuthCard>
   );
 }
