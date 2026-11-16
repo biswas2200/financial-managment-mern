@@ -17,28 +17,19 @@ import { money, moneyWhole, greeting, percent } from '../../lib/format.js';
 import { BalanceNote } from './BalanceNote.jsx';
 import { KpiStrip } from './KpiStrip.jsx';
 import { Insights } from './Insights.jsx';
+import { readPreference, writePreference } from '../../lib/consent.js';
 import { TransactionRow } from '../transactions/TransactionRow.jsx';
 import { GettingStarted } from './GettingStarted.jsx';
 import { DayDetail } from './DayDetail.jsx';
 import { BalanceDialog } from './BalanceDialog.jsx';
 
-/** Remembers per user whether the getting-started card was hidden. */
+/** Remembers per user whether the getting-started card was hidden (an optional item: see the cookie choice). */
 function useOnboardingHidden(userId) {
   const key = `kosha-onboarding-hidden:${userId}`;
-  const [hidden, setHidden] = useState(() => {
-    try {
-      return localStorage.getItem(key) === '1';
-    } catch {
-      return false;
-    }
-  });
+  const [hidden, setHidden] = useState(() => readPreference(key) === '1');
   const hide = () => {
-    setHidden(true);
-    try {
-      localStorage.setItem(key, '1');
-    } catch {
-      /* private mode: hidden for this visit only */
-    }
+    setHidden(true); // hidden for this visit either way; remembered only if the person said yes to preferences
+    writePreference(key, '1');
   };
   return [hidden, hide];
 }

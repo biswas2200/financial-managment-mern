@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, RouterProvider, Link } from 'react-router-dom';
+import { createBrowserRouter, Outlet, RouterProvider, Link } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, QueryCache } from '@tanstack/react-query';
 import { ThemeProvider } from './theme.jsx';
 import { RequireAuth, GuestOnly } from './auth.jsx';
@@ -9,6 +9,8 @@ import { AppShell } from '../components/layout/AppShell.jsx';
 import { Skeleton } from '../components/ui/primitives.jsx';
 import { OfflineBanner } from '../pwa/OfflineBanner.jsx';
 import { RouteError } from './RouteError.jsx';
+import { CookieConsentProvider } from '../features/cookies/CookieConsentProvider.jsx';
+import { CookieBanner } from '../features/cookies/CookieBanner.jsx';
 import { AuthLayout } from '../features/auth/AuthLayout.jsx';
 import { LoginPage, RegisterPage } from '../features/auth/AuthPages.jsx';
 import DashboardPage from '../features/dashboard/DashboardPage.jsx';
@@ -69,9 +71,20 @@ function NotFound() {
   );
 }
 
+/** Wraps every page, so the cookie banner can show on all of them, signed in or not. */
+function RootFrame() {
+  return (
+    <>
+      <Outlet />
+      <CookieBanner />
+    </>
+  );
+}
+
 const router = createBrowserRouter([
   // A page that cannot load (most often after an update) shows a plain message instead of the framework's error screen.
   {
+    element: <RootFrame />,
     errorElement: <RouteError />,
     children: [
   // Readable by anyone, signed in or not: people are asked to agree to these before they have an account.
@@ -133,10 +146,12 @@ export function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <RouterProvider router={router} />
-          <OfflineBanner />
-        </ToastProvider>
+        <CookieConsentProvider>
+          <ToastProvider>
+            <RouterProvider router={router} />
+            <OfflineBanner />
+          </ToastProvider>
+        </CookieConsentProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

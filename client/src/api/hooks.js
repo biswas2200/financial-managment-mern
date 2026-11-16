@@ -74,6 +74,15 @@ export function useUpdateProfile() {
   });
 }
 
+/** Keeps the answer to the cookie banner with the account. The server returns the answer on record, which may be newer. */
+export function useSaveCookieChoice() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => api('/auth/me/cookies', { method: 'PUT', body }).then((r) => r.cookieConsent),
+    onSuccess: (cookieConsent) => qc.setQueryData(keys.me, (me) => (me ? { ...me, cookieConsent } : me)),
+  });
+}
+
 /** Deletes the account for good; the session is gone afterwards, so the app returns to sign-in. */
 export function useDeleteAccount() {
   const qc = useQueryClient();

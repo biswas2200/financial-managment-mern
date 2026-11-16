@@ -1,20 +1,20 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { parseConsent, rawConsent, readPreference, subscribeConsent, writePreference } from '../lib/consent.js';
 
 const ThemeContext = createContext(null);
 const STORAGE_KEY = 'kosha-theme';
 
-function readPreference() {
-  try {
-    return localStorage.getItem(STORAGE_KEY) ?? 'system';
-  } catch {
-    return 'system';
-  }
+// The remembered theme is an optional item: it is read, and stored, only after the person said yes to preferences.
+function readStoredTheme() {
+  const stored = readPreference(STORAGE_KEY);
+  return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
 }
 
 const systemDark = () => window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
 
 export function ThemeProvider({ children }) {
-  const [preference, setPreference] = useState(readPreference);
+  const [preference, setPreference] = useState(readStoredTheme);
+  const allowed = parseConsent(useSyncExternalStore(subscribeConsent, rawConsent, () => null))?.preferences === true;
   const [systemIsDark, setSystemIsDark] = useState(systemDark);
 
   useEffect(() => {
@@ -31,14 +31,12 @@ export function ThemeProvider({ children }) {
     document.documentElement.dataset.theme = resolved;
   }, [resolved]);
 
-  const setTheme = useCallback((value) => {
-    setPreference(value);
-    try {
-      localStorage.setItem(STORAGE_KEY, value);
-    } catch {
-      /* private mode: preference lasts for this session only */
-    }
-  }, []);
+  // Before a yes the theme lasts for this visit only. On a yes, whatever is chosen is remembered from then on.
+  useEffect(() => {
+    if (allowed && (preference !== 'system' || readPreference(STORAGE_KEY) !== null)) writePreference(STORAGE_KEY, preference);
+  }, [allowed, preference]);
+
+  const setTheme = useCallback((value) => setPreference(value), []);
 
   const value = useMemo(() => ({ preference, resolved, setTheme }), [preference, resolved, setTheme]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

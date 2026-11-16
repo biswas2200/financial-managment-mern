@@ -8,6 +8,7 @@ import { Button, Dialog, Field } from '../../components/ui/primitives.jsx';
 import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
 import { dateLong } from '../../lib/format.js';
 import { Section } from './SettingsSection.jsx';
+import { CookieSettings } from '../cookies/CookieSettings.jsx';
 
 function DeleteAccountDialog({ open, onClose }) {
   const del = useDeleteAccount();
@@ -90,8 +91,13 @@ function PrivacySection({ user }) {
 export default function PrivacySettings() {
   const { data: user } = useMe();
   return (
-    <Section title="Privacy and your data" description="What you agreed to, and how to leave.">
-      {user && <PrivacySection user={user} />}
-    </Section>
+    <>
+      <Section title="Privacy and your data" description="What you agreed to, and how to leave.">
+        {user && <PrivacySection user={user} />}
+      </Section>
+      <Section title="Cookies" description="What is kept on this device, and your choice about it.">
+        <CookieSettings />
+      </Section>
+    </>
   );
 }
