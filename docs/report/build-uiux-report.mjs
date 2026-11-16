@@ -77,19 +77,20 @@ function runs(text, base = {}) {
     });
 }
 
-const P = (text, o = {}) => new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 140, line: 300 }, children: runs(text, o.run), ...o.para });
+const P = (text, o = {}) => new Paragraph({ alignment: AlignmentType.JUSTIFIED, spacing: { after: 100, line: 276 }, children: runs(text, o.run), ...o.para });
 const center = (text, o = {}) => new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: o.after ?? 120 }, children: [run(text, o.run)] });
-const H1 = (text) => new Paragraph({ pageBreakBefore: true, keepNext: true, spacing: { before: 0, after: 200 }, children: [run(text, { bold: true, size: 32, color: BLUE })] });
-const H2 = (text) => new Paragraph({ keepNext: true, spacing: { before: 220, after: 100 }, children: [run(text, { bold: true, size: 26, color: BLUE })] });
+/** A chapter heading. Chapters run on from one another; only the front matter and Chapter 1 start a new page. */
+const H1 = (text, { newPage = false } = {}) => new Paragraph({ pageBreakBefore: newPage, keepNext: true, spacing: { before: newPage ? 0 : 360, after: 160 }, border: newPage ? undefined : { top: { style: BorderStyle.SINGLE, size: 6, color: BLUE, space: 8 } }, children: [run(text, { bold: true, size: 32, color: BLUE })] });
+const H2 = (text) => new Paragraph({ keepNext: true, spacing: { before: 180, after: 80 }, children: [run(text, { bold: true, size: 26, color: BLUE })] });
 const H3 = (text) => new Paragraph({ keepNext: true, spacing: { before: 140, after: 60 }, children: [run(text, { bold: true, size: 24, color: BLUE })] });
 const link = (text, url) => new ExternalHyperlink({ link: url, children: [run(text, { color: BLUE, underline: {} })] });
 
-const bullets = (items) => items.map((i) => new Paragraph({ alignment: AlignmentType.JUSTIFIED, children: runs(i), numbering: { reference: 'bullets', level: 0 }, spacing: { after: 70, line: 288 } }));
+const bullets = (items) => items.map((i) => new Paragraph({ alignment: AlignmentType.JUSTIFIED, children: runs(i), numbering: { reference: 'bullets', level: 0 }, spacing: { after: 50, line: 264 } }));
 let listNo = 0;
 const numbered = (items) => {
   listNo += 1;
   const instance = listNo;
-  return items.map((i) => new Paragraph({ children: runs(i), numbering: { reference: 'numbers', level: 0, instance }, spacing: { after: 70, line: 288 } }));
+  return items.map((i) => new Paragraph({ children: runs(i), numbering: { reference: 'numbers', level: 0, instance }, spacing: { after: 50, line: 264 } }));
 };
 
 // Black single borders on every table, as in the reference.
@@ -122,11 +123,11 @@ function table(headers, rows, weights, o = {}) {
   const mid = (i) => (o.center?.includes(i) ? AlignmentType.CENTER : AlignmentType.LEFT);
   const trs = [new TableRow({ tableHeader: true, cantSplit: true, children: headers.map((h, i) => cell(h, widths[i], { header: true, align: AlignmentType.CENTER })) })];
   rows.forEach((r) => trs.push(new TableRow({ cantSplit: true, children: r.map((c, i) => cell(c, widths[i], { align: mid(i), bold: o.boldFirst && i === 0 })) })));
-  return [new Table({ width: { size: PAGE_W, type: WidthType.DXA }, columnWidths: widths, layout: TableLayoutType.FIXED, borders: BORDERS, rows: trs }), new Paragraph({ spacing: { after: 160 }, children: [] })];
+  return [new Table({ width: { size: PAGE_W, type: WidthType.DXA }, columnWidths: widths, layout: TableLayoutType.FIXED, borders: BORDERS, rows: trs }), new Paragraph({ spacing: { after: 80 }, children: [] })];
 }
 
 let figureNo = 0;
-function figure(key, text, widthIn = 6.0) {
+function figure(key, text, widthIn = 5.0) {
   const m = manifest[key];
   if (!m) throw new Error(`Missing image ${key}`);
   figureNo += 1;
@@ -138,7 +139,22 @@ function figure(key, text, widthIn = 6.0) {
       keepNext: true,
       children: [new ImageRun({ type: m.type, data: fs.readFileSync(path.join(TMP, m.file)), transformation: { width: w, height: Math.round((m.height / m.width) * w) } })],
     }),
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 220 }, children: [run(`Figure ${figureNo}: `, { bold: true, size: 20 }), run(text, { size: 20, italics: true })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 140 }, children: [run(`Figure ${figureNo}: `, { bold: true, size: 20 }), run(text, { size: 20, italics: true })] }),
+  ];
+}
+
+/** Two pictures side by side with one caption, for the tall phone screens. */
+function figurePair(keyA, keyB, text, widthEach = 2.3) {
+  figureNo += 1;
+  const img = (key) => {
+    const m = manifest[key];
+    if (!m) throw new Error(`Missing image ${key}`);
+    const w = Math.round(widthEach * 96);
+    return new ImageRun({ type: m.type, data: fs.readFileSync(path.join(TMP, m.file)), transformation: { width: w, height: Math.round((m.height / m.width) * w) } });
+  };
+  return [
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 100, after: 50 }, keepNext: true, children: [img(keyA), run('     '), img(keyB)] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 140 }, children: [run(`Figure ${figureNo}: `, { bold: true, size: 20 }), run(text, { size: 20, italics: true })] }),
   ];
 }
 
@@ -176,17 +192,11 @@ const cover = [
 
 // ---------------------------------------------------------------- 1. members and tasks
 const team = [
-  H1('1. PROJECT MEMBERS AND ASSIGNED TASKS'),
+  H1('1. PROJECT MEMBERS AND ASSIGNED TASKS', { newPage: true }),
   P('Kosha is developed as an academic project for the course UI/UX Design & Product Management (25MCA313). The four members worked as one product team: one person owned the product backlog and the server, one led the interface design, one owned data and analytics, and one owned quality and integration.'),
   ...table(['Sl. No.', 'Member Name', 'USN / Registration No.', 'Assigned Responsibility'], MEMBERS.map((m) => [String(m.n), m.name, m.usn, m.role]), [0.7, 1.9, 1.6, 4.6], { center: [0, 2] }),
   H2('1.1 Project Team Responsibilities'),
-  P('The product needs coordination between product management, interface design, data work and quality assurance. The main work areas of each member are listed below.'),
-  ...bullets([
-    '**Product ownership and backend:** product vision, backlog and priorities; Express REST APIs, authentication, session cookie, rate limits, Kosha Copilot with Google Gemini, market-data services.',
-    '**UI/UX design and frontend:** personas, user journeys, information architecture, wireframes, the design system (colour tokens, type, dark theme, motion, icons) and the React screens for the dashboard, transactions, budgets and settings.',
-    '**Data and analytics:** MongoDB collections and indexes, aggregation pipelines for the analytics, charts and tables, the Markets screens, the seed dataset and the sample accounts used for demonstration.',
-    '**Quality, content and integration:** usability and accessibility review against Nielsen\'s heuristics, unit, integration and end-to-end tests, Learn guides, Discussions, frontend and backend integration, and this report.',
-  ]),
+  P('The product needs coordination between product management, interface design, data work and quality assurance. Each member owned a main work area and supported the others, as the module table shows.'),
   H3('Module ownership'),
   ...table(
     ['Module', 'Primary owner', 'Supported by'],
@@ -236,13 +246,13 @@ const CHAPTERS = [
   ['14', 'Conclusion, References and Rubric Mapping'],
 ];
 const contents = [
-  H1('TABLE OF CONTENTS'),
+  H1('TABLE OF CONTENTS', { newPage: true }),
   ...table(['CHAPTER', 'TITLE', 'PAGE'], CHAPTERS.map(([n, t]) => [n, t, String(pages[n] ?? '')]), [1.5, 7.0, 1.1], { center: [0, 2] }),
 ];
 
 // ---------------------------------------------------------------- chapter 1
 const ch1 = [
-  H1('CHAPTER 1 – INTRODUCTION AND PROJECT BACKGROUND'),
+  H1('CHAPTER 1 – INTRODUCTION AND PROJECT BACKGROUND', { newPage: true }),
   H2('1.1 Introduction'),
   P('Money decisions are made many times a week and mostly from memory: what was spent on food this month, whether the rent has gone out, whether there is room for a trip. The information exists, but it lives in bank messages, UPI apps, notes and spreadsheets. A single, calm place that gathers it and explains it can change how a person behaves with money. That is as much a design problem as a technical one: the interface decides whether the person looks at it every day or abandons it after a week.'),
   H2('1.2 Project Overview'),
@@ -469,8 +479,8 @@ const ch5 = [
     ],
     [3.2, 6.8],
   ),
-  ...figure('diagram-dfd-level0', 'Level 0 data-flow diagram: Kosha and the people and systems it exchanges data with.', 5.6),
-  ...figure('diagram-dfd-level1', 'Level 1 data-flow diagram: the eight main processes and the data stores they read and write.', 6.3),
+  ...figure('diagram-dfd-level0', 'Level 0 data-flow diagram: Kosha and the people and systems it exchanges data with.', 4.8),
+  ...figure('diagram-dfd-level1', 'Level 1 data-flow diagram: the eight main processes and the data stores they read and write.', 5.6),
   P(`The diagrams are also provided as an interactive page (docs/report/diagrams/dfd-and-schema.html) with the Copilot diagram and the database schema. A test in the server suite compares the page with the real models, indexes and routes, so the diagrams stay true to the code.`),
   H2('5.3 Request Processing'),
   ...numbered([
@@ -525,7 +535,7 @@ const ch6 = [
     'The reply shows a card with the amount, category and date, and the buttons Confirm and Cancel.',
     'Only on Confirm does the server create the transaction, mark the action confirmed and add the entry to the list as "added by Copilot".',
   ]),
-  ...figure('diagram-dfd-level2', 'Level 2 data-flow diagram: inside Copilot. Changes are drafted and kept pending until the person presses Confirm.', 6.3),
+  ...figure('diagram-dfd-level2', 'Level 2 data-flow diagram: inside Copilot. Changes are drafted and kept pending until the person presses Confirm.', 5.6),
   H2('6.4 User Journeys'),
   P('A journey follows one persona through one goal. The steps below are what the product supports today.'),
   ...table(
@@ -735,32 +745,27 @@ const ch9 = [
   ),
   H2('9.3 Overview (Dashboard)'),
   P('The overview opens with a greeting and the month. The balance card shows the figure and says how it is made up. "What stands out this month" lists up to a few observations such as the savings rate or an over-budget category. Four key figures follow (income, spent, saved, savings rate), each with a help tip and a comparison with the same days last month. A getting-started card guides a new person through four steps.'),
-  ...figure('dashboard', 'The overview for a sample account: balance, observations and key figures.'),
+  ...figurePair('dashboard', 'dashboard-dark', 'The overview for a sample account, in the light theme (left) and the dark theme (right).', 3.3),
   H2('9.4 Transactions'),
   P('The transactions screen has search, filter chips, a month picker, a list grouped by day, a spending calendar and CSV export. The entry dialog opens with the amount focused and category chips with icons and colours. Validation messages appear beside the field.'),
-  ...figure('transactions', 'The transactions list with filters and the month picker.'),
-  ...figure('add-transaction', 'The entry dialog: amount, category chips, merchant and note.', 5.0),
+  ...figurePair('transactions', 'add-transaction', 'The transactions list with filters (left) and the entry dialog with category chips (right).', 3.3),
   H2('9.5 Budgets and Analytics'),
   P('Budgets show a bar per category with the amount spent against the limit and a warning state as the limit approaches. Analytics answer questions: how spending and income trend over twelve months, where the month went by category, which weekdays are heaviest and which merchants take the most. Hovering a bar highlights only the bar.'),
-  ...figure('budgets', 'Budgets: a limit per category with progress bars.'),
-  ...figure('analytics', 'Analytics: trend, categories, weekdays and merchants.'),
+  ...figurePair('budgets', 'analytics', 'Budgets with progress bars (left) and analytics: trend, categories, weekdays, merchants (right).', 3.3),
   H2('9.6 Kosha Copilot'),
   P('Copilot opens as a page and as a drawer on any screen. It shows which engine answered, a "What you can ask" panel, and cards for drafted changes with Confirm and Cancel. It explains market data and learning guides, and declines to say what to buy or sell.'),
-  ...figure('copilot', 'Copilot answering a question about the person\'s own data.'),
+  ...figure('copilot', 'Copilot answering a question about the person\'s own data.', 4.3),
   H2('9.7 Markets, Learn and Discussions'),
   P('Markets shows indices, sectors and movers with the trading day and the source; stock and fund pages show returns and a chart, with a table view. Learn lists guides by topic and opens one over a blurred page, with takeaways, sources and an Ask Copilot button. Discussions has spaces by topic, posts, comments and separate like and dislike counts.'),
-  ...figure('markets', 'Markets: end-of-day indices, sectors and movers with their date.'),
-  ...figure('article', 'A Learn guide opened over the page.'),
-  ...figure('discussions', 'Discussions: posts by topic with separate like and dislike counts.'),
+  ...figurePair('markets', 'discussions', 'Markets with end-of-day figures and their date (left) and Discussions with separate like and dislike counts (right).', 3.3),
+  ...figurePair('article', 'landing', 'A Learn guide opened over the page (left) and the landing page (right).', 3.3),
   H2('9.8 Landing, Sign-in and Sign-up'),
   P('Visitors see a landing page with an animated ink skyline of six Indian cities. Sign in and sign up share one frame so the drawing keeps running when the person switches. The note about data sits quietly under the form.'),
-  ...figure('landing', 'The landing page.'),
   H2('9.9 Phone Experience and the Installed App'),
   P('On a phone the sidebar becomes a bottom tab bar and a More sheet. The sheet shows every place as a coloured icon in a four-column grid, keeps its title in view while scrolling, and closes with the Back button. The app can be installed, opens offline with a clear message, and has shortcuts for adding an entry.'),
-  ...figure('mobile-more', 'The More sheet on a phone.', 2.6),
-  ...figure('mobile-dashboard', 'The overview on a phone.', 2.6),
+  ...figurePair('mobile-more', 'mobile-dashboard', 'On a phone: the More sheet (left) and the overview (right).'),
   H2('9.10 Themes'),
-  ...figure('dashboard-dark', 'The overview in the dark theme.'),
+  P('Every screen has a light and a dark theme from the same design tokens (the overview in section 9.3 is shown in both). The theme follows the device unless the person chooses one, and the choice is remembered only if the person accepts optional cookies.'),
   H2('9.11 Navigation, Feedback and Forms'),
   ...bullets([
     'Keyboard shortcuts: N and I add entries, / searches, ? lists shortcuts, Esc closes dialogs.',
