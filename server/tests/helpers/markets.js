@@ -83,7 +83,7 @@ const constituents = (list) =>
  * A stand-in for the downloader. `files` lists the days that have been published; a weekday not in it behaves
  * like a market holiday (404). `calls` records every URL asked for.
  */
-export function fakeNse({ publishedFrom = '2021-01-01', published = new Set(), skip = new Set(), fail = false, failWith = 403, extra = [], lateBhav = new Set() } = {}) {
+export function fakeNse({ publishedFrom = '2021-01-01', published = new Set(), skip = new Set(), fail = false, failWith = 403, extra = [], lateBhav = new Set(), failDays = new Set() } = {}) {
   const calls = [];
   const has = (day) => !isWeekend(day) && day >= publishedFrom && !skip.has(day) && (day <= LATEST || published.has(day));
   const fetchBuffer = async (url) => {
@@ -101,6 +101,7 @@ export function fakeNse({ publishedFrom = '2021-01-01', published = new Set(), s
     m = url.match(/BhavCopy_NSE_CM_0_0_0_(\d{4})(\d{2})(\d{2})_F_0000\.csv\.zip$/);
     if (m) {
       const day = `${m[1]}-${m[2]}-${m[3]}`;
+      if (failDays.has(day)) throw Object.assign(new Error('NSE hiccup'), { status: 503 });
       return has(day) && !lateBhav.has(day) ? bhavZip(day, [...stocksOn(day, extra), { symbol: 'XYZ', name: 'XYZ BONDS', isin: 'INE000X01009', series: 'BE', open: 10, high: 10, low: 10, close: 10, prevClose: 9, volume: 10 }]) : null;
     }
     if (url.endsWith('ind_nifty50list.csv')) return constituents([...STOCKS, ...extra].filter((s) => s.nifty50));

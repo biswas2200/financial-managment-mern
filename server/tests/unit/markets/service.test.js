@@ -89,6 +89,46 @@ describe('market overview', () => {
   });
 });
 
+describe('partial publication and flaky files', () => {
+  it('uses the previous day when the index file is out but the stock file is not', async () => {
+    const { service, clock } = make({}, { nse: fakeNse({ published: new Set(['2026-11-16']), lateBhav: new Set(['2026-11-16']) }) });
+    clock.t = new Date('2026-11-16T14:00:00Z').getTime();
+    const o = await service.overview();
+    expect(o.asOf).toBe('2026-11-13');
+    expect(o.gainers[0].symbol).toBe('AAA');
+  });
+
+  it('shows a dash for a period whose comparison file failed, and still shows the rest', async () => {
+    const { service } = make({}, { nse: fakeNse({ failDays: new Set(['2026-11-06']) }) });
+    const d = await service.stockDetail('AAA');
+    expect(d.returns.find((r) => r.period === '1W').pct).toBeNull();
+    expect(d.returns.find((r) => r.period === '1M').pct).not.toBeNull();
+    expect(d.close).toBe(stockClose(stock('AAA'), LATEST));
+  });
+
+  it('does the same for an index', async () => {
+    const nse = fakeNse();
+    const real = nse.fetchBuffer;
+    nse.fetchBuffer = async (url) => {
+      if (/ind_close_all_(\d{2})(\d{2})2023/.test(url)) throw Object.assign(new Error('NSE hiccup'), { status: 503 });
+      return real(url);
+    };
+    const { service } = make({}, { nse });
+    const d = await service.indexDetail('Nifty 50');
+    expect(d.returns.find((r) => r.period === '3Y').pct).toBeNull();
+    expect(d.returns.find((r) => r.period === '1Y').pct).not.toBeNull();
+  });
+
+  it('looks again, after a while, for a recent day that was missing, since NSE may publish late', async () => {
+    const skip = new Set([LATEST]);
+    const { service, clock } = make({}, { nse: fakeNse({ skip }) });
+    expect((await service.overview()).asOf).toBe('2026-11-12');
+    skip.delete(LATEST);
+    clock.t += 31 * 60_000;
+    expect((await service.overview()).asOf).toBe(LATEST);
+  });
+});
+
 describe('stocks', () => {
   it('searches by symbol or company name, symbol matches first', async () => {
     const { service } = make();

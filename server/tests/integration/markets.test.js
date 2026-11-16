@@ -76,6 +76,24 @@ describe('Markets API', () => {
     expect((await agent.get(`${api}/funds/search?q=flexi`).expect(200)).body.map((f) => f.code)).toEqual([122639]);
   });
 
+  it('answers a nonsense scheme code or a search with control characters with 400, not a made-up outage', async () => {
+    const { agent } = await signUp(app);
+    await agent.get(`${api}/funds/1000000000000000000000`).expect(400);
+    await agent.get(`${api}/funds/0`).expect(400);
+    await agent.get(`${api}/funds/search?q=%00%00`).expect(400);
+    await agent.get(`${api}/stocks/search?q=%00ab`).expect(400);
+  });
+
+  it('asks the fund source only once for the same search, however many people type it', async () => {
+    const mf = fakeMf();
+    const a = build({ mf });
+    const { agent } = await signUp(a);
+    await agent.get(`${api}/funds/search?q=nifty`).expect(200);
+    await agent.get(`${api}/funds/search?q=NIFTY`).expect(200);
+    await agent.get(`${api}/funds/search?q=nifty%20`).expect(200);
+    expect(mf.calls.filter((u) => u.includes('/search'))).toHaveLength(1);
+  });
+
   it('answers 503 with a clear code, not made-up numbers, when the data sources are unreachable', async () => {
     const down = build({ nse: fakeNse({ fail: true }), mf: fakeMf({ fail: true }) });
     const { agent } = await signUp(down);
@@ -166,5 +184,23 @@ describe('Watchlist', () => {
     await agent.post(url).send({ kind: 'stock', ref: 'AAA' }).expect(201);
     await agent.delete('/api/v1/auth/me').send({ password: credentials.password }).expect(204);
     expect(await mongoose.connection.db.collection('watchlistitems').countDocuments()).toBe(0);
+  });
+});
+
+describe('Markets rate limit', () => {
+  it('slows down someone who asks too often, with a plain message', async () => {
+    const { default: express } = await import('express');
+    const { marketsRoutes } = await import('../../src/routes/markets.routes.js');
+    const markets = createMarketService({ fetchBuffer: fakeNse().fetchBuffer, fetchJson: fakeMf().fetchJson, now: () => NOW_MONDAY_MORNING });
+    const tiny = express();
+    tiny.use((req, _res, next) => {
+      req.user = { _id: 'same-person' };
+      next();
+    });
+    tiny.use('/markets', marketsRoutes(markets, { limit: 3, skip: false }));
+    for (let i = 0; i < 3; i += 1) await request(tiny).get('/markets/funds/categories').expect(200);
+    const res = await request(tiny).get('/markets/funds/categories').expect(429);
+    expect(res.body.error).toMatchObject({ code: 'RATE_LIMITED' });
+    expect(res.body.error.message).toMatch(/too quickly/i);
   });
 });

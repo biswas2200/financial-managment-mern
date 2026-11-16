@@ -51,6 +51,11 @@ describe('service worker', () => {
     expect(sandbox.strategyFor(req('http://localhost:5173/api/v1/markets/overview', 'cors', 'POST'))).toBe('network-only');
   });
 
+  it('does not store what people search for', () => {
+    expect(sandbox.strategyFor(req('http://localhost:5173/api/v1/markets/stocks/search?q=secret'))).toBe('network-only');
+    expect(sandbox.strategyFor(req('http://localhost:5173/api/v1/markets/funds/search?q=secret'))).toBe('network-only');
+  });
+
   it('never stores anything personal: money, watchlist, Copilot, community, learn reactions and profile', () => {
     for (const path of ['transactions', 'budgets', 'balance', 'watchlist', 'assistant/history', 'community/posts', 'learn/articles', 'auth/me']) {
       expect(sandbox.strategyFor(req(`http://localhost:5173/api/v1/${path}`)), path).toBe('network-only');
@@ -95,6 +100,22 @@ describe('service worker caches', () => {
       throw new Error('offline');
     };
     expect(await sandbox.networkFirstData(request)).toBe('network error');
+  });
+
+  it('keeps the market cache small by forgetting the oldest copies', async () => {
+    const entries = Array.from({ length: 70 }, (_, i) => ({ url: `http://localhost:5173/api/v1/markets/stocks/S${i}` }));
+    const deleted = [];
+    const cache = {
+      put: async () => {},
+      match: async () => undefined,
+      keys: async () => entries,
+      delete: async (request) => deleted.push(request.url),
+    };
+    sandbox.caches = { open: async () => cache };
+    sandbox.fetch = async () => ({ ok: true, clone: () => ({}) });
+    await sandbox.networkFirstData(req('http://localhost:5173/api/v1/markets/stocks/S70'));
+    expect(deleted.length).toBe(10);
+    expect(deleted[0]).toBe('http://localhost:5173/api/v1/markets/stocks/S0');
   });
 
   it('removes the caches of older versions when a new worker takes over', async () => {
