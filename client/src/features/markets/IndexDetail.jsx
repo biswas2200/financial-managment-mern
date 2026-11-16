@@ -17,7 +17,7 @@ export default function IndexDetail() {
       </>
     );
   }
-  if (error || !i) {
+  if (!i) {
     return (
       <>
         <BackLink to="/markets">Back to markets</BackLink>

@@ -17,7 +17,7 @@ export default function StockDetail() {
       </>
     );
   }
-  if (error || !s) {
+  if (!s) {
     return (
       <>
         <BackLink to="/markets/stocks">Back to stocks</BackLink>

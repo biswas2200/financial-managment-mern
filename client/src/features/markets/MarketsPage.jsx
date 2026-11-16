@@ -113,7 +113,7 @@ export default function MarketsPage() {
         <div role="status" aria-label="Loading market data" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
         </div>
-      ) : error ? (
+      ) : !data ? (
         <MarketError error={error} onRetry={refetch} />
       ) : (
         <div className="flex flex-col gap-5">

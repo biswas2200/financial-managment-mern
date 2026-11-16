@@ -77,7 +77,7 @@ export default function StocksPage() {
 
       {isLoading ? (
         <Skeleton className="h-96 rounded-2xl" />
-      ) : error ? (
+      ) : !data ? (
         <MarketError error={error} onRetry={refetch} />
       ) : (
         <section className="raised rounded-2xl bg-surface shadow-raise-1">

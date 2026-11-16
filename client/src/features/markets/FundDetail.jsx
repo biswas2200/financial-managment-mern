@@ -18,7 +18,7 @@ export default function FundDetail() {
       </>
     );
   }
-  if (error || !f) {
+  if (!f) {
     return (
       <>
         <BackLink to="/markets/funds">Back to mutual funds</BackLink>

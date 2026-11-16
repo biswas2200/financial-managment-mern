@@ -112,6 +112,13 @@ describe('Stock page', () => {
     expect(prompt).toMatch(/do not give buy or sell advice/i);
   });
 
+  it('keeps showing the stock when a refresh fails after it has loaded', () => {
+    stock = { data: DATA, isLoading: false, error: Object.assign(new Error('offline'), { status: 0 }), refetch: vi.fn() };
+    renderPage();
+    expect(screen.getByRole('heading', { level: 1, name: 'RELIANCE INDUSTRIES LTD' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+  });
+
   it('says so when the stock cannot be found', () => {
     stock = { data: undefined, isLoading: false, error: Object.assign(new Error('We could not find that stock on the NSE.'), { status: 404 }), refetch: vi.fn() };
     renderPage();

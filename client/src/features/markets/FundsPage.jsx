@@ -86,7 +86,7 @@ export default function FundsPage() {
         <div role="status" aria-label="Loading funds">
           <Skeleton className="h-72 rounded-2xl" />
         </div>
-      ) : top.error ? (
+      ) : !top.data ? (
         <MarketError error={top.error} onRetry={top.refetch} />
       ) : (
         <section className="raised rounded-2xl bg-surface shadow-raise-1">

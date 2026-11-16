@@ -27,7 +27,7 @@ export default function WatchlistPage() {
         <div role="status" aria-label="Loading watchlist">
           <Skeleton className="h-56 rounded-2xl" />
         </div>
-      ) : error ? (
+      ) : !data && error ? (
         <MarketError error={error} onRetry={refetch} />
       ) : items.length === 0 ? (
         <section className="raised rounded-2xl bg-surface shadow-raise-1">

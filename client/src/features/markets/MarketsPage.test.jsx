@@ -102,6 +102,14 @@ describe('Markets overview', () => {
     expect(screen.getByRole('link', { name: /Nifty, Sensex and the exchanges/ })).toHaveAttribute('href', '/learn/nifty-sensex-basics');
   });
 
+  it('keeps showing what it already has when a refresh fails, for example after the connection drops', () => {
+    state = { data: DATA, isLoading: false, error: Object.assign(new Error('offline'), { status: 0 }), refetch: vi.fn() };
+    renderPage();
+    expect(screen.getByText('25,144.30')).toBeInTheDocument();
+    expect(screen.getByText(/as of 13 Nov 2026/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
+  });
+
   it('shows a loading state', () => {
     state = { data: undefined, isLoading: true, error: null };
     renderPage();
