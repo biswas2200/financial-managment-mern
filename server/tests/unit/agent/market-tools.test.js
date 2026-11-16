@@ -122,6 +122,10 @@ describe('Copilot system prompt', () => {
     expect(prompt).toMatch(/not a SEBI-registered/i);
   });
 
+  it('makes the first sentence of an answer to "should I buy X" a plain refusal', () => {
+    expect(prompt).toMatch(/first sentence[^.]*(can't|cannot)[^.]*(buy|sell)/i);
+  });
+
   it('asks it to name the match it used when the tool lists other matches', () => {
     expect(prompt).toContain('other_matches');
     expect(prompt).toMatch(/closest match/i);
