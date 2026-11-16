@@ -27,7 +27,7 @@ export function Reader({ open, onClose, title, meta, children }) {
         if (e.target === ref.current) onClose();
       }}
       onClick={(e) => e.target === ref.current && onClose()}
-      className="reader m-auto h-[min(92dvh,60rem)] max-h-none w-[min(100%,48rem)] overflow-hidden rounded-2xl bg-surface p-0 text-ink shadow-raise-2 max-sm:h-dvh max-sm:w-full max-sm:rounded-none"
+      className="reader m-auto h-[min(92dvh,60rem)] max-h-none w-[min(100%,48rem)] overflow-hidden rounded-2xl bg-surface p-0 text-ink shadow-raise-2 max-sm:h-dvh max-sm:w-full max-sm:max-w-none max-sm:rounded-none"
     >
       {open && (
         <div className="flex h-full flex-col">

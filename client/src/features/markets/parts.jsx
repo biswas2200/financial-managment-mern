@@ -20,7 +20,7 @@ export function Change({ pct, className }) {
   const { icon: Icon, ink, word } = TREND[t];
   if (pct === null || pct === undefined || Number.isNaN(Number(pct))) return <span className={clsx('text-ink-3', className)}>–</span>;
   return (
-    <span data-trend={t} className={clsx('tabular inline-flex items-center gap-0.5 font-semibold', ink, className)}>
+    <span data-trend={t} className={clsx('tabular relative inline-flex items-center gap-0.5 font-semibold', ink, className)}>
       <Icon size={13} aria-hidden strokeWidth={2.5} />
       {formatPct(pct)}
       <span className="sr-only"> {word}</span>
