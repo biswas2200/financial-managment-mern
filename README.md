@@ -23,6 +23,8 @@ with likes and dislikes counted separately).
 - **Budgets with your own categories:** every expense category can be picked, and a new category with its own icon (55+ to choose from) can be made without leaving the budget form.
 - **Settings:** profile picture (an icon on a colour, or your own photo shrunk in the browser), phone number, date of birth, password, light/dark/system theme, custom categories, what you agreed to, deleting your account, and which Copilot engine is active.
 - **Privacy:** a plain-language Privacy Policy and Terms of Use, accepted at sign-up and recorded with the version and time. Phone number and date of birth are optional.
+- **Cookies:** Kosha sets one cookie, to keep you signed in (httpOnly), and uses a little browser storage. A banner asks once, with two equal choices: "Accept all" or "Essential only". Your theme and the hidden getting-started card are only remembered after a yes, and a no removes them. The choice is kept in your browser and, once you sign in, with your account (`PUT /auth/me/cookies`): the newest answer wins, so a new device does not ask again. Settings, under Privacy, lists everything Kosha stores. The list is one shared source (`shared/src/cookies.js`) that the banner, Settings, the policy and the clearing code all read. There are no advertising, analytics or tracking cookies.
+- **Back to top:** long pages (in the app, on the landing page and in the policies) get a button once you have scrolled down. It glides or jumps depending on reduced motion, and moves the keyboard back to the top.
 - **A front door:** visitors see a landing page with a live, ink-on-paper sketch of six Indian cities (Gateway of India, India Gate, Howrah Bridge, Charminar, Vidhana Soudha, Kapaleeshwarar Temple) that draws itself in, then pans while water ripples, boats bob, flags sway and traffic crosses. The sign-in and sign-up pages carry the same sketch, and it inverts for the dark theme. Everything stops for reduced motion.
 - **One logo, one skyline:** the logo is a fixed drawing on a black tile, so it looks the same in the light and dark themes, on a phone and on a laptop, in the browser tab and on the home-screen icon. Inside the app the same city sketch stands still, faint, behind every page (in both themes), without animation or a glow.
 - **Sidebar by domain:** Money (Overview, Transactions, Analytics, Budgets), Invest (Markets, Stocks, Mutual funds, Watchlist), Learn and talk (Learn, Discussions) and Assistant (Copilot). On a phone the tab bar keeps four everyday places and a **More** sheet lists the rest, each place with its own icon colour. On a short laptop window the whole sidebar scrolls as one piece, like the page, with a fade at the bottom while there is more.
@@ -111,6 +113,20 @@ npm run dev                   # API on http://localhost:5000, web app on http://
 Open http://localhost:5173 and sign in with the seed-dataset demo account
 (local development only): **demo@kosha.app** / **Demo@1234**. A second account, riya@kosha.app, uses the same password.
 
+`npm run seed:personas` adds eight more accounts, each a different way of living with money, so every screen has something real to show.
+They all use **Demo@1234**:
+
+| Account | Who | What it shows |
+|---|---|---|
+| kabir@kosha.app | Kabir Sethi, 22, a student in Pune | A small allowance, tuition gigs, an internship stipend, canteen and bus-pass spending |
+| nandini@kosha.app | Nandini Chauhan, 38, runs a joint-family home in Jaipur | A household allowance, school fees every term, festival spikes, a custom income category |
+| karthik@kosha.app | Karthik Raman, 31, a freelance designer in Chennai | A retainer plus lumpy project income, work tools, quarterly advance tax |
+| vikas@kosha.app | Vikas Agarwal, 45, owns a store in Lucknow | Weekly takings, wholesale stock, wages, a home loan and a festive season |
+| mohan@kosha.app | Mohan Pillai, 68, a retired bank manager in Kochi | A pension, rent and deposit interest, medicines and check-ups, donations |
+| jasleen@kosha.app | Jasleen Bhatia, 30, newly married in Chandigarh | A monthly transfer to a home fund, a car EMI, a shared rent, two trips |
+| rohit@kosha.app | Rohit Chaudhary, 28, an early-career investor in Gurugram | SIPs first, then spending, and a watchlist of stocks and the Nifty 50 |
+| farah@kosha.app | Farah Siddiqui, 34, a resident doctor in Hyderabad | A stipend with duty shifts, an education loan, exam coaching, late meals |
+
 mongo-express is available at http://localhost:8081 to browse the database.
 
 ### Use it on your phone (PWA)
@@ -169,6 +185,8 @@ When Gemini is enabled, your question and the figures Copilot looks up are sent 
 | `npm run e2e` | Playwright end-to-end journeys in Google Chrome (starts the dev servers if needed) |
 | `npm run seed` / `npm run seed:fresh` | Recreate the demo accounts / drop the database and reseed |
 | `npm run seed:community` | Add sample discussions (16 members, 16 posts, 67 comments). Safe to run again: it only adds what is missing |
+| `npm run seed:personas` | Add eight sample accounts for different use cases (add `-- --refresh` to rebuild just those) |
+| `npm run clean:test-data` | Remove accounts that tests made (emails on kosha.test or review.test) and everything they posted or saved. The browser tests do this themselves when they finish |
 | `npm run db:dump` | Write the database to `database/dump/kosha.archive.gz` |
 | `npm run db:reset` | Recreate the MongoDB volume (restores the committed dump) |
 | `npm run screenshots` | Capture every screen into `docs/report/screenshots` |
@@ -183,10 +201,10 @@ Development followed test-driven development: each feature started with a failin
 
 | Suite | Tests | Notes |
 |---|---|---|
-| shared | 109 | money, IST dates, validation schemas, phone, date of birth, avatar, balance, community rules (domains, post and comment limits, ids written one way, invisible characters, `formatCount` that never goes below zero), watchlist |
-| server | 436 | unit (parser, intents, Gemini loop, NSE and AMFI parsing, return maths, the market service with fake files, caching and eviction, article content, Copilot tools) and API integration against MongoDB: auth, profile, balance, transactions, budgets, community (reactions under concurrency, cascade deletes), the sample discussions seed (safe to run twice), learn, markets, watchlist, Copilot |
-| client | 435 | forms, dropdown, month picker, calendar, reactions, Reader, article reader, comments, discussions, every Markets screen, the logo, the still skyline behind the app, the sidebar that scrolls as one piece, the phone tab bar and the coloured More sheet, Copilot drawer and cards, the landing page and sketch generators, auth gate and offline screen, route errors, service worker, manifest |
-| e2e | 112 | real browser against the real server: sign-up and consent, CRUD, budgets, Copilot, months and days, balance, profile, settings pages, landing and the live sketch, Learn (shared like/dislike counts, comments), Discussions, Markets with live NSE and AMFI data and honest failures, watchlist, Copilot with guides and no advice, the one fixed logo in both themes, the still skyline, a sidebar that scrolls as one piece at laptop heights, coloured phone icons and the More sheet, no sideways scroll on any page, installed app (offline, caches) |
+| shared | 117 | money, IST dates, validation schemas, phone, date of birth, avatar, balance, community rules (domains, post and comment limits, ids written one way, invisible characters, `formatCount` that never goes below zero), watchlist |
+| server | 485 | unit (parser, intents, Gemini loop, NSE and AMFI parsing, return maths, the market service with fake files, caching and eviction, article content, Copilot tools) and API integration against MongoDB: auth, profile, balance, transactions, budgets, community (reactions under concurrency, cascade deletes), the sample discussions and sample accounts seeds (safe to run twice), the cookie choice kept with the account, clearing test accounts, the diagrams page checked against the real models and routes, learn, markets, watchlist, Copilot |
+| client | 496 | forms, dropdown, month picker, calendar, reactions, Reader, article reader, comments, discussions, every Markets screen, the logo, the still skyline behind the app, the sidebar that scrolls as one piece, the phone tab bar and the coloured More sheet, Copilot drawer and cards, the landing page and sketch generators, auth gate and offline screen, route errors, service worker, manifest |
+| e2e | 128 | real browser against the real server: sign-up and consent, CRUD, budgets, Copilot, months and days, balance, profile, settings pages, landing and the live sketch, Learn (shared like/dislike counts, comments), Discussions, Markets with live NSE and AMFI data and honest failures, watchlist, Copilot with guides and no advice, the one fixed logo in both themes, the still skyline, a sidebar that scrolls as one piece at laptop heights, coloured phone icons and the More sheet, no sideways scroll on any page, installed app (offline, caches), the cookie banner and its sync to a second device, back to top, and sign in and sign up sharing one skyline |
 
 The market and community suites never touch the network: the market service is given fake NSE and AMFI files. The browser
 suite does use the real sources, and skips the tests that need numbers if they cannot be reached.
@@ -208,13 +226,13 @@ server/      Express API
   src/markets       NSE and AMFI parsing, return maths, the market service with caching and honest failures
   src/content       the Learn articles, as plain data
   src/agent         Copilot: tools, Gemini provider, offline engine, insights
-  src/seed          the demo data generator and the sample discussions
-  scripts/          seed.js, seed-community.js, dump.sh
+  src/seed          the demo data generator, the sample discussions, the eight sample accounts, and clearing out test accounts
+  scripts/          seed.js, seed-community.js, seed-personas.js, clean-test-data.js, dump.sh
   tests/            unit and integration suites
 client/      React app (features/: landing, learn, discussions, markets, settings...; components/brand/sketch draws the city skyline); public/ holds the manifest, icons and sw.js
 e2e/         Playwright specs and the screenshot script
 database/    initdb restore script and the committed seed dump
-docs/report/ project report, diagrams, screenshots and test evidence
+docs/report/ project report, diagrams, screenshots and test evidence. Open docs/report/diagrams/dfd-and-schema.html in a browser for the data-flow diagrams and the database schema (plain HTML, CSS and JS, checked against the code by a test)
 ```
 
 ## API overview
