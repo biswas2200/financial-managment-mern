@@ -1,5 +1,7 @@
-/* Kosha service worker: app-shell caching. Money data (/api) is never cached. */
-const VERSION = 'kosha-v2';
+/* Kosha service worker: app-shell caching. Personal data (/api) is never cached. The one exception is public,
+   dated market data (/api/v1/markets), kept so the last end-of-day figures can still be read offline. */
+const VERSION = 'kosha-v3';
+const DATA_CACHE = `${VERSION}-markets`;
 const MATCH = { ignoreVary: true }; // build assets are served with Vary: Origin; cached copies must still match
 const SHELL = ['/', '/manifest.webmanifest', '/favicon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
@@ -10,6 +12,7 @@ function strategyFor(request) {
   if (url.origin !== self.location.origin) {
     return FONT_HOSTS.includes(url.hostname) ? 'stale-while-revalidate' : 'network-only';
   }
+  if (url.pathname.startsWith('/api/v1/markets/')) return 'network-first-data';
   if (url.pathname.startsWith('/api/')) return 'network-only';
   if (request.mode === 'navigate') return 'network-first';
   if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icons/')) return 'cache-first';
@@ -34,7 +37,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION && k !== DATA_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -47,6 +50,18 @@ async function networkFirst(request) {
     return response;
   } catch {
     return (await cache.match('/')) ?? Response.error();
+  }
+}
+
+/** Public market data: always try the network, remember the last good answer, and fall back to it when offline. */
+async function networkFirstData(request) {
+  const cache = await caches.open(DATA_CACHE);
+  try {
+    const response = await fetch(request);
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  } catch {
+    return (await cache.match(request)) ?? Response.error();
   }
 }
 
@@ -74,6 +89,7 @@ self.addEventListener('fetch', (event) => {
   const strategy = strategyFor(event.request);
   if (strategy === 'network-only') return;
   if (strategy === 'network-first') event.respondWith(networkFirst(event.request));
+  else if (strategy === 'network-first-data') event.respondWith(networkFirstData(event.request));
   else if (strategy === 'cache-first') event.respondWith(cacheFirst(event.request));
   else event.respondWith(staleWhileRevalidate(event.request));
 });
