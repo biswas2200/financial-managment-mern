@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { toMinor, toSignedMinor, MAX_AMOUNT_MINOR, MAX_BALANCE_MINOR } from './money.js';
 import { parseDateInput } from './dates.js';
 import { TRANSACTION_TYPES, PAYMENT_METHODS } from './categories.js';
-import { normalizePhone, ageFromDob, AVATAR_PRESETS, MAX_AVATAR_CHARS, MIN_AGE } from './profile.js';
+import { normalizePhone, ageFromDob, stripInvisible, AVATAR_PRESETS, MAX_AVATAR_CHARS, MIN_AGE } from './profile.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -57,6 +57,12 @@ const optionalQuery = (schema) =>
   z.preprocess((v) => (v === '' || v === null ? undefined : v), schema.optional());
 
 // ---------- Auth ----------
+
+/** A display name: invisible characters are removed first, so a name cannot be made of nothing. */
+const personName = z
+  .string({ required_error: 'Name is required' })
+  .transform(stripInvisible)
+  .pipe(z.string().trim().min(2, 'Name is too short').max(60, 'Name is too long'));
 
 /** Empty text clears an optional profile field. */
 const clearable = (schema) => z.union([z.literal('').transform(() => null), z.null(), schema]);
@@ -113,7 +119,7 @@ const contactFields = {
 };
 
 export const registerSchema = z.object({
-  name: z.string().trim().min(2, 'Name is too short').max(60, 'Name is too long'),
+  name: personName,
   email,
   password: passwordRule,
   ...contactFields,
@@ -126,7 +132,7 @@ export const loginSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-  name: z.string().trim().min(2, 'Name is too short').max(60, 'Name is too long'),
+  name: personName,
   ...contactFields,
   avatar: avatarSchema.nullable().optional(),
 });

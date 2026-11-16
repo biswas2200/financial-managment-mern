@@ -14,6 +14,8 @@ import {
   COMMUNITY_LIMITS,
 } from '../src/community.js';
 
+const POST_ID = 'a1b2c3d4e5f6a1b2c3d4e5f6';
+
 describe('domains and spaces', () => {
   it('names the eight money domains, each with an id and a label', () => {
     expect(DOMAINS.map((d) => d.id)).toEqual(['saving', 'investing', 'stocks', 'funds', 'tax', 'protection', 'credit', 'safety']);
@@ -99,24 +101,24 @@ describe('postSchema', () => {
 
 describe('commentSchema', () => {
   it('needs a kind, a target and some text', () => {
-    expect(commentSchema.safeParse({ kind: 'post', target: 'abc', body: 'Nice' }).success).toBe(true);
+    expect(commentSchema.safeParse({ kind: 'post', target: POST_ID, body: 'Nice' }).success).toBe(true);
     expect(commentSchema.safeParse({ kind: 'article', target: 'emergency-fund', body: 'Useful' }).success).toBe(true);
-    expect(commentSchema.safeParse({ kind: 'comment', target: 'abc', body: 'Nested' }).success).toBe(false);
-    expect(commentSchema.safeParse({ kind: 'post', target: 'abc', body: '   ' }).success).toBe(false);
-    expect(commentSchema.safeParse({ kind: 'post', target: 'abc', body: 'x'.repeat(COMMUNITY_LIMITS.comment + 1) }).success).toBe(false);
+    expect(commentSchema.safeParse({ kind: 'comment', target: POST_ID, body: 'Nested' }).success).toBe(false);
+    expect(commentSchema.safeParse({ kind: 'post', target: POST_ID, body: '   ' }).success).toBe(false);
+    expect(commentSchema.safeParse({ kind: 'post', target: POST_ID, body: 'x'.repeat(COMMUNITY_LIMITS.comment + 1) }).success).toBe(false);
   });
 });
 
 describe('reactionSchema', () => {
   it('accepts like, dislike or null (to take a reaction back)', () => {
     for (const value of ['like', 'dislike', null]) {
-      expect(reactionSchema.safeParse({ kind: 'post', target: 'abc', value }).success, String(value)).toBe(true);
+      expect(reactionSchema.safeParse({ kind: 'post', target: POST_ID, value }).success, String(value)).toBe(true);
     }
   });
 
   it('rejects anything else, so a score can never be pushed below zero by a made-up value', () => {
     for (const value of ['-1', -1, 1, 'unlike', undefined, true]) {
-      expect(reactionSchema.safeParse({ kind: 'post', target: 'abc', value }).success, String(value)).toBe(false);
+      expect(reactionSchema.safeParse({ kind: 'post', target: POST_ID, value }).success, String(value)).toBe(false);
     }
   });
 });
@@ -124,7 +126,7 @@ describe('reactionSchema', () => {
 describe('list queries', () => {
   it('give sensible defaults', () => {
     expect(postListQuery.parse({})).toMatchObject({ sort: 'new', page: 1, limit: 10 });
-    expect(commentListQuery.parse({ kind: 'post', target: 'abc' })).toMatchObject({ sort: 'top', page: 1, limit: 20 });
+    expect(commentListQuery.parse({ kind: 'post', target: POST_ID })).toMatchObject({ sort: 'top', page: 1, limit: 20 });
   });
 
   it('read numbers from the query string and cap the page size', () => {

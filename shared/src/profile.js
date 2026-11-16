@@ -50,3 +50,11 @@ export function ageFromDob(dob, now = new Date()) {
   if (tm < bm || (tm === bm && td < bd)) age -= 1;
   return age;
 }
+
+/**
+ * Characters that show nothing (zero-width spaces and joiners, bidirectional overrides, the byte-order mark).
+ * They are removed from names, titles and comments so nothing can be made invisible or written backwards.
+ */
+// eslint-disable-next-line no-misleading-character-class
+const INVISIBLE = /[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]/g;
+export const stripInvisible = (value) => String(value ?? '').replace(INVISIBLE, '');

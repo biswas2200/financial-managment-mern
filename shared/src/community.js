@@ -6,6 +6,7 @@
  * net score: both are shown as plain positive numbers.
  */
 import { z } from 'zod';
+import { stripInvisible } from './profile.js';
 
 /** The money domains. Articles belong to one; discussion spaces reuse them. */
 export const DOMAINS = [
@@ -56,7 +57,7 @@ export function publicName(name) {
 // Control characters never belong in a post; tabs and line breaks do.
 // eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
-const clean = (value) => value.replace(CONTROL, '').replace(/\n{3,}/g, '\n\n').trim();
+const clean = (value) => stripInvisible(value.replace(CONTROL, '')).replace(/\n{3,}/g, '\n\n').trim();
 
 const text = (label, min, max) =>
   z
@@ -71,24 +72,41 @@ const text = (label, min, max) =>
 
 const target = z.string().trim().min(1, 'Missing target').max(80, 'Invalid target');
 
+const HEX_ID = /^[a-f\d]{24}$/i;
+/**
+ * A post or comment is named by its 24-character id, and that id is written in lower case only. Otherwise the same
+ * post could be reached under two spellings and a person could end up with two reactions on it. An article is named
+ * by its slug and is left as it is.
+ */
+const withTarget = (schema) =>
+  schema
+    .superRefine((v, ctx) => {
+      if (v.kind !== 'article' && !HEX_ID.test(v.target)) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['target'], message: 'Invalid target' });
+    })
+    .transform((v) => (v.kind === 'article' ? v : { ...v, target: v.target.toLowerCase() }));
+
 export const postSchema = z.object({
   space: z.enum(SPACE_IDS, { errorMap: () => ({ message: 'Choose a space for your post' }) }),
   title: text('Title', 3, COMMUNITY_LIMITS.title),
   body: text('Post', 10, COMMUNITY_LIMITS.post),
 });
 
-export const commentSchema = z.object({
-  kind: z.enum(COMMENT_TARGET_KINDS, { errorMap: () => ({ message: 'Comments go on an article or a post' }) }),
-  target,
-  body: text('Comment', 1, COMMUNITY_LIMITS.comment),
-});
+export const commentSchema = withTarget(
+  z.object({
+    kind: z.enum(COMMENT_TARGET_KINDS, { errorMap: () => ({ message: 'Comments go on an article or a post' }) }),
+    target,
+    body: text('Comment', 1, COMMUNITY_LIMITS.comment),
+  }),
+);
 
-export const reactionSchema = z.object({
-  kind: z.enum(REACTION_KINDS),
-  target,
-  // null takes the reaction back. Nothing else is accepted, so a count can only ever be a count.
-  value: z.enum(REACTION_VALUES).nullable(),
-});
+export const reactionSchema = withTarget(
+  z.object({
+    kind: z.enum(REACTION_KINDS),
+    target,
+    // null takes the reaction back. Nothing else is accepted, so a count can only ever be a count.
+    value: z.enum(REACTION_VALUES).nullable(),
+  }),
+);
 
 const blankIsAbsent = (schema) => z.preprocess((v) => (v === '' || v === null ? undefined : v), schema.optional());
 const pageNumber = z.coerce.number().int().min(1).default(1);
@@ -101,12 +119,14 @@ export const postListQuery = z.object({
   limit: pageSize(10, 50),
 });
 
-export const commentListQuery = z.object({
-  kind: z.enum(COMMENT_TARGET_KINDS),
-  target,
-  sort: z.enum(['top', 'new', 'old']).default('top'),
-  page: pageNumber,
-  limit: pageSize(20, 50),
-});
+export const commentListQuery = withTarget(
+  z.object({
+    kind: z.enum(COMMENT_TARGET_KINDS),
+    target,
+    sort: z.enum(['top', 'new', 'old']).default('top'),
+    page: pageNumber,
+    limit: pageSize(20, 50),
+  }),
+);
 
 export const articleListQuery = z.object({ domain: blankIsAbsent(z.enum(DOMAIN_IDS)) });
