@@ -83,16 +83,14 @@ describe('seedPersonas', () => {
   });
 
   it('can rebuild just these accounts, without touching anybody else', async () => {
-    const { agent } = await signUp(app, { name: 'Real Person' });
-    await agent.post('/api/v1/transactions').send({ type: 'expense', amount: 100, category: (await agent.get('/api/v1/categories')).body[0].id, date: new Date().toISOString() });
-    const mine = await Transaction.countDocuments({ description: { $ne: null } });
-    const kabir = await User.findOne({ email: PERSONAS[0].email });
-    await Transaction.deleteMany({ user: kabir._id }); // damage one of them
+    const { agent, categories } = await signUp(app, { name: 'Real Person' });
+    await agent.post('/api/v1/transactions').send({ type: 'expense', amount: 25000, category: categories.Groceries.id, description: 'Weekly groceries', date: '2026-11-08' }).expect(201);
+    const first = await User.findOne({ email: PERSONAS[0].email });
+    await Transaction.deleteMany({ user: first._id }); // damage one of them
     const refreshed = await seedPersonas({ now: NOW, refresh: true });
     expect(refreshed).toMatchObject({ created: PERSONAS.length, skipped: 0 });
     expect(await User.countDocuments()).toBe(PERSONAS.length + 1);
     expect(await Transaction.countDocuments({ user: (await User.findOne({ email: PERSONAS[0].email }))._id })).toBeGreaterThan(100);
-    expect((await agent.get('/api/v1/transactions?limit=5')).body.total).toBeGreaterThanOrEqual(1);
-    expect(mine).toBeGreaterThan(0);
+    expect((await agent.get('/api/v1/transactions?limit=5').expect(200)).body.total).toBe(1); // the real person's own entry is still there
   });
 });

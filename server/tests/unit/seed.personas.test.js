@@ -198,7 +198,7 @@ describe('Their budgets', () => {
     for (const p of PERSONAS) {
       const cats = idFor(p);
       const name = Object.fromEntries(cats.map((c) => [c.id, c.name]));
-      const rows = monthly(p).slice(-3);
+      const rows = monthly(p); // the whole window, so a category that is skipped some months does not decide it
       for (const [category, rupees] of Object.entries(p.budgets)) {
         const spends = rows.map((r) => r.byCategory[`expense:${category}`] ?? 0);
         const avg = spends.reduce((a, b) => a + b, 0) / spends.length;
