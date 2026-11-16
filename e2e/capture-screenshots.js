@@ -16,7 +16,7 @@ const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const OUT = path.join(ROOT, 'docs/report/screenshots');
 const BASE = process.env.KOSHA_URL ?? 'http://localhost:5173';
 // Seed-dataset demo account (local development only)
-const DEMO = { email: 'demo@kosha.app', password: 'Demo@1234' };
+const DEMO = { email: process.env.KOSHA_EMAIL ?? 'demo@kosha.app', password: process.env.KOSHA_PASSWORD ?? 'Demo@1234' };
 const only = process.argv.slice(2).filter((a) => !a.startsWith('-'));
 const want = (name) => !only.length || only.includes(name);
 

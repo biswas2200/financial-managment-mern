@@ -232,7 +232,7 @@ server/      Express API
 client/      React app (features/: landing, learn, discussions, markets, settings...; components/brand/sketch draws the city skyline); public/ holds the manifest, icons and sw.js
 e2e/         Playwright specs and the screenshot script
 database/    initdb restore script and the committed seed dump
-docs/report/ project report, diagrams, screenshots and test evidence. Open docs/report/diagrams/dfd-and-schema.html in a browser for the data-flow diagrams and the database schema (plain HTML, CSS and JS, checked against the code by a test)
+docs/report/ project reports, diagrams, screenshots and test evidence. `Kosha_UIUX_LA_Project_Report.docx` is the LA report for UI/UX Design & Product Management (25MCA313), built by `node docs/report/build-uiux-report.mjs`. Open docs/report/diagrams/dfd-and-schema.html in a browser for the data-flow diagrams and the database schema (plain HTML, CSS and JS, checked against the code by a test)
 ```
 
 ## API overview
