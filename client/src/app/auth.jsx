@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useMe } from '../api/hooks.js';
 import { LogoMark } from '../components/brand/Logo.jsx';
@@ -10,6 +11,19 @@ function Splash() {
     </div>
   );
 }
+
+const SIGNED_IN_KEY = 'kosha-signed-in';
+/** This browser has signed in before. Only a hint for what to show with no connection; the server still decides who you are. */
+const remembered = (value) => {
+  try {
+    if (value === undefined) return localStorage.getItem(SIGNED_IN_KEY) === '1';
+    if (value) localStorage.setItem(SIGNED_IN_KEY, '1');
+    else localStorage.removeItem(SIGNED_IN_KEY);
+  } catch {
+    /* private mode or blocked storage: the hint is optional */
+  }
+  return false;
+};
 
 function Offline({ onRetry }) {
   return (
@@ -29,9 +43,14 @@ function Offline({ onRetry }) {
 export function RequireAuth({ landing }) {
   const { data: user, isLoading, error, refetch } = useMe();
   const location = useLocation();
+  useEffect(() => {
+    if (user) remembered(true);
+    else if (user === null || error?.status === 401) remembered(false);
+  }, [user, error]);
   if (isLoading) return <Splash />;
-  // No connection is not the same as being signed out: say so, rather than sending an installed app to the sign-in page.
-  if (!user && error?.status === 0) return <Offline onRetry={refetch} />;
+  // No connection is not the same as being signed out: for someone who has signed in here before, say so rather than
+  // sending an installed app to the sign-in page. A first-time visitor has nothing to check, so they see the landing page.
+  if (!user && error?.status === 0 && remembered()) return <Offline onRetry={refetch} />;
   if (!user) {
     if (landing && location.pathname === '/') return landing;
     return <Navigate to="/login" replace state={{ from: location }} />;
