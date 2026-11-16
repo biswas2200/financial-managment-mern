@@ -28,6 +28,8 @@ export const PRIVACY = {
               ['Profile picture', 'An icon you pick, or a small photo you upload. Photos are shrunk in your browser before they are saved.', 'No'],
               ['Your money data', 'Transactions (amount, date, category, merchant, description, notes, payment method), budgets, categories and the starting balance you set.', 'Yes, to use the app'],
               ['Copilot messages', 'What you ask Copilot and the answers it gives, so the conversation is still there next time.', 'Only if you use Copilot'],
+              ['Posts, comments and reactions', 'What you write in Discussions and under articles, and the likes and dislikes you give. These can be seen by other members (see Who can see it).', 'Only if you use the community'],
+              ['Watchlist', 'The stocks, indices and funds you save to follow, up to 50.', 'Only if you use it'],
               ['Your agreement', 'Which version of these documents you accepted and when.', 'Yes'],
               ['Technical', 'One sign-in cookie (httpOnly, so scripts cannot read it) and a few preferences in your browser (theme, a hidden checklist). The server may log the time and address of requests while it runs.', 'Yes'],
             ],
@@ -44,6 +46,8 @@ export const PRIVACY = {
           list: [
             'To run the app: sign you in, store your records and work out the totals, charts and budgets you see.',
             'To answer your questions in Copilot.',
+            'To show your posts and comments to other members, and to count likes and dislikes.',
+            'To keep your watchlist.',
             'To keep your account safe, for example by checking your current password before it can be changed.',
             'To check your age, if you gave your date of birth.',
             'To reach you about your account, if you gave a phone number. Kosha does not send marketing.',
@@ -70,8 +74,18 @@ export const PRIVACY = {
       id: 'who',
       title: 'Who can see it',
       body: [
-        'Your records are stored in the Kosha database run by whoever hosts this copy of the app. Other Kosha users cannot see them. Beyond that host, the only other party is Google, when Copilot uses Gemini as described above.',
+        'Your records are stored in the Kosha database run by whoever hosts this copy of the app. Your money data (transactions, budgets, balance, categories, Copilot messages and watchlist) is never visible to other members.',
+        'What you post in Discussions or write as a comment can be read by every signed-in member. It shows your first name and the first letter of your last name (for example "Aarav M."), and your icon if you picked one. Uploaded photos are never shown to other members, and your email, phone number and date of birth are never shown. Your likes and dislikes are counted, and other members cannot see which ones are yours.',
+        'Beyond the host and other members, the only other party is Google, when Copilot uses Gemini as described above.',
         'We share your data with no one else unless the law requires it.',
+      ],
+    },
+    {
+      id: 'markets',
+      title: 'Market data and guides',
+      body: [
+        'Market figures on the Markets pages come from NSE India (index closes and end-of-day prices) and from AMFI mutual fund NAV data. The Kosha server fetches them; nothing about you is sent to those sources. The figures are end-of-day, carry their date, and are not live.',
+        'The guides in Learn are general education written for Kosha. Neither the guides nor the market pages are investment advice.',
       ],
     },
     {
@@ -79,7 +93,7 @@ export const PRIVACY = {
       title: 'How long we keep it',
       body: [
         'For as long as you have an account. You can edit or delete any transaction, budget or category yourself, clear your Copilot conversation, and remove your phone number, date of birth or picture at any time.',
-        'Deleting your account from Settings permanently removes your profile, transactions, budgets, categories and Copilot messages.',
+        'Deleting your account from Settings permanently removes your profile, transactions, budgets, categories, Copilot messages, posts, comments, reactions and watchlist. You can also delete your own posts and comments one by one.',
       ],
     },
     {
@@ -142,10 +156,25 @@ export const TERMS = {
       ],
     },
     {
+      id: 'community',
+      title: 'Community',
+      body: [
+        'Discussions and comments are open to every signed-in member. Be respectful and stay on topic. Do not share personal or financial details, your own or anyone else\'s. Do not tell others to buy or sell a specific investment, promise returns, advertise, or post anything unlawful or abusive.',
+        'Posts and comments are the views of the member who wrote them. Kosha does not check them, and they are not advice. We may remove content that breaks these rules, and suspend accounts that keep doing so.',
+      ],
+    },
+    {
       id: 'advice',
       title: 'Copilot and your decisions',
       body: [
         'Copilot is an AI helper. It can be wrong, and what it says is not financial advice. Kosha does not recommend investments or tell you what to buy or sell. Check important figures against your own records before you act on them.',
+      ],
+    },
+    {
+      id: 'markets',
+      title: 'Markets and guides',
+      body: [
+        'The Markets pages show end-of-day figures from public sources, with their date. They may be late, incomplete or wrong, and past returns do not predict future returns. The guides in Learn are general education. The guides and the figures are not investment advice, and Kosha is not a SEBI-registered investment adviser. For advice about your own situation, speak to a SEBI-registered adviser.',
       ],
     },
     {
