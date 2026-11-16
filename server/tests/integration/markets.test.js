@@ -145,13 +145,10 @@ describe('Watchlist', () => {
   });
 
   it('still lists an entry, without a price, when the data source is down', async () => {
-    const { agent } = await signUp(app);
+    const { agent, credentials } = await signUp(app);
     await agent.post(url).send({ kind: 'stock', ref: 'AAA' }).expect(201);
-    const down = build({ nse: fakeNse({ fail: true }) });
-    const again = request.agent(down);
-    // Same user, different app instance: sign in again against the shared test database.
-    const email = (await agent.get('/api/v1/auth/me').expect(200)).body.user?.email ?? (await agent.get('/api/v1/auth/me')).body.email;
-    await again.post('/api/v1/auth/login').send({ email, password: 'testpass123' }).expect(200);
+    const again = request.agent(build({ nse: fakeNse({ fail: true }) }));
+    await again.post('/api/v1/auth/login').send({ email: credentials.email, password: credentials.password }).expect(200);
     const list = (await again.get(url).expect(200)).body.items;
     expect(list).toHaveLength(1);
     expect(list[0]).toMatchObject({ ref: 'AAA', label: 'AAA FINANCE LTD', price: null, changePct: null });

@@ -113,7 +113,7 @@ export function fakeNse({ publishedFrom = '2021-01-01', published = new Set(), s
 // ---------- Mutual funds ----------
 
 export const FUNDS = [
-  // NAV(day) = 10 * (1 + growth) ^ days since 2018-01-01; a dip in 2020 gives the funds a drawdown.
+  // NAV(day) = 10 * (1 + growth) ^ days since the fund started; a dip in 2020 gives the funds a drawdown.
   { code: 120716, name: 'UTI Nifty 50 Index Fund - Direct Plan - Growth', house: 'UTI Mutual Fund', category: 'Other Scheme - Index Funds', growth: 0.0004, since: '2013-01-02' },
   { code: 119063, name: 'HDFC Nifty 50 Index Fund - Direct Plan - Growth Option', house: 'HDFC Mutual Fund', category: 'Other Scheme - Index Funds', growth: 0.0006, since: '2013-01-02' },
   { code: 122639, name: 'Parag Parikh Flexi Cap Fund - Direct Plan - Growth', house: 'PPFAS Mutual Fund', category: 'Equity Scheme - Flexi Cap Fund', growth: 0.0003, since: '2013-05-24' },
@@ -122,7 +122,7 @@ export const FUNDS = [
 
 const dmy = (day) => day.split('-').reverse().join('-');
 export const navOn = (fund, day) => {
-  const n = dayNumber(day) - dayNumber('2018-01-01');
+  const n = dayNumber(day) - dayNumber(fund.since);
   const dip = day >= '2020-02-20' && day <= '2020-03-23' ? 0.7 : 1; // a sharp fall, then recovery
   return Number((10 * (1 + fund.growth) ** Math.max(n, 0) * dip).toFixed(4));
 };
